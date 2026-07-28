@@ -7,10 +7,16 @@
   "theme_color": "#05070f",
   "icons": [
     {
-      "src": "https://img.icons8.com/isometric-folders/512/water-element.png",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Water_drop_icon.svg/512px-Water_drop_icon.svg.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Water_drop_icon.svg/512px-Water_drop_icon.svg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
