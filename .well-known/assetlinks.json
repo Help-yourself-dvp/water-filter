@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.help_yourself_dvp.twa",
-        "sha256_cert_fingerprints": ["F2:72:73:D3:1F:BE:35:B8:A6:C2:7E:3A:FC:10:6C:48:72:6F:00:13:9E:30:22:12:F1:0D:E6:00:77:60:D2:F0"]
+        "sha256_cert_fingerprints": ["3E:B6:35:34:BE:D1:7F:22:9F:BA:04:56:5A:4A:FC:43:5E:5C:90:AB:12:46:C4:32:26:C0:21:F7:C7:DB:18:9A"]
       }
     }]
