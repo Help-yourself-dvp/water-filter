@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AquaControl</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #05070f; color: #fff; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        
+        /* Объёмный фон PS5 */
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Стеклянная карточка приложения */
+        .card { position: relative; z-index: 2; background: rgba(20, 26, 45, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 28px; padding: 35px 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+        
+        h1 { font-size: 18px; font-weight: 600; letter-spacing: 2px; color: #8f9cae; margin-bottom: 25px; text-transform: uppercase; }
+        
+        /* Дисплей счетчика */
+        .timer-display { margin: 15px 0 25px; }
+        .days-left { font-size: 72px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.5); line-height: 1; letter-spacing: -2px; }
+        .days-label { font-size: 13px; color: #6e7d93; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+        
+        /* Настройки */
+        .setting-group { margin: 20px 0; text-align: left; }
+        label { font-size: 12px; color: #8f9cae; display: block; margin-bottom: 8px; margin-left: 4px; }
+        select { width: 100%; padding: 14px; background: rgba(10, 14, 26, 0.7); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px; color: #fff; font-size: 15px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat: no-repeat; background-position: right 12px center; }
+        
+        /* Кнопки */
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; margin-top: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-warning { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.08); color: #a0aab8; }
+        
+        /* Всплывающее окно */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .modal-content { background: #121724; padding: 28px; border-radius: 24px; width: 85%; max-width: 340px; border: 1px solid rgba(255, 255, 255, 0.12); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .modal h2 { font-size: 20px; color: #ff4757; margin-bottom: 10px; }
+        .modal p { font-size: 14px; color: #8f9cae; margin-bottom: 20px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <!-- Анимированный 3D-фон (3 объемных слоя волн) -->
+    <canvas id="waveCanvas"></canvas>
+
+    <!-- Главная карточка -->
+    <div class="card">
+        <h1>Фильтр для воды</h1>
+        
+        <div class="timer-display">
+            <div class="days-left" id="daysDisplay">--</div>
+            <div class="days-label" id="statusLabel">дней осталось</div>
+        </div>
+
+        <div class="setting-group">
+            <label for="intervalSelect">Запланированный ресурс:</label>
+            <select id="intervalSelect" onchange="changeInterval()">
+                <option value="30">30 дней (1 месяц)</option>
+                <option value="60">60 дней (2 месяца)</option>
+                <option value="90" selected>90 дней (3 месяца) — Стандарт</option>
+                <option value="120">120 дней (4 месяца)</option>
+                <option value="180">180 дней (6 месяцев)</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="resetFilterQuick()">Заменил фильтр сегодня</button>
+    </div>
+
+    <!-- Всплывающий диалог при истечении срока -->
+    <div class="modal" id="expiredModal">
+        <div class="modal-content">
+            <h2>Срок истек!</h2>
+            <p>Картридж отработал свой ресурс. Выберите действие:</p>
+            <button class="btn btn-primary" onclick="confirmReset(90)">Заменил (сброс на 90 дн.)</button>
+            <button class="btn btn-warning" onclick="postpone(15)">Отложить на 15 дней</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Настроить вручную</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. ОБЪЕМНАЯ АНИМАЦИЯ ФОНА (3 Слоя PS5 Wave) ---
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, step = 0;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Данные для 3-х объемных волн
+        const waves = [
+            { length: 0.002, amplitude: 90, speed: 0.012, color: 'rgba(0, 162, 255, 0.12)', offset: 0 },
+            { length: 0.001, amplitude: 120, speed: 0.008, color: 'rgba(0, 242, 254, 0.08)', offset: 2 },
+            { length: 0.003, amplitude: 60, speed: 0.015, color: 'rgba(67, 100, 247, 0.15)', offset: 4 }
+        ];
+
+        function drawWaves() {
+            ctx.clearRect(0, 0, width, height);
+
+            waves.forEach(wave => {
+                ctx.beginPath();
+                ctx.fillStyle = wave.color;
+
+                ctx.moveTo(0, height);
+                for (let x = 0; x <= width; x += 10) {
+                    let y = Math.sin((x * wave.length) + (step * wave.speed) + wave.offset) * wave.amplitude + (height / 2);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(width, height);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            step++;
+            requestAnimationFrame(drawWaves);
+        }
+        drawWaves();
+
+        // --- 2. ЛОГИКА ТАЙМЕРА И ДАННЫХ ---
+        let filterData = JSON.parse(localStorage.getItem('waterFilterData')) || {
+            startDate: new Date().getTime(),
+            intervalDays: 90
+        };
+
+        function saveData() {
+            localStorage.setItem('waterFilterData', JSON.stringify(filterData));
+            updateUI();
+        }
+
+        function updateUI() {
+            const now = new Date().getTime();
+            const elapsedDays = Math.floor((now - filterData.startDate) / (1000 * 60 * 60 * 24));
+            const daysLeft = filterData.intervalDays - elapsedDays;
+
+            document.getElementById('intervalSelect').value = filterData.intervalDays;
+            const daysDisplay = document.getElementById('daysDisplay');
+
+            if (daysLeft <= 0) {
+                daysDisplay.innerText = "0";
+                daysDisplay.style.color = "#ff4757";
+                daysDisplay.style.textShadow = "0 0 30px rgba(255, 71, 87, 0.6)";
+                document.getElementById('statusLabel').innerText = "Требуется замена!";
+                document.getElementById('expiredModal').style.display = 'flex';
+                sendNotification("AquaControl", "Срок службы фильтра воды истек! Пора заменить.");
+            } else {
+                daysDisplay.innerText = daysLeft;
+                daysDisplay.style.color = "#00f2fe";
+                daysDisplay.style.textShadow = "0 0 30px rgba(0, 242, 254, 0.5)";
+                document.getElementById('statusLabel').innerText = "дней осталось";
+            }
+        }
+
+        function changeInterval() {
+            const select = document.getElementById('intervalSelect');
+            filterData.intervalDays = parseInt(select.value);
+            saveData();
+        }
+
+        function resetFilterQuick() {
+            filterData.startDate = new Date().getTime();
+            saveData();
+            alert("Таймер успешно обновлен!");
+        }
+
+        function confirmReset(days) {
+            filterData.startDate = new Date().getTime();
+            filterData.intervalDays = days;
+            document.getElementById('expiredModal').style.display = 'none';
+            saveData();
+        }
+
+        // Функция откладывания на 15 дней
+        function postpone(days) {
+            const now = new Date().getTime();
+            const msPerDay = 1000 * 60 * 60 * 24;
+            // Имитируем, будто дата установки была так, чтобы осталось ровно 15 дней
+            filterData.startDate = now - ((filterData.intervalDays - days) * msPerDay);
+            document.getElementById('expiredModal').style.display = 'none';
+            saveData();
+            alert(`Срок продлен на ${days} дней.`);
+        }
+
+        function closeModal() {
+            document.getElementById('expiredModal').style.display = 'none';
+        }
+
+        // --- 3. УВЕДОМЛЕНИЯ ---
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body });
+            }
+        }
+
+        requestNotificationPermission();
+        updateUI();
+    </script>
+</body>
+</html>
