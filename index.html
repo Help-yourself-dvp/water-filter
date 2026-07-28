@@ -7,42 +7,47 @@
     <link rel="manifest" href="manifest.json">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #05070f; color: #fff; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        body { background: #05070f; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: center; padding: 20px 0; }
         
         /* Фон PS5 */
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
         /* Карточка */
-        .card { position: relative; z-index: 2; background: rgba(20, 26, 45, 0.6); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 32px; padding: 30px 20px; width: 88%; max-width: 360px; text-align: center; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7); }
+        .card { position: relative; z-index: 2; background: rgba(20, 26, 45, 0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 32px; padding: 28px 20px; width: 90%; max-width: 360px; text-align: center; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7); }
         
-        h1 { font-size: 16px; font-weight: 600; letter-spacing: 2px; color: #8f9cae; margin-bottom: 20px; text-transform: uppercase; }
+        h1 { font-size: 16px; font-weight: 600; letter-spacing: 2px; color: #8f9cae; margin-bottom: 15px; text-transform: uppercase; }
         
-        .timer-display { margin: 10px 0 20px; }
-        .days-left { font-size: 76px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.5); line-height: 1; }
+        .timer-display { margin: 10px 0 15px; }
+        .days-left { font-size: 72px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.5); line-height: 1; }
         .days-label { font-size: 12px; color: #6e7d93; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Стильные кнопки-чипсы вместо белого списка */
-        .setting-label { font-size: 12px; color: #8f9cae; text-align: left; margin-bottom: 10px; padding-left: 4px; }
-        .period-selector { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 25px; }
-        .chip { flex: 1; padding: 10px 0; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #8f9cae; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        /* Кнопки-чипсы */
+        .setting-label { font-size: 12px; color: #8f9cae; text-align: left; margin-bottom: 8px; padding-left: 4px; }
+        .period-selector { display: flex; gap: 6px; justify-content: space-between; margin-bottom: 20px; }
+        .chip { flex: 1; padding: 8px 0; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: #8f9cae; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .chip.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); }
         
         /* Главная кнопка */
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
         .btn-primary { background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); }
         .btn-primary:active { transform: scale(0.96); }
-        .btn-warning { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); margin-top: 8px; }
-        .btn-secondary { background: rgba(255, 255, 255, 0.08); color: #a0aab8; margin-top: 8px; }
         
-        /* Модальное окно */
+        /* Блок тестирования */
+        .test-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+        .test-title { font-size: 11px; color: #ffaa00; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+        .btn-test { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.25); font-size: 12px; padding: 10px; }
+        .btn-test:active { background: rgba(255, 170, 0, 0.25); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.08); color: #a0aab8; }
+        
+        /* Всплывающее окно */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .modal-content { background: #121724; padding: 25px; border-radius: 24px; width: 85%; max-width: 320px; border: 1px solid rgba(255, 255, 255, 0.12); text-align: center; }
         .modal h2 { font-size: 18px; color: #ff4757; margin-bottom: 8px; }
         .modal p { font-size: 13px; color: #8f9cae; margin-bottom: 18px; }
 
-        /* Всплывающее неоновое уведомление (Вместо alert) */
-        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 20; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0; }
-        .toast.show { bottom: 40px; opacity: 1; }
+        /* Неоновый тост */
+        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 20; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0; text-align: center; width: 80%; max-width: 300px; }
+        .toast.show { bottom: 30px; opacity: 1; }
     </style>
 </head>
 <body>
@@ -67,25 +72,30 @@
         </div>
 
         <button class="btn btn-primary" onclick="resetFilterQuick()">Заменил фильтр сегодня</button>
-        <button class="btn btn-warning" style="margin-top:10px;" onclick="testExpireNow()">⚡ Протестировать сработку (Тест)</button>
+
+        <!-- ЗОНА ТЕСТИРОВАНИЯ -->
+        <div class="test-section">
+            <div class="test-title">🧪 Режим проверки функций:</div>
+            <button class="btn btn-test" onclick="testExpireNow()">⚡ Срок истёк (0 дней)</button>
+            <button class="btn btn-test" onclick="testExpireTomorrow()">⏳ Завтра замена (1 день)</button>
+            <button class="btn btn-test" onclick="testDelayedPush()">🔔 Тест Push через 5 сек (Сверните!)</button>
+        </div>
     </div>
 
-    <!-- Кастомный Toast -->
     <div class="toast" id="toast">Таймер обновлен!</div>
 
-    <!-- Модальное окно -->
     <div class="modal" id="expiredModal">
         <div class="modal-content">
             <h2>Срок истек!</h2>
             <p>Фильтр отработал свой ресурс. Выберите действие:</p>
             <button class="btn btn-primary" onclick="confirmReset(90)">Заменил (сброс на 90 дн.)</button>
-            <button class="btn btn-warning" onclick="postpone(15)">Отложить на 15 дней</button>
+            <button class="btn btn-test" style="width:100%; margin-top:8px;" onclick="postpone(15)">Отложить на 15 дней</button>
             <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
         </div>
     </div>
 
     <script>
-        // Анимация волн
+        // 1. АНИМАЦИЯ
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -119,7 +129,7 @@
         }
         drawWaves();
 
-        // Логика
+        // 2. ДАННЫЕ И ТАЙМЕР
         let filterData = JSON.parse(localStorage.getItem('waterFilterData')) || {
             startDate: new Date().getTime(),
             intervalDays: 90
@@ -134,7 +144,7 @@
             const toast = document.getElementById('toast');
             toast.innerText = text;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         function updateUI() {
@@ -142,7 +152,6 @@
             const elapsedDays = Math.floor((now - filterData.startDate) / (1000 * 60 * 60 * 24));
             const daysLeft = filterData.intervalDays - elapsedDays;
 
-            // Обновляем активную чипсу
             document.querySelectorAll('.chip').forEach(chip => {
                 if (parseInt(chip.innerText) === filterData.intervalDays) chip.classList.add('active');
                 else chip.classList.remove('active');
@@ -155,6 +164,7 @@
                 daysDisplay.style.color = "#ff4757";
                 document.getElementById('statusLabel').innerText = "Требуется замена!";
                 document.getElementById('expiredModal').style.display = 'flex';
+                sendNotification("AquaControl 🚨", "Срок службы фильтра воды истек! Пора заменить.");
             } else {
                 daysDisplay.innerText = daysLeft;
                 daysDisplay.style.color = "#00f2fe";
@@ -195,11 +205,46 @@
             document.getElementById('expiredModal').style.display = 'none';
         }
 
+        // 3. ФУНКЦИИ ТЕСТИРОВАНИЯ
+        function testExpireNow() {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            filterData.startDate = new Date().getTime() - ((filterData.intervalDays + 1) * msPerDay);
+            saveData();
+        }
+
+        function testExpireTomorrow() {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            filterData.startDate = new Date().getTime() - ((filterData.intervalDays - 1) * msPerDay);
+            document.getElementById('expiredModal').style.display = 'none';
+            saveData();
+            showToast("Имитация: Завтра замена (остался 1 день)");
+        }
+
+        function testDelayedPush() {
+            showToast("Сверните приложение! Уведомление придет через 5 сек...");
+            setTimeout(() => {
+                sendNotification("AquaControl 💧", "Тестовое уведомление прошло успешно!");
+            }, 5000);
+        }
+
+        // 4. PUSH УВЕДОМЛЕНИЯ
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { 
+                    body: body,
+                    icon: 'icon.png'
+                });
+            }
+        }
+
+        requestNotificationPermission();
         updateUI();
     </script>
-    function testExpireNow() {
-    filterData.startDate = new Date().getTime() - (91 * 24 * 60 * 60 * 1000); // Относим дату на 91 день назад
-    saveData();
-}
 </body>
 </html>
