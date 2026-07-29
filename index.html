@@ -58,10 +58,13 @@
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
         .dev-panel-content.open { display: block; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        /* ВСЕ МОДАЛКИ Z-INDEX 100, ОКНО ПОДТВЕРЖДЕНИЯ Z-INDEX 200 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; }
         .modal-subtitle { font-size: 11px; color: #00f2fe; text-align: center; margin-bottom: 15px; }
+
+        #confirmModal { z-index: 200 !important; }
 
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
@@ -71,7 +74,7 @@
         .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
         .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
 
-        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 20; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
+        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
 
         .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
@@ -161,7 +164,7 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
+    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ (Z-INDEX 200) -->
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <h2 id="confirmTitle">Подтверждение</h2>
@@ -317,7 +320,7 @@
             closeModals();
         };
 
-        // CANVAS ENGINE
+        // CANVAS ANIMATION ENGINE
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -456,94 +459,10 @@
             }
         }
 
-        function getFilterNotifId(filterId, isReminder = false) {
-            let hash = 0;
-            for (let i = 0; i < filterId.length; i++) {
-                hash = (hash << 5) - hash + filterId.charCodeAt(i);
-                hash |= 0;
-            }
-            return Math.abs(hash) + (isReminder ? 500000 : 0);
-        }
-
-        async function syncNativeFilterSchedule(filter) {
-            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.LocalNotifications) return;
-
-            const ln = window.Capacitor.Plugins.LocalNotifications;
-            const notifIdMain = getFilterNotifId(filter.id, false);
-            const notifIdReminder = getFilterNotifId(filter.id, true);
-
-            try {
-                await ln.cancel({ notifications: [{ id: notifIdMain }, { id: notifIdReminder }] });
-
-                let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-                let hardnessMult = 1 / (filter.hardness || 1);
-                let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-                
-                const expireTimestamp = filter.lastDate + (realMaxDays * 24 * 60 * 60 * 1000);
-                const reminderTimestamp = expireTimestamp + (7 * 24 * 60 * 60 * 1000);
-                const now = Date.now();
-
-                const locObj = appData.locations.find(l => l.id === filter.locationId);
-                const locText = locObj ? ` [${locObj.name}]` : '';
-
-                await ln.createChannel({
-                    id: 'aqua_high_priority',
-                    name: 'AquaControl Напоминания',
-                    description: 'Уведомления о замене фильтра для воды',
-                    importance: 5,
-                    visibility: 1,
-                    sound: 'default',
-                    vibrates: true
-                });
-
-                let notificationsToSchedule = [];
-
-                if (expireTimestamp > now) {
-                    notificationsToSchedule.push({
-                        title: "AquaControl",
-                        body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
-                        id: notifIdMain,
-                        schedule: { at: new Date(expireTimestamp) },
-                        smallIcon: "ic_stat_icon",
-                        iconColor: "#00F2FE",
-                        autoCancel: true,
-                        channelId: 'aqua_high_priority',
-                        extra: { locationId: filter.locationId, filterId: filter.id }
-                    });
-                }
-
-                if (reminderTimestamp > now) {
-                    notificationsToSchedule.push({
-                        title: "AquaControl",
-                        body: `Напоминание: замена картриджа в фильтре "${filter.name}"${locText} просрочена.`,
-                        id: notifIdReminder,
-                        schedule: { at: new Date(reminderTimestamp) },
-                        smallIcon: "ic_stat_icon",
-                        iconColor: "#00F2FE",
-                        autoCancel: true,
-                        channelId: 'aqua_high_priority',
-                        extra: { locationId: filter.locationId, filterId: filter.id }
-                    });
-                }
-
-                if (notificationsToSchedule.length > 0) {
-                    await ln.schedule({ notifications: notificationsToSchedule });
-                }
-            } catch(e) { console.log('Schedule Error:', e); }
-        }
-
-        function syncAllSchedules() {
-            if (appData.filters) {
-                appData.filters.forEach(f => syncNativeFilterSchedule(f));
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
-                ln.requestPermissions().then(() => {
-                    syncAllSchedules();
-                });
+                ln.requestPermissions();
                 
                 ln.addListener('localNotificationActionPerformed', (notification) => {
                     if (notification.notification && notification.notification.id) {
@@ -556,6 +475,17 @@
                     if (extraData && extraData.locationId && extraData.filterId) {
                         appData.currentLocationId = extraData.locationId;
                         appData.currentFilterId = extraData.filterId;
+
+                        // Если пришел клик по уведомлению — переводим фильтр в просроченный (0 дней)
+                        const filter = appData.filters.find(f => f.id === extraData.filterId);
+                        if (filter) {
+                            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
+                            let hardnessMult = 1 / (filter.hardness || 1);
+                            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
+                            const msPerDay = 1000 * 60 * 60 * 24;
+                            filter.lastDate = Date.now() - (realMaxDays * msPerDay + 5000);
+                        }
+
                         saveDB();
                         openReplaceModal();
                     }
@@ -575,7 +505,6 @@
                 filter.lastDate = now - ((realMaxDays - days) * msPerDay);
                 closeModals();
                 saveDB();
-                syncNativeFilterSchedule(filter);
                 showToast(`Продлено на ${days} дней!`);
             }
         }
@@ -601,7 +530,7 @@
             panel.classList.toggle('open');
         }
 
-        // РУЧНОЙ ТЕСТ: РАБОТАЕТ НА 100% ДЛЯ ВСЕХ ТАЙМЕРОВ (0s, 10s, 10m, 1h)
+        // ПРЯМОЙ НАДЕЖНЫЙ ЗАПУСК ТЕСТА УВЕДОМЛЕНИЙ В ANDROID
         async function runCustomTest() {
             const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
@@ -612,22 +541,24 @@
             if (val === '10m') ms = 600000;
             if (val === '1h') ms = 3600000;
 
-            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-            let hardnessMult = 1 / (filter.hardness || 1);
-            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-
-            // Состариваем фильтр в базе данных к моменту срабатывания таймера
-            const msPerDay = 1000 * 60 * 60 * 24;
-            filter.lastDate = (Date.now() + ms) - (realMaxDays * msPerDay + 2000);
-            saveDB();
-
             const locObj = appData.locations.find(l => l.id === filter.locationId);
             const locText = locObj ? ` [${locObj.name}]` : '';
 
-            showToast(`Тест запущен (${val})!`);
+            showToast(`Тест запущен (${val})! Сверните приложение...`);
 
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
+                
+                await ln.createChannel({
+                    id: 'aqua_high_priority',
+                    name: 'AquaControl Напоминания',
+                    description: 'Уведомления о замене фильтра для воды',
+                    importance: 5,
+                    visibility: 1,
+                    sound: 'default',
+                    vibrates: true
+                });
+
                 await ln.schedule({
                     notifications: [{
                         title: "AquaControl",
@@ -641,6 +572,10 @@
                         extra: { locationId: filter.locationId, filterId: filter.id }
                     }]
                 });
+            } else if ("Notification" in window && Notification.permission === "granted") {
+                setTimeout(() => {
+                    new Notification("AquaControl", { body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.` });
+                }, ms);
             }
         }
 
@@ -727,7 +662,6 @@
 
                 closeModals();
                 saveDB();
-                syncNativeFilterSchedule(filter);
                 showToast("Замена зафиксирована!");
             }
         }
@@ -741,7 +675,7 @@
             const buyUrl = document.getElementById('newFilterUrl').value;
 
             const newId = 'f_' + Date.now();
-            const newFilterObj = {
+            appData.filters.push({
                 id: newId,
                 locationId: appData.currentLocationId,
                 name: name,
@@ -752,13 +686,11 @@
                 lastDate: new Date().getTime(),
                 brand: '',
                 buyUrl: buyUrl
-            };
+            });
 
-            appData.filters.push(newFilterObj);
             appData.currentFilterId = newId;
             closeModals();
             saveDB();
-            syncNativeFilterSchedule(newFilterObj);
             showToast("Фильтр создан!");
         }
 
@@ -782,14 +714,6 @@
                 "Удаление устройства",
                 `Вы действительно хотите удалить "${filter.name}"?`,
                 () => {
-                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                        window.Capacitor.Plugins.LocalNotifications.cancel({ 
-                            notifications: [
-                                { id: getFilterNotifId(filter.id, false) }, 
-                                { id: getFilterNotifId(filter.id, true) }
-                            ] 
-                        });
-                    }
                     appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
                     saveDB();
                     showToast("Устройство удалено");
@@ -805,20 +729,11 @@
                 "Удаление объекта",
                 `Удалить объект "${loc.name}" и все связанные с ним фильтры?`,
                 () => {
-                    const filtersToDelete = appData.filters.filter(f => f.locationId === loc.id);
-                    filtersToDelete.forEach(f => {
-                        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                            window.Capacitor.Plugins.LocalNotifications.cancel({ 
-                                notifications: [
-                                    { id: getFilterNotifId(f.id, false) }, 
-                                    { id: getFilterNotifId(f.id, true) }
-                                ] 
-                            });
-                        }
-                    });
                     appData.filters = appData.filters.filter(f => f.locationId !== loc.id);
                     appData.locations = appData.locations.filter(l => l.id !== loc.id);
-                    appData.currentLocationId = appData.locations[0].id;
+                    if (appData.currentLocationId === loc.id) {
+                        appData.currentLocationId = appData.locations[0].id;
+                    }
                     closeModals();
                     saveDB();
                     showToast("Объект удален");
