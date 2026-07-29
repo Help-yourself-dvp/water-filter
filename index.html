@@ -163,7 +163,7 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ (Z-INDEX 200) -->
+    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <h2 id="confirmTitle">Подтверждение</h2>
@@ -382,8 +382,11 @@
 
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
+            if (currentLoc) appData.currentLocationId = currentLoc.id;
+
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
 
+            // ЖЕСТКАЯ ИЗОЛЯЦИЯ: Только фильтры активного дома
             const currentFilters = appData.filters.filter(f => f.locationId === appData.currentLocationId);
             const tabsContainer = document.getElementById('filterTabs');
             let filter = null;
@@ -392,7 +395,7 @@
                 tabsContainer.innerHTML = '<div style="font-size:12px; color:#6e7d93;">Нет устройств в этой локации</div>';
                 appData.currentFilterId = null;
             } else {
-                if (!currentFilters.find(f => f.id === appData.currentFilterId)) {
+                if (!currentFilters.some(f => f.id === appData.currentFilterId)) {
                     appData.currentFilterId = currentFilters[0].id;
                 }
                 filter = currentFilters.find(f => f.id === appData.currentFilterId);
@@ -440,12 +443,14 @@
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
                     btnPostponeMain.style.display = 'block';
                     if (filter.buyUrl) btnBuy.style.display = 'block';
+                    else btnBuy.style.display = 'none';
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255, 170, 0, 0.15)';
                     document.getElementById('statusLabel').innerText = 'Скоро замена!';
                     btnPostponeMain.style.display = 'none';
                     if (filter.buyUrl) btnBuy.style.display = 'block';
+                    else btnBuy.style.display = 'none';
                 } else {
                     daysDisplay.style.color = '#00f2fe';
                     waveColor = 'rgba(0, 242, 254, 0.12)';
@@ -454,6 +459,7 @@
                     btnBuy.style.display = 'none';
                 }
             } else {
+                // ПОЛНЫЙ СБРОС ИНТЕРФЕЙСА ДЛЯ ПУСТОГО ДОМА
                 daysDisplay.innerText = '--';
                 daysDisplay.style.color = '#00f2fe';
                 document.getElementById('statusLabel').innerText = 'нет устройств';
@@ -727,6 +733,10 @@
         }
 
         function deleteSpecificLocation(locId) {
+            if (appData.locations.length <= 1) {
+                showToast("Нельзя удалить единственный объект!");
+                return;
+            }
             const loc = appData.locations.find(l => l.id === locId);
             if (!loc) return;
 
@@ -734,10 +744,13 @@
                 "Удаление объекта",
                 `Удалить объект "${loc.name}" и все связанные с ним фильтры?`,
                 () => {
-                    appData.filters = appData.filters.filter(f => f.locationId !== loc.id);
-                    appData.locations = appData.locations.filter(l => l.id !== loc.id);
-                    if (appData.currentLocationId === loc.id) {
+                    // ЖЕСТКАЯ ИЗОЛЯЦИЯ: Удаляем ТОЛЬКО фильтры этого конкретного дома
+                    appData.filters = appData.filters.filter(f => f.locationId !== locId);
+                    appData.locations = appData.locations.filter(l => l.id !== locId);
+                    
+                    if (appData.currentLocationId === locId) {
                         appData.currentLocationId = appData.locations[0].id;
+                        appData.currentFilterId = null;
                     }
                     closeModals();
                     saveDB();
