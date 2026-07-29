@@ -10,45 +10,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: 1. Скачивание исходного кода
       uses: actions/checkout@v4
 
-    - name: Set up Java JDK 17
+    - name: 2. Настройка Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Node.js 22
+    - name: 3. Настройка Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 4. Настройка Node.js 20
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '20'
 
-    - name: Prepare Web Dir and Build APK
+    - name: 5. Подготовка файлов проекта
       run: |
-        # 1. Создаем отдельную чистую папку для сайта
         mkdir -p www
-        cp index.html manifest.json icon.png www/ 2>/dev/null || :
+        cp index.html www/
+        cp manifest.json www/ 2>/dev/null || true
+        cp icon.png www/ 2>/dev/null || true
 
-        # 2. Устанавливаем инструменты сборки
+    - name: 6. Установка зависимостей Capacitor
+      run: |
         npm init -y
-        npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
 
-        # 3. Инициализируем проект из папки www
+    - name: 7. Инициализация платформы Android
+      run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
-
-        # 4. Собираем нативный проект Android
         npx cap add android
         npx cap sync android
 
-        # 5. Компилируем готовый .APK
+    - name: 8. Компиляция нативного APK
+      run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
-      env:
-        CI: false
+        ./gradlew assembleDebug --stacktrace
 
-    - name: Upload APK Artifact
+    - name: 9. Выгрузка готового APK файла
       uses: actions/upload-artifact@v4
       with:
         name: AquaControlPro-Native
