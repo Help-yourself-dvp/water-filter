@@ -3,6 +3,7 @@ name: Build Native Android APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,25 +22,36 @@ jobs:
     - name: Set up Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: '22'
 
-    - name: Initialize NPM & Install Capacitor
+    - name: Build Android App with Capacitor
       run: |
+        # 1. Создаем чистый package.json
         npm init -y
+        
+        # 2. Устанавливаем Capacitor
         npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/local-notifications@latest
+        
+        # 3. Удаляем старые конфликтующие конфигурации (если есть)
+        rm -f capacitor.config.json capacitor.config.ts
+        rm -rf android
+        
+        # 4. Инициализируем проект с нуля
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir .
+        
+        # 5. Добавляем платформу Android
         npx cap add android
-
-    - name: Accept Android SDK Licenses
-      run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-    - name: Build Android APK
-      run: |
+        
+        # 6. Синхронизируем файлы
+        npx cap copy android
         npx cap sync android
+        
+        # 7. Компилируем нативный APK файл
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
+      env:
+        CI: false
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
