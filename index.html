@@ -7,40 +7,58 @@
     <link rel="manifest" href="manifest.json">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #05070f; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 20px 0; }
+        body { background: #04060e; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; }
         
+        /* 3D Canvas с пузырьками */
         canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        .card { position: relative; z-index: 2; background: rgba(20, 26, 45, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 28px; padding: 24px 18px; width: 92%; max-width: 400px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8); margin-bottom: 30px; }
+        /* Главная карточка */
+        .card { position: relative; z-index: 2; background: rgba(16, 22, 38, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 32px; padding: 22px 16px; width: 92%; max-width: 400px; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85); margin-bottom: 30px; }
         
-        /* Шапка с выбором локаций */
-        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .location-select { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; outline: none; }
-        .btn-icon { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        /* Шапка и стильные SVG иконки */
+        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .location-wrapper { display: flex; align-items: center; gap: 10px; }
         
-        /* Список фильтров */
-        .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        /* Глянцевая 3D-кнопка Дома (по скриншоту) */
+        .icon-home-3d { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #29b6f6, #0052d4 60%, #002171); box-shadow: 0 6px 15px rgba(0, 114, 255, 0.5), inset 0 2px 4px rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3); }
+        .icon-home-3d svg { width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        
+        .location-select { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 8px 12px; border-radius: 14px; font-size: 14px; font-weight: 600; outline: none; }
+        
+        /* Неоновая иконка Графика (по скриншоту) */
+        .btn-chart-icon { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-chart-icon svg { width: 22px; height: 22px; }
+
+        /* Вкладки фильтров */
+        .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
         .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #8f9cae; }
-        .tab.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; }
+        .tab.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         
-        /* Таймер отображение */
-        .timer-box { text-align: center; margin: 15px 0 20px; }
-        .days-left { font-size: 68px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.4); line-height: 1; transition: color 0.5s; }
+        /* Дисплей таймера */
+        .timer-box { text-align: center; margin: 10px 0 15px; transition: all 0.3s ease; }
+        .days-left { font-size: 68px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.4); line-height: 1; transition: font-size 0.3s, color 0.5s; }
+        .days-left.large { font-size: 96px; text-shadow: 0 0 45px rgba(0, 242, 254, 0.6); }
         .days-label { font-size: 11px; color: #6e7d93; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
         
-        /* Инфо-блок выбранного фильтра */
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 16px; margin-bottom: 20px; font-size: 12px; color: #a0aab8; }
+        /* Сворачиваемый инфо-блок */
+        .info-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
+        .info-title { font-size: 11px; color: #8f9cae; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-toggle { background: none; border: none; color: #00f2fe; font-size: 12px; cursor: pointer; font-weight: 600; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; transition: all 0.3s; }
+        .info-grid.collapsed { display: none; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
 
-        /* Кнопки действий */
+        /* Кнопки */
         .btn { width: 100%; padding: 15px; border: none; border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
         .btn-primary { background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); }
+        .btn-buy { background: linear-gradient(135deg, #ff9900, #ff5500); color: #fff; box-shadow: 0 8px 20px rgba(255, 153, 0, 0.4); display: none; }
         .btn-secondary { background: rgba(255, 255, 255, 0.08); color: #a0aab8; }
-        .btn-danger { background: rgba(255, 71, 87, 0.15); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); }
+        .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
 
         /* Модальные окна */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 340px; border: 1px solid rgba(255, 255, 255, 0.12); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 340px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 15px; text-align: center; }
         
         .form-group { margin-bottom: 12px; text-align: left; }
@@ -50,9 +68,9 @@
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 20; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
 
-        /* История */
-        .history-list { max-height: 200px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 15px; }
+        .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
         .history-item { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; }
+        .eco-badge { background: rgba(76, 217, 100, 0.15); border: 1px solid rgba(76, 217, 100, 0.3); color: #4cd964; padding: 10px; border-radius: 12px; font-size: 11px; margin-bottom: 12px; text-align: left; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -60,21 +78,32 @@
     <canvas id="waveCanvas"></canvas>
 
     <div class="card">
-        <!-- Шапка -->
+        <!-- Шапка с премиум 3D иконками -->
         <div class="header-nav">
-            <select class="location-select" id="locationSelect" onchange="switchLocation()">
-                <!-- Локации подгрузятся JS -->
-            </select>
-            <div style="display: flex; gap: 6px;">
-                <button class="btn-icon" onclick="openAddLocationModal()" title="Добавить локацию">🏠+</button>
-                <button class="btn-icon" onclick="openHistoryModal()" title="История расходов">📊</button>
+            <div class="location-wrapper">
+                <div class="icon-home-3d" onclick="openAddLocationModal()" title="Добавить объект">
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </div>
+                <select class="location-select" id="locationSelect" onchange="switchLocation()"></select>
+            </div>
+            
+            <!-- Неоновый график иконка -->
+            <div class="btn-chart-icon" onclick="openHistoryModal()" title="Статистика и Расходы">
+                <svg viewBox="0 0 24 24">
+                    <defs>
+                        <linearGradient id="g1" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#7b2cbf"/><stop offset="100%" stop-color="#9d4edd"/></linearGradient>
+                        <linearGradient id="g2" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#f72585"/><stop offset="100%" stop-color="#4cc9f0"/></linearGradient>
+                        <linearGradient id="g3" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ff9e00"/><stop offset="100%" stop-color="#ff0054"/></linearGradient>
+                    </defs>
+                    <rect x="3" y="12" width="4" height="9" rx="1" fill="url(#g1)"/>
+                    <rect x="10" y="7" width="4" height="14" rx="1" fill="url(#g2)"/>
+                    <rect x="17" y="3" width="4" height="18" rx="1" fill="url(#g3)"/>
+                </svg>
             </div>
         </div>
 
         <!-- Вкладки фильтров -->
-        <div class="filter-tabs" id="filterTabs">
-            <!-- Фильтры подгрузятся JS -->
-        </div>
+        <div class="filter-tabs" id="filterTabs"></div>
 
         <!-- Дисплей таймера -->
         <div class="timer-box">
@@ -82,25 +111,34 @@
             <div class="days-label" id="statusLabel">дней осталось</div>
         </div>
 
-        <!-- Инфо выбранного фильтра -->
-        <div class="info-grid">
+        <!-- Сворачиваемый Блок информации -->
+        <div class="info-card-header">
+            <span class="info-title">Параметры системы</span>
+            <button class="btn-toggle" id="toggleBtn" onclick="toggleInfoBlock()">Свернуть ▲</button>
+        </div>
+        <div class="info-grid" id="infoGrid">
             <div class="info-item">Тип: <span id="infoType">--</span></div>
             <div class="info-item">Нагрузка: <span id="infoPeople">-- чел</span></div>
+            <div class="info-item">Вода: <span id="infoHardness">--</span></div>
             <div class="info-item">Картридж: <span id="infoBrand">--</span></div>
-            <div class="info-item">Базовый ресурс: <span id="infoBaseDays">-- дн</span></div>
         </div>
+
+        <!-- Динамическая кнопка покупки (появляется при износе) -->
+        <button class="btn btn-buy" id="btnBuyCartridge" onclick="openBuyLink()">🛒 Заказать новый картридж</button>
 
         <button class="btn btn-primary" onclick="openReplaceModal()">Заменил картридж сегодня</button>
         <button class="btn btn-secondary" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
-        <button class="btn btn-danger" style="margin-top: 15px; font-size: 11px; padding: 8px;" onclick="testExpireNow()">⚡ Тест: Имитировать 0 дней</button>
+        
+        <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
+        <button class="btn btn-danger-outline" style="border:none; color:#6e7d93;" onclick="testExpireNow()">⚡ Тест: Имитировать 0 дней</button>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- МОДАЛКА: Заменил картридж (с вводом цены) -->
+    <!-- МОДАЛКА: Замена (С функцией пропуска) -->
     <div class="modal" id="replaceModal">
         <div class="modal-content">
-            <h2>Фиксация замены</h2>
+            <h2>Замена картриджа</h2>
             <div class="form-group">
                 <label>Модель картриджа / Модель:</label>
                 <input type="text" id="repBrand" placeholder="например, Аквафор А5">
@@ -109,52 +147,66 @@
                 <label>Стоимость (руб):</label>
                 <input type="number" id="repCost" placeholder="450">
             </div>
-            <button class="btn btn-primary" onclick="confirmReplacement()">Сохранить и сбросить таймер</button>
-            <button class="btn btn-secondary" onclick="closeModals()">Отмена</button>
+            <button class="btn btn-primary" onclick="confirmReplacement(false)">Сохранить и сбросить таймер</button>
+            <button class="btn btn-secondary" style="margin-top:8px;" onclick="confirmReplacement(true)">Быстрая замена (Пропустить ввод)</button>
+            <button class="btn btn-secondary" style="border:none;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
 
-    <!-- МОДАЛКА: Добавить новый фильтр -->
+    <!-- МОДАЛКА: Добавить фильтр -->
     <div class="modal" id="addFilterModal">
         <div class="modal-content">
             <h2>Новый фильтр</h2>
             <div class="form-group">
-                <label>Название фильтра:</label>
+                <label>Название устройства:</label>
                 <input type="text" id="newFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
                 <label>Тип устройства:</label>
                 <select id="newFilterType">
-                    <option value="Кувшин">Кувшин</option>
-                    <option value="Проточный (1-3 ступени)">Проточный под раковину</option>
+                    <option value="Кувшин">Кувшин для воды</option>
+                    <option value="Проточный (под раковину)">Проточный под раковину</option>
                     <option value="Осмос (Мембрана)">Система Осмос</option>
-                    <option value="Фильтр для душа">Фильтр для душа / Ванной</option>
+                    <option value="Насадка на кран">Насадка на кран</option>
+                    <option value="Фильтр для душа">Фильтр для душа</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Паспортный ресурс (дней):</label>
                 <select id="newFilterBaseDays">
-                    <option value="30">30 дней</option>
-                    <option value="60">60 дней</option>
-                    <option value="90" selected>90 дней</option>
-                    <option value="180">180 дней</option>
+                    <option value="30">30 дней (1 мес)</option>
+                    <option value="60">60 дней (2 мес)</option>
+                    <option value="90" selected>90 дней (3 мес)</option>
+                    <option value="180">180 дней (6 мес)</option>
                     <option value="365">365 дней (1 год)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Качество/Жесткость воды:</label>
+                <select id="newFilterHardness">
+                    <option value="1">Мягкая / Нормальная (100% ресурса)</option>
+                    <option value="1.25">Жесткая (+25% износа)</option>
+                    <option value="1.5">Очень жесткая (+50% износа)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Количество пользователей:</label>
                 <select id="newFilterPeople">
-                    <option value="1">1 человек (100% ресурса)</option>
-                    <option value="2" selected>2 человека (75% ресурса)</option>
-                    <option value="3">3–4 человека (50% ресурса)</option>
+                    <option value="1">1 человек</option>
+                    <option value="2" selected>2 человека</option>
+                    <option value="3">3–4 человека</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Ссылка на покупку (Ozon / WB / Маркет):</label>
+                <input type="url" id="newFilterUrl" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="addNewFilter()">Создать фильтр</button>
             <button class="btn btn-secondary" onclick="closeModals()">Отмена</button>
         </div>
     </div>
 
-    <!-- МОДАЛКА: Добавить локацию -->
+    <!-- МОДАЛКА: Добавить объект -->
     <div class="modal" id="addLocationModal">
         <div class="modal-content">
             <h2>Новый объект / Дом</h2>
@@ -167,13 +219,15 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА: История замен и расходов -->
+    <!-- МОДАЛКА: Статистика и Эко-расчет -->
     <div class="modal" id="historyModal">
         <div class="modal-content">
-            <h2>История и Расходы</h2>
-            <div class="history-list" id="historyList">
-                <!-- История JS -->
+            <h2>Статистика и Расходы</h2>
+            <div class="eco-badge" id="ecoBadge">
+                🌱 <b>Эко-вклад:</b> Вы сберегли ~<span id="ecoBottles">0</span> пластиковых бутылок 1.5л.<br>
+                💰 <b>Экономия:</b> ~<span id="ecoMoney">0</span> ₽ по сравнению с бутилированной водой.
             </div>
+            <div class="history-list" id="historyList"></div>
             <div style="font-size: 13px; font-weight: 600; text-align: right; margin-bottom: 15px; color: #00f2fe;">
                 Всего потрачено: <span id="totalSpent">0</span> ₽
             </div>
@@ -182,17 +236,16 @@
     </div>
 
     <script>
-        // --- 1. СТРУКТУРА ДАННЫХ (DATABASE SCHEMA) ---
+        // БАЗА ДАННЫХ
         let defaultData = {
             currentLocationId: 'loc1',
             currentFilterId: 'f1',
             locations: [
-                { id: 'loc1', name: '🏠 Моя квартира' },
-                { id: 'loc2', name: '👵 Дом родителей' }
+                { id: 'loc1', name: 'Моя квартира' },
+                { id: 'loc2', name: 'Дом родителей' }
             ],
             filters: [
-                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, people: 2, lastDate: new Date().getTime(), brand: 'Аквафор' },
-                { id: 'f2', locationId: 'loc2', name: 'Проточный 3-ст', type: 'Проточный', baseDays: 180, people: 2, lastDate: new Date().getTime(), brand: 'Барьер' }
+                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, people: 2, hardness: 1, lastDate: new Date().getTime(), brand: 'Аквафор', buyUrl: '' }
             ],
             history: []
         };
@@ -204,11 +257,19 @@
             updateUI();
         }
 
-        // --- 2. АНИМАЦИЯ (АДАПТИВНЫЙ ЦВЕТ ВОЛН) ---
+        // 3D АНИМАЦИЯ С ПУЗЫРЬКАМИ (Адаптированная под вертикальные экраны)
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
-        let waveColor = 'rgba(0, 242, 254, 0.1)'; // Изначально голубой
+        let waveColor = 'rgba(0, 242, 254, 0.12)';
+        
+        // Массив пузырьков
+        const particles = Array.from({ length: 25 }, () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            r: Math.random() * 3 + 1,
+            s: Math.random() * 1 + 0.5
+        }));
 
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
@@ -216,35 +277,50 @@
 
         function drawWaves() {
             ctx.clearRect(0, 0, width, height);
-            ctx.beginPath();
-            ctx.fillStyle = waveColor;
-            ctx.moveTo(0, height);
-            for (let x = 0; x <= width; x += 10) {
-                let y = Math.sin((x * 0.002) + (step * 0.01)) * 80 + (height / 2);
-                ctx.lineTo(x, y);
+
+            // Пузырьки
+            ctx.fillStyle = 'rgba(0, 242, 254, 0.25)';
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                p.y -= p.s;
+                if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
+            });
+
+            // 3 Слоя Волн (Увеличенная высота для мобильных экранов)
+            const isMobile = width < 600;
+            const amp = isMobile ? 110 : 70; // На смартфонах волны выше!
+
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = waveColor;
+                ctx.moveTo(0, height);
+                for (let x = 0; x <= width; x += 12) {
+                    let y = Math.sin((x * 0.002) + (step * 0.01) + (i * 2)) * amp + (height * 0.55);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(width, height);
+                ctx.closePath();
+                ctx.fill();
             }
-            ctx.lineTo(width, height);
-            ctx.closePath();
-            ctx.fill();
+
             step++;
             requestAnimationFrame(drawWaves);
         }
         drawWaves();
 
-        // --- 3. ИНТЕРФЕЙС И ЛОГИКА ---
+        // ЛОГИКА
         function updateUI() {
-            // Заполнение селектора локаций
             const locSelect = document.getElementById('locationSelect');
             locSelect.innerHTML = appData.locations.map(l => `<option value="${l.id}" ${l.id === appData.currentLocationId ? 'selected' : ''}>${l.name}</option>`).join('');
 
-            // Заполнение вкладок фильтров для текущей локации
             const currentFilters = appData.filters.filter(f => f.locationId === appData.currentLocationId);
             const tabsContainer = document.getElementById('filterTabs');
             
             if (currentFilters.length === 0) {
-                tabsContainer.innerHTML = '<div style="font-size:12px; color:#6e7d93;">Нет фильтров в этой локации</div>';
+                tabsContainer.innerHTML = '<div style="font-size:12px; color:#6e7d93;">Нет устройств в этой локации</div>';
             } else {
-                // Если выбранный фильтр не принадлежит этой локации, выбираем первый
                 if (!currentFilters.find(f => f.id === appData.currentFilterId)) {
                     appData.currentFilterId = currentFilters[0].id;
                 }
@@ -253,12 +329,13 @@
                 ).join('');
             }
 
-            // Отображение данных выбранного фильтра
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
+            const btnBuy = document.getElementById('btnBuyCartridge');
+
             if (filter) {
-                // Расчет реальных дней с учетом людей
-                let mult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-                let realMaxDays = Math.round(filter.baseDays * mult);
+                let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
+                let hardnessMult = 1 / (filter.hardness || 1);
+                let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
 
                 const now = new Date().getTime();
                 const elapsedDays = Math.floor((now - filter.lastDate) / (1000 * 60 * 60 * 24));
@@ -267,39 +344,50 @@
                 document.getElementById('daysDisplay').innerText = daysLeft > 0 ? daysLeft : 0;
                 document.getElementById('infoType').innerText = filter.type;
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
+                document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жесткая' : (filter.hardness == 1.25 ? 'Жесткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
-                document.getElementById('infoBaseDays').innerText = filter.baseDays + ' дн';
 
-                // Смена цвета в зависимости от износа
                 const daysDisplay = document.getElementById('daysDisplay');
                 if (daysLeft <= 0) {
                     daysDisplay.style.color = '#ff4757';
-                    waveColor = 'rgba(255, 71, 87, 0.15)'; // Красный
+                    waveColor = 'rgba(255, 71, 87, 0.18)';
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
-                    scheduleNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}" истек!`);
+                    if (filter.buyUrl) btnBuy.style.display = 'block';
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
-                    waveColor = 'rgba(255, 170, 0, 0.12)'; // Желтый
+                    waveColor = 'rgba(255, 170, 0, 0.15)';
                     document.getElementById('statusLabel').innerText = 'Скоро замена!';
+                    if (filter.buyUrl) btnBuy.style.display = 'block';
                 } else {
                     daysDisplay.style.color = '#00f2fe';
-                    waveColor = 'rgba(0, 242, 254, 0.1)'; // Голубой
+                    waveColor = 'rgba(0, 242, 254, 0.12)';
                     document.getElementById('statusLabel').innerText = 'дней осталось';
+                    btnBuy.style.display = 'none';
                 }
             } else {
                 document.getElementById('daysDisplay').innerText = '--';
+                btnBuy.style.display = 'none';
             }
         }
 
-        function switchLocation() {
-            appData.currentLocationId = document.getElementById('locationSelect').value;
-            saveDB();
+        function toggleInfoBlock() {
+            const grid = document.getElementById('infoGrid');
+            const btn = document.getElementById('toggleBtn');
+            const daysDisplay = document.getElementById('daysDisplay');
+
+            if (grid.classList.contains('collapsed')) {
+                grid.classList.remove('collapsed');
+                btn.innerText = 'Свернуть ▲';
+                daysDisplay.classList.remove('large');
+            } else {
+                grid.classList.add('collapsed');
+                btn.innerText = 'Развернуть ▼';
+                daysDisplay.classList.add('large');
+            }
         }
 
-        function selectFilter(id) {
-            appData.currentFilterId = id;
-            saveDB();
-        }
+        function switchLocation() { appData.currentLocationId = document.getElementById('locationSelect').value; saveDB(); }
+        function selectFilter(id) { appData.currentFilterId = id; saveDB(); }
 
         function openReplaceModal() { document.getElementById('replaceModal').style.display = 'flex'; }
         function openAddFilterModal() { document.getElementById('addFilterModal').style.display = 'flex'; }
@@ -308,38 +396,46 @@
         function openHistoryModal() {
             const list = document.getElementById('historyList');
             let total = 0;
-            if (appData.history.length === 0) {
-                list.innerHTML = '<div style="color:#6e7d93; text-align:center;">История пуста</div>';
+            let replacementsCount = appData.history.length;
+
+            if (replacementsCount === 0) {
+                list.innerHTML = '<div style="color:#6e7d93; text-align:center;">История замен пуста</div>';
             } else {
                 list.innerHTML = appData.history.map(h => {
                     total += Number(h.cost || 0);
                     return `<div class="history-item">
-                        <div><b>${h.filterName}</b><br><small style="color:#6e7d93">${h.date}</small></div>
-                        <div style="color:#00f2fe;">${h.cost ? h.cost + ' ₽' : '-'}</div>
+                        <div><b>${h.filterName}</b><br><small style="color:#6e7d93">${h.date} ${h.note ? '• '+h.note : ''}</small></div>
+                        <div style="color:#00f2fe;">${h.cost ? h.cost + ' ₽' : '0 ₽'}</div>
                     </div>`;
                 }).join('');
             }
-            document.getElementById('totalSpent').innerText = total;
+
+            // Эко-расчет
+            const bottles = replacementsCount * 200; // Примерно 200 бутылок с 1 фильтра
+            const savedMoney = bottles * 45; // Считаем по 45 руб за бутылку 1.5л
+            document.getElementById('ecoBottles').innerText = bottles;
+            document.getElementById('ecoMoney').innerText = savedMoney.toLocaleString('ru-RU');
+            document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
+            
             document.getElementById('historyModal').style.display = 'flex';
         }
 
-        function closeModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
-        function confirmReplacement() {
+        function confirmReplacement(skipDetails) {
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
             if (filter) {
-                const brand = document.getElementById('repBrand').value || filter.brand;
-                const cost = document.getElementById('repCost').value || 0;
+                const brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
+                const cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
 
                 filter.lastDate = new Date().getTime();
-                filter.brand = brand;
+                if (!skipDetails && brand) filter.brand = brand;
 
                 appData.history.unshift({
                     filterName: filter.name,
                     date: new Date().toLocaleDateString('ru-RU'),
-                    cost: cost
+                    cost: cost,
+                    note: skipDetails ? 'Быстрая замена' : ''
                 });
 
                 closeModals();
@@ -349,10 +445,12 @@
         }
 
         function addNewFilter() {
-            const name = document.getElementById('newFilterName').value || 'Новый фильтр';
+            const name = document.getElementById('newFilterName').value || 'Фильтр';
             const type = document.getElementById('newFilterType').value;
             const baseDays = parseInt(document.getElementById('newFilterBaseDays').value);
+            const hardness = parseFloat(document.getElementById('newFilterHardness').value);
             const people = parseInt(document.getElementById('newFilterPeople').value);
+            const buyUrl = document.getElementById('newFilterUrl').value;
 
             const newId = 'f_' + Date.now();
             appData.filters.push({
@@ -361,27 +459,43 @@
                 name: name,
                 type: type,
                 baseDays: baseDays,
+                hardness: hardness,
                 people: people,
                 lastDate: new Date().getTime(),
-                brand: ''
+                brand: '',
+                buyUrl: buyUrl
             });
 
             appData.currentFilterId = newId;
             closeModals();
             saveDB();
-            showToast("Фильтр добавлен!");
+            showToast("Фильтр создан!");
         }
 
         function addNewLocation() {
             const name = document.getElementById('newLocName').value;
             if (name) {
                 const newId = 'loc_' + Date.now();
-                appData.locations.push({ id: newId, name: '📍 ' + name });
+                appData.locations.push({ id: newId, name: name });
                 appData.currentLocationId = newId;
                 closeModals();
                 saveDB();
-                showToast("Локация создана!");
+                showToast("Локация добавлена!");
             }
+        }
+
+        function deleteCurrentFilter() {
+            const filter = appData.filters.find(f => f.id === appData.currentFilterId);
+            if (filter && confirm(`Удалить устройство "${filter.name}"?`)) {
+                appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
+                saveDB();
+                showToast("Устройство удалено");
+            }
+        }
+
+        function openBuyLink() {
+            const filter = appData.filters.find(f => f.id === appData.currentFilterId);
+            if (filter && filter.buyUrl) window.open(filter.buyUrl, '_blank');
         }
 
         function testExpireNow() {
@@ -397,17 +511,6 @@
             toast.innerText = text;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        // Интеграция системных уведомлений
-        function scheduleNativeNotification(title, body) {
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body: body, icon: 'icon.png' });
-            }
-        }
-
-        if ("Notification" in window && Notification.permission !== "granted") {
-            Notification.requestPermission();
         }
 
         updateUI();
