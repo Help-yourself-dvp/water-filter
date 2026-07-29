@@ -24,14 +24,14 @@ jobs:
       with:
         node-version: '20'
 
-    - name: 4. Подготовка файлов приложения
+    - name: 4. Подготовка веб-файлов
       run: |
         mkdir -p www
         cp index.html www/
         cp manifest.json www/ 2>/dev/null || true
         cp icon.png www/ 2>/dev/null || true
 
-    - name: 5. Установка Capacitor и плагина Уведомлений
+    - name: 5. Установка Capacitor
       run: |
         npm init -y
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7
@@ -40,16 +40,22 @@ jobs:
       run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
+
+        # Установка Target SDK 34 (для Android 14/15/16)
+        sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
+        sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
+
+        # Добавление системных разрешений на Уведомления в AndroidManifest.xml
+        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
+
         npx cap sync android
 
-    - name: 7. Замена Иконок и очистка XML дубликатов
+    - name: 7. Настройка Иконок (И в шторке, и в настройках Honor)
       run: |
-        # Удаляем конфликтную XML-папку, вызвавшую дублирование ресурсов
-        rm -rf android/app/src/main/res/mipmap-anydpi-v26
-        
         if [ -f "icon.png" ]; then
+          # Заменяем растровые иконки во всех mipmap-папках, НЕ трогая папку v26
           for dir in android/app/src/main/res/mipmap-*; do
-            if [ -d "$dir" ]; then
+            if [ -d "$dir" ] && [ "$dir" != "android/app/src/main/res/mipmap-anydpi-v26" ]; then
               cp icon.png "$dir/ic_launcher.png"
               cp icon.png "$dir/ic_launcher_round.png"
               cp icon.png "$dir/ic_launcher_foreground.png"
