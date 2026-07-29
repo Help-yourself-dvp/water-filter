@@ -1,0 +1,6 @@
+{
+  "appId": "com.aquacontrol.pro",
+  "appName": "AquaControl Pro",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}
