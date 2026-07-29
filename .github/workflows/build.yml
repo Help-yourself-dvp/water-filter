@@ -1,4 +1,4 @@
-name: Build Native Signed Android APK
+name: Build Native Android APK
 
 on:
   push:
@@ -19,61 +19,58 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 3. Настройка Android SDK 34
+    - name: 3. Настройка Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: 4. Настройка Node.js 20
+    - name: 4. Настройка Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
 
-    - name: 5. Подготовка папки www
+    - name: 5. Подготовка веб-файлов
       run: |
         mkdir -p www
         cp index.html www/
-        cp manifest.json www/
-        cp icon.png www/
+        cp manifest.json www/ 2>/dev/null || true
+        cp icon.png www/ 2>/dev/null || true
 
-    - name: 6. Установка Capacitor и генератора Иконок
+    - name: 6. Установка Capacitor
       run: |
         npm init -y
-        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7 @capacitor/assets@3.0.5
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7
 
-    - name: 7. Инициализация и Настройка Android
+    - name: 7. Инициализация платформы Android
       run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
-        
-        # Генерация нативных HD-иконок для Android из icon.png
-        npx cap-assets generate --android
 
-        # Принудительная установка Target SDK 34 в Gradle
+        # Установка Target SDK 34 (для Android 14/15/16)
         sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
         sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
 
-        # Добавление разрешения на Уведомления в AndroidManifest.xml
-        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
+        # Добавление системных разрешений на Уведомления в AndroidManifest.xml
+        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
 
         npx cap sync android
 
-    - name: 8. Создание Цифрового Сертификата Подписи (Keystore)
+    - name: 8. Замена иконок приложения на капельку воды
       run: |
-        keytool -genkey -v -keystore release.keystore -alias aquakey -keyalg RSA -keysize 2048 -validity 10000 -storepass aquapass123 -keypass aquapass123 -dname "CN=AquaControl, OU=Dev, O=Aqua, L=City, S=State, C=RU"
+        for dir in android/app/src/main/res/mipmap-*; do
+          if [ -d "$dir" ]; then
+            cp icon.png "$dir/ic_launcher.png"
+            cp icon.png "$dir/ic_launcher_round.png"
+            cp icon.png "$dir/ic_launcher_foreground.png"
+          fi
+        done
 
-    - name: 9. Сборка и Подпись APK
+    - name: 9. Компиляция готового APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleRelease
-        
-        # Подпись файла ключом
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../release.keystore -storepass aquapass123 app/build/outputs/apk/release/app-release-unsigned.apk aquakey
-        
-        # Переименование в итоговый подписанный файл
-        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/AquaControlPro-Signed.apk
+        ./gradlew assembleDebug
 
-    - name: 10. Выгрузка ГОТОВОГО Подписанного APK
+    - name: 10. Выгрузка файла APK
       uses: actions/upload-artifact@v4
       with:
-        name: AquaControlPro-Signed-APK
-        path: android/app/build/outputs/apk/release/AquaControlPro-Signed.apk
+        name: AquaControlPro-Native
+        path: android/app/build/outputs/apk/debug/app-debug.apk
