@@ -19,7 +19,6 @@
         .icon-home-3d { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #29b6f6, #0052d4 60%, #002171); box-shadow: 0 6px 15px rgba(0, 114, 255, 0.5), inset 0 2px 4px rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3); }
         .icon-home-3d svg { width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
         
-        /* КРАСИВАЯ КНОПКА ВЫБОРА ЛОКАЦИИ ВМЕСТО SELECT */
         .location-btn-picker { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 10px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
         
         .btn-chart-icon { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -81,7 +80,6 @@
                 <div class="icon-home-3d" onclick="openAddLocationModal()" title="Добавить объект">
                     <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 </div>
-                <!-- СТИЛЬНАЯ КНОПКА ВЫБОРА ЛОКАЦИИ -->
                 <div class="location-btn-picker" onclick="openLocationSelectModal()">
                     <span id="currentLocName">Моя квартира</span> ▼
                 </div>
@@ -135,7 +133,7 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- МОДАЛКА ВЫБОРА ЛОКАЦИИ (Вместо стандартного выпадающего списка) -->
+    <!-- МОДАЛКА ВЫБОРА ЛОКАЦИИ -->
     <div class="modal" id="locSelectModal">
         <div class="modal-content">
             <h2>Выберите объект</h2>
@@ -355,6 +353,9 @@
                     waveColor = 'rgba(255, 71, 87, 0.18)';
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
                     if (filter.buyUrl) btnBuy.style.display = 'block';
+                    
+                    // ВЫЗОВ НА ТИВНОГО УВЕДОМЛЕНИЯ
+                    triggerNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}" истек!`);
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255, 170, 0, 0.15)';
@@ -369,6 +370,26 @@
             } else {
                 document.getElementById('daysDisplay').innerText = '--';
                 btnBuy.style.display = 'none';
+            }
+        }
+
+        // НА ТИВНЫЙ МОСТ УВЕДОМЛЕНИЙ ДЛЯ ANDROID (CAPACITOR)
+        async function triggerNativeNotification(title, bodyText) {
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                try {
+                    const ln = window.Capacitor.Plugins.LocalNotifications;
+                    await ln.requestPermissions();
+                    await ln.schedule({
+                        notifications: [{
+                            title: title,
+                            body: bodyText,
+                            id: Math.floor(Math.random() * 10000) + 1,
+                            schedule: { at: new Date(Date.now() + 500) }
+                        }]
+                    });
+                } catch(e) { console.log('Capacitor Push err:', e); }
+            } else if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: bodyText });
             }
         }
 
