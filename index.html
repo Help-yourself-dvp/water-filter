@@ -108,7 +108,6 @@
             </div>
             
             <div class="header-actions">
-                <!-- Компактная корзина: ссылка магазина для текущего фильтра -->
                 <div class="btn-header-icon cart-empty" id="btnCartIcon" onclick="onCartIconClick()" title="Магазин картриджа" style="display:none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -182,7 +181,6 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <h2 id="confirmTitle">Подтверждение</h2>
@@ -192,7 +190,6 @@
         </div>
     </div>
 
-    <!-- ВЫБОР ОБЪЕКТА -->
     <div class="modal" id="locSelectModal">
         <div class="modal-content">
             <h2>Выберите объект</h2>
@@ -201,7 +198,6 @@
         </div>
     </div>
 
-    <!-- ПЕРЕИМЕНОВАНИЕ ОБЪЕКТА -->
     <div class="modal" id="renameLocationModal">
         <div class="modal-content">
             <h2>Переименовать объект</h2>
@@ -215,7 +211,6 @@
         </div>
     </div>
 
-    <!-- РЕДАКТИРОВАНИЕ ФИЛЬТРА -->
     <div class="modal" id="editFilterModal">
         <div class="modal-content">
             <h2>Изменить фильтр</h2>
@@ -233,7 +228,6 @@
         </div>
     </div>
 
-    <!-- НЕТ ССЫЛКИ — ПРЕДЛОЖЕНИЕ ДОБАВИТЬ -->
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
             <h2>Ссылка не указана</h2>
@@ -387,7 +381,6 @@
             closeModals();
         };
 
-        // CANVAS ANIMATION ENGINE
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -452,6 +445,40 @@
             return appData.filters.find(f => f.id === appData.currentFilterId) || null;
         }
 
+        function normalizeUrl(url) {
+            const u = (url || '').trim();
+            if (!u) return '';
+            if (!/^https?:\/\//i.test(u)) return 'https://' + u;
+            return u;
+        }
+
+        async function openExternalUrl(url) {
+            if (!url) return;
+            const target = normalizeUrl(url);
+            if (!target) return;
+
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                    await window.Capacitor.Plugins.Browser.open({ url: target });
+                    return;
+                }
+            } catch (e) {
+                console.warn('Browser plugin failed', e);
+            }
+
+            try {
+                const a = document.createElement('a');
+                a.href = target;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e2) {
+                window.location.href = target;
+            }
+        }
+
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
@@ -510,10 +537,9 @@
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жесткая' : (filter.hardness == 1.25 ? 'Жесткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
 
-                // Компактная корзина всегда видна, если есть активный фильтр
                 btnCart.style.display = 'flex';
                 btnEditFilter.style.display = 'block';
-                if (filter.buyUrl) {
+                if (filter.buyUrl && String(filter.buyUrl).trim()) {
                     btnCart.classList.add('cart-active');
                     btnCart.classList.remove('cart-empty');
                     cartDot.style.display = 'block';
@@ -703,7 +729,6 @@
             pendingRenameLocationId = locId;
             document.getElementById('renameLocContext').innerText = `Сейчас: ${loc.name}`;
             document.getElementById('renameLocInput').value = loc.name;
-            // Не закрываем через closeModals(), чтобы не сбросить другие стейты — просто показываем поверх
             document.getElementById('renameLocationModal').style.display = 'flex';
         }
 
@@ -749,7 +774,7 @@
             const filter = getCurrentFilter();
             if (!filter) return;
             const name = (document.getElementById('editFilterName').value || '').trim();
-            const buyUrl = (document.getElementById('editFilterUrl').value || '').trim();
+            const buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
             if (!name) {
                 showToast('Введите название фильтра');
                 return;
@@ -765,12 +790,12 @@
             const filter = getCurrentFilter();
             if (!filter) return;
 
-            if (filter.buyUrl) {
-                window.open(filter.buyUrl, '_blank');
+            if (filter.buyUrl && String(filter.buyUrl).trim()) {
+                showToast('Открываем магазин…');
+                openExternalUrl(filter.buyUrl);
                 return;
             }
 
-            // Ссылки нет — предлагаем добавить
             document.getElementById('noLinkUrlInput').value = '';
             document.getElementById('noLinkModal').style.display = 'flex';
         }
@@ -778,7 +803,7 @@
         function saveBuyUrlFromNoLinkModal() {
             const filter = getCurrentFilter();
             if (!filter) return;
-            const buyUrl = (document.getElementById('noLinkUrlInput').value || '').trim();
+            const buyUrl = normalizeUrl(document.getElementById('noLinkUrlInput').value);
             if (!buyUrl) {
                 showToast('Вставьте ссылку на магазин');
                 return;
@@ -848,7 +873,7 @@
             const baseDays = parseInt(getSelectedChipValue('chipBaseDays') || '90');
             const hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
             const people = parseInt(getSelectedChipValue('chipPeople') || '2');
-            const buyUrl = document.getElementById('newFilterUrl').value;
+            const buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
 
             const newId = 'f_' + Date.now();
             appData.filters.push({
