@@ -133,7 +133,7 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- МОДАЛКА ВЫБОРА ЛОКАЦИИ -->
+    <!-- МОДАЛКИ -->
     <div class="modal" id="locSelectModal">
         <div class="modal-content">
             <h2>Выберите объект</h2>
@@ -142,7 +142,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ -->
     <div class="modal" id="replaceModal">
         <div class="modal-content">
             <h2>Замена картриджа</h2>
@@ -354,8 +353,10 @@
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
                     if (filter.buyUrl) btnBuy.style.display = 'block';
                     
-                    // ВЫЗОВ НА ТИВНОГО УВЕДОМЛЕНИЯ
-                    triggerNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}" истек!`);
+                    // ПОДСТАВЛЯЕМ НАЗВАНИЕ ДОМА В УВЕДОМЛЕНИЕ
+                    const locObj = appData.locations.find(l => l.id === filter.locationId);
+                    const locNameText = locObj ? ` [${locObj.name}]` : '';
+                    triggerNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}"${locNameText} истек!`);
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255, 170, 0, 0.15)';
@@ -373,7 +374,7 @@
             }
         }
 
-        // НА ТИВНЫЙ МОСТ УВЕДОМЛЕНИЙ ДЛЯ ANDROID (CAPACITOR)
+        // НА ТИВНЫЙ МОСТ УВЕДОМЛЕНИЙ CAPACITOR
         async function triggerNativeNotification(title, bodyText) {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 try {
@@ -384,7 +385,9 @@
                             title: title,
                             body: bodyText,
                             id: Math.floor(Math.random() * 10000) + 1,
-                            schedule: { at: new Date(Date.now() + 500) }
+                            schedule: { at: new Date(Date.now() + 500) },
+                            smallIcon: "ic_launcher",
+                            iconColor: "#00F2FE"
                         }]
                     });
                 } catch(e) { console.log('Capacitor Push err:', e); }
