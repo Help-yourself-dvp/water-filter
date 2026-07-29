@@ -42,8 +42,12 @@ jobs:
         npx cap add android
         npx cap sync android
 
-    - name: 7. Замена иконок на капельку воды
+    - name: 7. Замена иконок (Удаление конфликтов XML)
       run: |
+        # Удаляем адаптивные XML иконки, чтобы не было дубликатов
+        rm -rf android/app/src/main/res/mipmap-anydpi-v26
+        
+        # Копируем нашу капельку во все растровые папки
         if [ -f "icon.png" ]; then
           for dir in android/app/src/main/res/mipmap-*; do
             if [ -d "$dir" ]; then
