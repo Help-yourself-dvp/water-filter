@@ -41,33 +41,29 @@ jobs:
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
 
-        # Установка Target SDK 34 (Android 14/15/16)
+        # Настройка Target SDK 34 (Android 14/15/16)
         sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
         sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
 
-        # Авто-добавление разрешений
+        # Добавление системных разрешений
         sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
 
         npx cap sync android
 
-    - name: 7. Замена всех иконок (И в настройках Honor, и в шторке)
+    - name: 7. Безопасная подготовка адаптивных иконок и шторки
       run: |
         if [ -f "icon.png" ]; then
-          # 1. Растровые иконки рабочего стола и меню Honor
+          # Замена классических растровых иконок
           for dir in android/app/src/main/res/mipmap-*; do
-            if [ -d "$dir" ]; then
+            if [ -d "$dir" ] && [ "$dir" != "android/app/src/main/res/mipmap-anydpi-v26" ]; then
               cp icon.png "$dir/ic_launcher.png"
               cp icon.png "$dir/ic_launcher_round.png"
               cp icon.png "$dir/ic_launcher_foreground.png"
             fi
           done
 
-          # 2. Перезапись адаптивных иконок (Раздел "О приложении")
+          # Иконка для шторки уведомлений (Status Bar Icon)
           mkdir -p android/app/src/main/res/drawable
-          cp icon.png android/app/src/main/res/drawable/ic_launcher_foreground.png
-          cp icon.png android/app/src/main/res/drawable/ic_launcher_background.png
-
-          # 3. Иконка шторки уведомлений (Status Bar)
           cp icon.png android/app/src/main/res/drawable/ic_stat_icon.png
         fi
 
