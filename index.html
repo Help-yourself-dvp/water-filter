@@ -59,8 +59,9 @@
         .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
         .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
         .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
-        .chip-btn.chip-test { border-color: rgba(255, 170, 0, 0.35); color: #ffaa00; }
-        .chip-btn.chip-test.selected { background: rgba(255, 170, 0, 0.18); border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.25); }
+        .chip-btn.chip-test { border-color: rgba(255, 170, 0, 0.5); color: #ffaa00; background: rgba(255, 170, 0, 0.08); }
+        .chip-btn.chip-test.selected { background: rgba(255, 170, 0, 0.22); border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.3); }
+        .hint-test { font-size: 10px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
         .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
@@ -72,7 +73,6 @@
         .loc-icon-btn { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #8f9cae; }
         .loc-icon-btn.edit { color: #00f2fe; border-color: rgba(0,242,254,0.25); background: rgba(0,242,254,0.08); }
         .loc-icon-btn.delete { color: #ff4757; border-color: rgba(255,71,87,0.25); background: rgba(255,71,87,0.1); }
-        .hint-test { font-size: 10px; color: #ffaa00; margin-top: 4px; line-height: 1.3; }
     </style>
 </head>
 <body>
@@ -140,18 +140,17 @@
         <div class="dev-panel-wrapper">
             <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
             <div class="dev-panel-content" id="devPanel">
+                <p class="hint-test" style="margin-bottom:10px;">Авто-пуши: создайте или измените фильтр → ресурс <b>1 мин (тест)</b> → сверните приложение → подождите ~1–2 мин.</p>
                 <div class="form-group">
-                    <label style="color:#ffaa00;">Разовый тест пуша (не авто-логика):</label>
+                    <label style="color:#ffaa00;">Разовый тест (обход авто-логики):</label>
                     <div class="chip-group" id="testTimerChips">
                         <div class="chip-btn selected" data-value="0" onclick="selectChip('testTimerChips', this)">0 сек</div>
                         <div class="chip-btn" data-value="10s" onclick="selectChip('testTimerChips', this)">10 сек</div>
                         <div class="chip-btn" data-value="10m" onclick="selectChip('testTimerChips', this)">10 мин</div>
-                        <div class="chip-btn" data-value="1h" onclick="selectChip('testTimerChips', this)">1 час</div>
                     </div>
                 </div>
                 <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Разовый тест</button>
                 <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Пересоздать авто-пуши</button>
-                <p class="hint-test">Авто-пуши проверяйте так: создайте фильтр с ресурсом «1 мин (тест)», сверните приложение и подождите.</p>
             </div>
         </div>
     </div>
@@ -188,6 +187,7 @@
         </div>
     </div>
 
+    <!-- РЕДАКТИРОВАНИЕ: ресурс со ВСЕМИ чипами, включая тест -->
     <div class="modal" id="editFilterModal">
         <div class="modal-content">
             <h2>Изменить фильтр</h2>
@@ -198,13 +198,23 @@
             </div>
             <div class="form-group">
                 <label>Паспортный ресурс:</label>
-                <div class="chip-group" id="editChipResource"></div>
-                <p class="hint-test">Оранжевые чипы — только для проверки авто-пушей. Потом верните 30–90 дней.</p>
+                <div class="chip-group" id="editChipResource">
+                    <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('editChipResource', this)">1 мин (тест)</div>
+                    <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('editChipResource', this)">5 мин (тест)</div>
+                    <div class="chip-btn chip-test" data-value="t3600" onclick="selectChip('editChipResource', this)">1 час (тест)</div>
+                    <div class="chip-btn" data-value="d1" onclick="selectChip('editChipResource', this)">1 день</div>
+                    <div class="chip-btn" data-value="d30" onclick="selectChip('editChipResource', this)">30 дн</div>
+                    <div class="chip-btn" data-value="d60" onclick="selectChip('editChipResource', this)">60 дн</div>
+                    <div class="chip-btn selected" data-value="d90" onclick="selectChip('editChipResource', this)">90 дн</div>
+                    <div class="chip-btn" data-value="d180" onclick="selectChip('editChipResource', this)">180 дн</div>
+                    <div class="chip-btn" data-value="d365" onclick="selectChip('editChipResource', this)">1 год</div>
+                </div>
+                <p class="hint-test">Оранжевые = проверка авто-уведомлений. После теста верните 30–90 дней.</p>
             </div>
             <div class="form-group">
                 <label>Жесткость воды:</label>
                 <div class="chip-group" id="editChipHardness">
-                    <div class="chip-btn" data-value="1" onclick="selectChip('editChipHardness', this)">Мягкая</div>
+                    <div class="chip-btn selected" data-value="1" onclick="selectChip('editChipHardness', this)">Мягкая</div>
                     <div class="chip-btn" data-value="1.25" onclick="selectChip('editChipHardness', this)">Жесткая</div>
                     <div class="chip-btn" data-value="1.5" onclick="selectChip('editChipHardness', this)">Оч. жесткая</div>
                 </div>
@@ -213,7 +223,7 @@
                 <label>Количество чел.:</label>
                 <div class="chip-group" id="editChipPeople">
                     <div class="chip-btn" data-value="1" onclick="selectChip('editChipPeople', this)">1 чел</div>
-                    <div class="chip-btn" data-value="2" onclick="selectChip('editChipPeople', this)">2 чел</div>
+                    <div class="chip-btn selected" data-value="2" onclick="selectChip('editChipPeople', this)">2 чел</div>
                     <div class="chip-btn" data-value="3" onclick="selectChip('editChipPeople', this)">3–4 чел</div>
                 </div>
             </div>
@@ -231,7 +241,7 @@
             <h2>Ссылка не указана</h2>
             <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Добавьте ссылку на магазин для этого фильтра.</p>
             <div class="form-group">
-                <label>Ссылка на покупку:</label>
+                <label>Ссылка:</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="saveBuyUrlFromNoLinkModal()">Сохранить ссылку</button>
@@ -252,12 +262,13 @@
                 <input type="number" id="repCost" placeholder="450">
             </div>
             <button class="btn btn-primary" onclick="confirmReplacement(false)">Сохранить и сбросить таймер</button>
-            <button class="btn btn-warning" onclick="postponeCurrentFilter(15)">Отложить замену на 15 дней</button>
+            <button class="btn btn-warning" onclick="postponeCurrentFilter(15)">Отложить на 15 дней</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">Быстрая замена</button>
             <button class="btn btn-secondary-small" style="width:100%; border:none;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
 
+    <!-- НОВЫЙ ФИЛЬТР: те же тестовые чипы в HTML -->
     <div class="modal" id="addFilterModal">
         <div class="modal-content">
             <h2>Новый фильтр</h2>
@@ -276,8 +287,18 @@
             </div>
             <div class="form-group">
                 <label>Паспортный ресурс:</label>
-                <div class="chip-group" id="chipResource"></div>
-                <p class="hint-test">Для проверки уведомлений выберите «1 мин (тест)», сверните приложение и подождите ~1 минуту.</p>
+                <div class="chip-group" id="chipResource">
+                    <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('chipResource', this)">1 мин (тест)</div>
+                    <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('chipResource', this)">5 мин (тест)</div>
+                    <div class="chip-btn chip-test" data-value="t3600" onclick="selectChip('chipResource', this)">1 час (тест)</div>
+                    <div class="chip-btn" data-value="d1" onclick="selectChip('chipResource', this)">1 день</div>
+                    <div class="chip-btn" data-value="d30" onclick="selectChip('chipResource', this)">30 дн</div>
+                    <div class="chip-btn" data-value="d60" onclick="selectChip('chipResource', this)">60 дн</div>
+                    <div class="chip-btn selected" data-value="d90" onclick="selectChip('chipResource', this)">90 дн</div>
+                    <div class="chip-btn" data-value="d180" onclick="selectChip('chipResource', this)">180 дн</div>
+                    <div class="chip-btn" data-value="d365" onclick="selectChip('chipResource', this)">1 год</div>
+                </div>
+                <p class="hint-test">Чтобы проверить авто-пуш: выберите «1 мин (тест)», создайте фильтр, сверните приложение на 1–2 минуты.</p>
             </div>
             <div class="form-group">
                 <label>Жесткость воды:</label>
@@ -325,28 +346,15 @@
             </div>
             <div class="history-list" id="historyList"></div>
             <div style="font-size: 13px; font-weight: 600; text-align: right; margin-bottom: 15px; color: #00f2fe;">
-                Всего потрачено: <span id="totalSpent">0</span> ₽
+                Всего: <span id="totalSpent">0</span> ₽
             </div>
             <button class="btn btn-secondary-small" style="width:100%;" onclick="closeModals()">Закрыть</button>
         </div>
     </div>
 
     <script>
-        var MS_DAY = 1000 * 60 * 60 * 24;
+        var MS_DAY = 86400000;
         var NOTIF_CHANNEL = 'aqua_high_priority';
-
-        /* Ресурсы: value + optional cycleMs for short tests */
-        var RESOURCE_OPTIONS = [
-            { value: 't60', label: '1 мин (тест)', cycleMs: 60 * 1000, test: true },
-            { value: 't300', label: '5 мин (тест)', cycleMs: 5 * 60 * 1000, test: true },
-            { value: 't3600', label: '1 час (тест)', cycleMs: 60 * 60 * 1000, test: true },
-            { value: 'd1', label: '1 день', baseDays: 1, test: false },
-            { value: 'd30', label: '30 дн', baseDays: 30, test: false },
-            { value: 'd60', label: '60 дн', baseDays: 60, test: false },
-            { value: 'd90', label: '90 дн', baseDays: 90, test: false },
-            { value: 'd180', label: '180 дн', baseDays: 180, test: false },
-            { value: 'd365', label: '1 год', baseDays: 365, test: false }
-        ];
 
         var defaultData = {
             currentLocationId: 'loc1',
@@ -403,16 +411,16 @@
             var amp = width < 600 ? 90 : 65;
             for (var i = 0; i < 3; i++) {
                 ctx.beginPath(); ctx.fillStyle = waveColor; ctx.moveTo(0, height);
-                for (var x = 0; x <= width; x += 10) ctx.lineTo(x, Math.sin((x * 0.002) + (step * 0.012) + (i * 2.2)) * amp + height * 0.58);
+                for (var x = 0; x <= width; x += 10) ctx.lineTo(x, Math.sin(x * 0.002 + step * 0.012 + i * 2.2) * amp + height * 0.58);
                 ctx.lineTo(width, height); ctx.closePath(); ctx.fill();
             }
             step++; requestAnimationFrame(drawWaves);
         }
         drawWaves();
 
-        function selectChip(groupId, element) {
+        function selectChip(groupId, el) {
             document.querySelectorAll('#' + groupId + ' .chip-btn').forEach(function (b) { b.classList.remove('selected'); });
-            element.classList.add('selected');
+            el.classList.add('selected');
         }
         function getSelectedChipValue(groupId) {
             var s = document.querySelector('#' + groupId + ' .chip-btn.selected');
@@ -432,65 +440,53 @@
             }
         }
 
-        function fillResourceChips(containerId, selectedValue, defaultValue) {
-            var box = document.getElementById(containerId);
-            box.innerHTML = RESOURCE_OPTIONS.map(function (opt) {
-                var cls = 'chip-btn' + (opt.test ? ' chip-test' : '');
-                return '<div class="' + cls + '" data-value="' + opt.value + '" onclick="selectChip(\'' + containerId + '\', this)">' + opt.label + '</div>';
-            }).join('');
-            setChipValue(containerId, selectedValue || defaultValue || 'd90');
+        function parseResourceChip(value) {
+            if (value === 't60') return { cycleMs: 60000, baseDays: 0 };
+            if (value === 't300') return { cycleMs: 300000, baseDays: 0 };
+            if (value === 't3600') return { cycleMs: 3600000, baseDays: 0 };
+            if (value === 'd1') return { cycleMs: null, baseDays: 1 };
+            if (value === 'd30') return { cycleMs: null, baseDays: 30 };
+            if (value === 'd60') return { cycleMs: null, baseDays: 60 };
+            if (value === 'd180') return { cycleMs: null, baseDays: 180 };
+            if (value === 'd365') return { cycleMs: null, baseDays: 365 };
+            return { cycleMs: null, baseDays: 90 };
         }
 
-        function resourceFromChip(value) {
-            for (var i = 0; i < RESOURCE_OPTIONS.length; i++) {
-                if (RESOURCE_OPTIONS[i].value === value) return RESOURCE_OPTIONS[i];
-            }
-            return RESOURCE_OPTIONS[6]; /* 90d */
-        }
-
-        function resourceChipValueFromFilter(filter) {
-            if (filter.cycleMs) {
-                for (var i = 0; i < RESOURCE_OPTIONS.length; i++) {
-                    if (RESOURCE_OPTIONS[i].cycleMs === filter.cycleMs) return RESOURCE_OPTIONS[i].value;
-                }
-                return 't60';
-            }
+        function resourceChipFromFilter(filter) {
+            if (filter.cycleMs === 60000) return 't60';
+            if (filter.cycleMs === 300000) return 't300';
+            if (filter.cycleMs === 3600000) return 't3600';
+            if (filter.cycleMs && filter.cycleMs > 0) return 't60';
             var d = Number(filter.baseDays) || 90;
-            for (var j = 0; j < RESOURCE_OPTIONS.length; j++) {
-                if (!RESOURCE_OPTIONS[j].test && RESOURCE_OPTIONS[j].baseDays === d) return RESOURCE_OPTIONS[j].value;
-            }
+            if (d === 1) return 'd1';
+            if (d === 30) return 'd30';
+            if (d === 60) return 'd60';
+            if (d === 180) return 'd180';
+            if (d === 365) return 'd365';
             return 'd90';
         }
 
-        function applyResourceToFilter(filter, chipValue) {
-            var opt = resourceFromChip(chipValue);
-            if (opt.cycleMs) {
-                filter.cycleMs = opt.cycleMs;
-                filter.baseDays = 0;
-            } else {
-                filter.cycleMs = null;
-                filter.baseDays = opt.baseDays;
-            }
+        function applyResourceChip(filter, chipValue) {
+            var r = parseResourceChip(chipValue);
+            filter.cycleMs = r.cycleMs;
+            filter.baseDays = r.baseDays;
         }
 
         function getCurrentFilter() {
             return appData.filters.find(function (f) { return f.id === appData.currentFilterId; }) || null;
         }
-        function getPeopleMult(people) {
-            return people == 1 ? 1 : (people == 2 ? 0.75 : 0.5);
-        }
+        function peopleMult(p) { return p == 1 ? 1 : (p == 2 ? 0.75 : 0.5); }
 
         function getFilterTiming(filter) {
-            var resourceMs;
             var isTest = !!(filter.cycleMs && filter.cycleMs > 0);
+            var resourceMs;
             if (isTest) {
                 resourceMs = filter.cycleMs;
             } else {
-                var days = Math.round((filter.baseDays || 90) * getPeopleMult(filter.people) * (1 / (filter.hardness || 1)));
-                resourceMs = days * MS_DAY;
+                var days = Math.round((filter.baseDays || 90) * peopleMult(filter.people) * (1 / (filter.hardness || 1)));
+                resourceMs = Math.max(days, 1) * MS_DAY;
             }
             var expiryMs = Number(filter.lastDate) + resourceMs;
-            /* Обычный фильтр: повтор +7 дней. Тестовый: повтор ещё через такой же короткий цикл */
             var followUpMs = expiryMs + (isTest ? resourceMs : 7 * MS_DAY);
             var leftMs = expiryMs - Date.now();
             return {
@@ -500,7 +496,8 @@
                 followUpMs: followUpMs,
                 leftMs: leftMs,
                 daysLeft: Math.ceil(leftMs / MS_DAY),
-                minutesLeft: Math.ceil(leftMs / 60000)
+                minutesLeft: Math.ceil(leftMs / 60000),
+                secondsLeft: Math.ceil(leftMs / 1000)
             };
         }
 
@@ -510,7 +507,6 @@
             if (!/^https?:\/\//i.test(u)) return 'https://' + u;
             return u;
         }
-
         async function openExternalUrl(url) {
             var target = normalizeUrl(url);
             if (!target) return;
@@ -527,45 +523,41 @@
             } catch (e2) { window.location.href = target; }
         }
 
-        function getLocalNotifications() {
+        function getLN() {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 return window.Capacitor.Plugins.LocalNotifications;
             }
             return null;
         }
-
         function notifId(filterId, kind) {
-            var s = String(filterId) + '|' + String(kind);
+            var s = String(filterId) + '|' + kind;
             var h = 2166136261;
             for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
             var id = (h >>> 0) % 2000000000;
             return id === 0 ? 1 : id;
         }
-
-        async function ensureNotifChannel(ln) {
+        async function ensureChannel(ln) {
             await ln.createChannel({
-                id: NOTIF_CHANNEL,
-                name: 'AquaControl Напоминания',
+                id: NOTIF_CHANNEL, name: 'AquaControl Напоминания',
                 description: 'Авто-напоминания о замене фильтра',
                 importance: 5, visibility: 1, sound: 'default', vibrates: true
             });
         }
-
-        async function cancelAllPendingNotifications(ln) {
+        async function cancelAllPending(ln) {
             try {
-                var pending = await ln.getPending();
-                if (pending && pending.notifications && pending.notifications.length) {
-                    await ln.cancel({ notifications: pending.notifications.map(function (n) { return { id: n.id }; }) });
+                var p = await ln.getPending();
+                if (p && p.notifications && p.notifications.length) {
+                    await ln.cancel({ notifications: p.notifications.map(function (n) { return { id: n.id }; }) });
                 }
             } catch (e) {}
         }
 
         async function scheduleAllFilterNotifications() {
-            var ln = getLocalNotifications();
+            var ln = getLN();
             if (!ln || !notificationsReady) return;
             try {
-                await ensureNotifChannel(ln);
-                await cancelAllPendingNotifications(ln);
+                await ensureChannel(ln);
+                await cancelAllPending(ln);
                 var now = Date.now();
                 var batch = [];
                 appData.filters.forEach(function (filter) {
@@ -573,8 +565,7 @@
                     var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
                     var locText = loc ? ' [' + loc.name + ']' : '';
                     var extra = { locationId: filter.locationId, filterId: filter.id };
-
-                    if (t.expiryMs > now + 3000) {
+                    if (t.expiryMs > now + 2500) {
                         batch.push({
                             title: 'AquaControl — срок истёк',
                             body: 'Пора заменить картридж: "' + filter.name + '"' + locText + '.',
@@ -584,10 +575,10 @@
                             channelId: NOTIF_CHANNEL, extra: extra
                         });
                     }
-                    if (t.followUpMs > now + 3000) {
+                    if (t.followUpMs > now + 2500) {
                         batch.push({
                             title: 'AquaControl — всё ещё не заменён',
-                            body: 'Фильтр "' + filter.name + '"' + locText + ' всё ещё просрочен. Зафиксируйте замену или отложите срок.',
+                            body: 'Фильтр "' + filter.name + '"' + locText + ' всё ещё просрочен. Зафиксируйте замену.',
                             id: notifId(filter.id, 'p7'),
                             schedule: { at: new Date(t.followUpMs), allowWhileIdle: true },
                             smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
@@ -610,108 +601,109 @@
             if (currentLoc) appData.currentLocationId = currentLoc.id;
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
 
-            var currentFilters = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
-            var tabsContainer = document.getElementById('filterTabs');
+            var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
+            var tabs = document.getElementById('filterTabs');
             var filter = null;
 
-            if (!currentFilters.length) {
-                tabsContainer.innerHTML = '<div style="font-size:12px;color:#6e7d93;">Нет устройств в этой локации</div>';
+            if (!list.length) {
+                tabs.innerHTML = '<div style="font-size:12px;color:#6e7d93;">Нет устройств</div>';
                 appData.currentFilterId = null;
             } else {
-                if (!currentFilters.some(function (f) { return f.id === appData.currentFilterId; })) appData.currentFilterId = currentFilters[0].id;
-                filter = currentFilters.find(function (f) { return f.id === appData.currentFilterId; });
-                tabsContainer.innerHTML = currentFilters.map(function (f) {
+                if (!list.some(function (f) { return f.id === appData.currentFilterId; })) appData.currentFilterId = list[0].id;
+                filter = list.find(function (f) { return f.id === appData.currentFilterId; });
+                tabs.innerHTML = list.map(function (f) {
                     var t = getFilterTiming(f);
                     var cls = '', icon = '';
                     if (t.leftMs <= 0) { cls = 'tab-danger'; icon = '🔴 '; }
-                    else if ((!t.isTest && t.daysLeft <= 10) || (t.isTest && t.leftMs <= t.resourceMs * 0.2)) { cls = 'tab-warning'; icon = '🟡 '; }
-                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active' : '') + ' ' + cls + '" onclick="selectFilter(\'' + f.id + '\')">' + icon + f.name + '</div>';
+                    else if ((!t.isTest && t.daysLeft <= 10) || (t.isTest && t.leftMs <= t.resourceMs * 0.25)) { cls = 'tab-warning'; icon = '🟡 '; }
+                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + f.id + '\')">' + icon + f.name + '</div>';
                 }).join('');
             }
 
             var btnCart = document.getElementById('btnCartIcon');
             var cartDot = document.getElementById('cartDot');
-            var btnPostponeMain = document.getElementById('btnPostponeMain');
-            var btnEditFilter = document.getElementById('btnEditFilter');
+            var btnPost = document.getElementById('btnPostponeMain');
+            var btnEdit = document.getElementById('btnEditFilter');
             var daysDisplay = document.getElementById('daysDisplay');
 
             if (filter) {
-                var timing = getFilterTiming(filter);
+                var t = getFilterTiming(filter);
                 document.getElementById('infoType').innerText = filter.type;
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жесткая' : (filter.hardness == 1.25 ? 'Жесткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
-
                 btnCart.style.display = 'flex';
-                btnEditFilter.style.display = 'block';
+                btnEdit.style.display = 'block';
                 if (filter.buyUrl && String(filter.buyUrl).trim()) {
                     btnCart.classList.add('cart-active'); btnCart.classList.remove('cart-empty'); cartDot.style.display = 'block';
                 } else {
                     btnCart.classList.remove('cart-active'); btnCart.classList.add('cart-empty'); cartDot.style.display = 'none';
                 }
 
-                if (timing.leftMs <= 0) {
+                if (t.leftMs <= 0) {
                     daysDisplay.innerText = '0';
                     daysDisplay.style.color = '#ff4757';
-                    waveColor = 'rgba(255, 71, 87, 0.18)';
+                    waveColor = 'rgba(255,71,87,0.18)';
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
-                    btnPostponeMain.style.display = timing.isTest ? 'none' : 'block';
-                } else if (timing.isTest) {
-                    daysDisplay.innerText = Math.max(1, timing.minutesLeft);
-                    daysDisplay.style.color = timing.minutesLeft <= 1 ? '#ffaa00' : '#00f2fe';
-                    waveColor = 'rgba(0, 242, 254, 0.12)';
-                    document.getElementById('statusLabel').innerText = 'минут осталось (тест)';
-                    btnPostponeMain.style.display = 'none';
-                } else if (timing.daysLeft <= 10) {
-                    daysDisplay.innerText = timing.daysLeft;
+                    btnPost.style.display = t.isTest ? 'none' : 'block';
+                } else if (t.isTest) {
+                    if (t.secondsLeft < 120) {
+                        daysDisplay.innerText = Math.max(1, t.secondsLeft);
+                        document.getElementById('statusLabel').innerText = 'секунд (тест)';
+                    } else {
+                        daysDisplay.innerText = Math.max(1, t.minutesLeft);
+                        document.getElementById('statusLabel').innerText = 'минут осталось (тест)';
+                    }
+                    daysDisplay.style.color = t.minutesLeft <= 1 ? '#ffaa00' : '#00f2fe';
+                    waveColor = 'rgba(0,242,254,0.12)';
+                    btnPost.style.display = 'none';
+                } else if (t.daysLeft <= 10) {
+                    daysDisplay.innerText = t.daysLeft;
                     daysDisplay.style.color = '#ffaa00';
-                    waveColor = 'rgba(255, 170, 0, 0.15)';
+                    waveColor = 'rgba(255,170,0,0.15)';
                     document.getElementById('statusLabel').innerText = 'Скоро замена!';
-                    btnPostponeMain.style.display = 'none';
+                    btnPost.style.display = 'none';
                 } else {
-                    daysDisplay.innerText = timing.daysLeft;
+                    daysDisplay.innerText = t.daysLeft;
                     daysDisplay.style.color = '#00f2fe';
-                    waveColor = 'rgba(0, 242, 254, 0.12)';
+                    waveColor = 'rgba(0,242,254,0.12)';
                     document.getElementById('statusLabel').innerText = 'дней осталось';
-                    btnPostponeMain.style.display = 'none';
+                    btnPost.style.display = 'none';
                 }
             } else {
                 daysDisplay.innerText = '--';
                 daysDisplay.style.color = '#00f2fe';
                 document.getElementById('statusLabel').innerText = 'нет устройств';
-                waveColor = 'rgba(0, 242, 254, 0.12)';
+                waveColor = 'rgba(0,242,254,0.12)';
                 document.getElementById('infoType').innerText = '--';
                 document.getElementById('infoPeople').innerText = '-- чел';
                 document.getElementById('infoHardness').innerText = '--';
                 document.getElementById('infoBrand').innerText = '--';
                 btnCart.style.display = 'none';
-                btnEditFilter.style.display = 'none';
-                btnPostponeMain.style.display = 'none';
+                btnEdit.style.display = 'none';
+                btnPost.style.display = 'none';
             }
         }
 
         document.addEventListener('DOMContentLoaded', async function () {
-            fillResourceChips('chipResource', 'd90', 'd90');
-            fillResourceChips('editChipResource', 'd90', 'd90');
-
-            var ln = getLocalNotifications();
+            var ln = getLN();
             if (!ln) return;
             try {
                 await ln.requestPermissions();
-                await ensureNotifChannel(ln);
+                await ensureChannel(ln);
                 notificationsReady = true;
                 ln.addListener('localNotificationActionPerformed', function (notification) {
                     if (notification.notification && notification.notification.id) {
                         ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
                     }
-                    var extraData = notification.notification.extra || {};
-                    if (extraData.locationId && extraData.filterId) {
-                        appData.currentLocationId = extraData.locationId;
-                        appData.currentFilterId = extraData.filterId;
-                        var filter = appData.filters.find(function (f) { return f.id === extraData.filterId; });
-                        if (filter) {
-                            var t = getFilterTiming(filter);
-                            if (t.leftMs > 0) filter.lastDate = Date.now() - (t.resourceMs + 5000);
+                    var ex = notification.notification.extra || {};
+                    if (ex.locationId && ex.filterId) {
+                        appData.currentLocationId = ex.locationId;
+                        appData.currentFilterId = ex.filterId;
+                        var f = appData.filters.find(function (x) { return x.id === ex.filterId; });
+                        if (f) {
+                            var t = getFilterTiming(f);
+                            if (t.leftMs > 0) f.lastDate = Date.now() - (t.resourceMs + 5000);
                         }
                         saveDB();
                         openReplaceModal();
@@ -721,7 +713,6 @@
             } catch (e) { console.warn(e); }
         });
 
-        /* тикаем UI каждую секунду для тестовых минут */
         setInterval(function () {
             var f = getCurrentFilter();
             if (f && f.cycleMs) updateUI();
@@ -732,18 +723,14 @@
             if (!filter || filter.cycleMs) return;
             var t = getFilterTiming(filter);
             filter.lastDate = Date.now() - (t.resourceMs - days * MS_DAY);
-            closeModals(); saveDB(); showToast('Продлено на ' + days + ' дней!');
+            closeModals(); saveDB(); showToast('Продлено на ' + days + ' дней');
         }
-
         function toggleInfoBlock() {
-            var wrapper = document.getElementById('infoGridWrapper');
-            var btn = document.getElementById('toggleBtn');
-            var daysDisplay = document.getElementById('daysDisplay');
-            if (wrapper.classList.contains('collapsed')) {
-                wrapper.classList.remove('collapsed'); btn.innerText = 'Свернуть ▲'; daysDisplay.classList.remove('large');
-            } else {
-                wrapper.classList.add('collapsed'); btn.innerText = 'Развернуть ▼'; daysDisplay.classList.add('large');
-            }
+            var w = document.getElementById('infoGridWrapper');
+            var b = document.getElementById('toggleBtn');
+            var d = document.getElementById('daysDisplay');
+            if (w.classList.contains('collapsed')) { w.classList.remove('collapsed'); b.innerText = 'Свернуть ▲'; d.classList.remove('large'); }
+            else { w.classList.add('collapsed'); b.innerText = 'Развернуть ▼'; d.classList.add('large'); }
         }
         function toggleDevPanel() { document.getElementById('devPanel').classList.toggle('open'); }
 
@@ -754,17 +741,15 @@
             var ms = 500;
             if (val === '10s') ms = 10000;
             if (val === '10m') ms = 600000;
-            if (val === '1h') ms = 3600000;
-            var locObj = appData.locations.find(function (l) { return l.id === filter.locationId; });
-            var locText = locObj ? ' [' + locObj.name + ']' : '';
-            showToast('Разовый тест (' + val + '). Сверните приложение');
-            var ln = getLocalNotifications();
+            showToast('Разовый тест. Сверните приложение');
+            var ln = getLN();
             if (!ln) return;
-            await ensureNotifChannel(ln);
+            await ensureChannel(ln);
+            var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
             await ln.schedule({
                 notifications: [{
                     title: 'AquaControl (разовый тест)',
-                    body: 'Тест пуша для "' + filter.name + '"' + locText,
+                    body: 'Тест для "' + filter.name + '"' + (loc ? ' [' + loc.name + ']' : ''),
                     id: Math.floor(Math.random() * 80000) + 1000000,
                     schedule: { at: new Date(Date.now() + ms), allowWhileIdle: true },
                     smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
@@ -775,23 +760,23 @@
         }
 
         function openLocationSelectModal() {
-            var container = document.getElementById('locationsListContainer');
-            var canDelete = appData.locations.length > 1;
-            container.innerHTML = appData.locations.map(function (l) {
+            var c = document.getElementById('locationsListContainer');
+            var canDel = appData.locations.length > 1;
+            c.innerHTML = appData.locations.map(function (l) {
                 return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
                     '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
                     l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
                     '<button class="loc-icon-btn edit" onclick="event.stopPropagation();openRenameLocationModal(\'' + l.id + '\')">✏️</button>' +
-                    (canDelete ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
+                    (canDel ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
                     '</div></div>';
             }).join('');
             document.getElementById('locSelectModal').style.display = 'flex';
         }
         function selectLocationDirect(id) { appData.currentLocationId = id; closeModals(); saveDB(); }
-        function openRenameLocationModal(locId) {
-            var loc = appData.locations.find(function (l) { return l.id === locId; });
+        function openRenameLocationModal(id) {
+            var loc = appData.locations.find(function (l) { return l.id === id; });
             if (!loc) return;
-            pendingRenameLocationId = locId;
+            pendingRenameLocationId = id;
             document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
             document.getElementById('renameLocInput').value = loc.name;
             document.getElementById('renameLocationModal').style.display = 'flex';
@@ -801,73 +786,73 @@
             if (!name) { showToast('Введите название'); return; }
             var loc = appData.locations.find(function (l) { return l.id === pendingRenameLocationId; });
             if (!loc) return;
-            loc.name = name; pendingRenameLocationId = null; closeModals(); saveDB(); showToast('Объект переименован');
+            loc.name = name; pendingRenameLocationId = null; closeModals(); saveDB(); showToast('Переименовано');
         }
         function selectFilter(id) { appData.currentFilterId = id; saveDB(); }
         function openReplaceModal() {
-            var filter = getCurrentFilter();
-            var locObj = appData.locations.find(function (l) { return l.id === appData.currentLocationId; });
-            if (filter && locObj) document.getElementById('replaceModalContext').innerText = 'Объект: ' + locObj.name + ' • ' + filter.name;
+            var f = getCurrentFilter();
+            var loc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; });
+            if (f && loc) document.getElementById('replaceModalContext').innerText = loc.name + ' • ' + f.name;
             document.getElementById('replaceModal').style.display = 'flex';
         }
         function openAddFilterModal() {
-            fillResourceChips('chipResource', 'd90', 'd90');
+            setChipValue('chipResource', 'd90');
             document.getElementById('addFilterModal').style.display = 'flex';
         }
         function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
 
         function openEditFilterModal() {
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            document.getElementById('editFilterContext').innerText = 'Текущее: ' + filter.name;
-            document.getElementById('editFilterName').value = filter.name || '';
-            document.getElementById('editFilterUrl').value = filter.buyUrl || '';
-            fillResourceChips('editChipResource', resourceChipValueFromFilter(filter), 'd90');
-            setChipValue('editChipHardness', filter.hardness);
-            setChipValue('editChipPeople', filter.people);
+            var f = getCurrentFilter();
+            if (!f) return;
+            document.getElementById('editFilterContext').innerText = 'Текущее: ' + f.name;
+            document.getElementById('editFilterName').value = f.name || '';
+            document.getElementById('editFilterUrl').value = f.buyUrl || '';
+            setChipValue('editChipResource', resourceChipFromFilter(f));
+            setChipValue('editChipHardness', f.hardness);
+            setChipValue('editChipPeople', f.people);
             document.getElementById('editFilterModal').style.display = 'flex';
         }
 
         function confirmEditFilter() {
-            var filter = getCurrentFilter();
-            if (!filter) return;
+            var f = getCurrentFilter();
+            if (!f) return;
             var name = (document.getElementById('editFilterName').value || '').trim();
             if (!name) { showToast('Введите название'); return; }
-            filter.name = name;
-            filter.buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
-            filter.hardness = parseFloat(getSelectedChipValue('editChipHardness') || filter.hardness);
-            filter.people = parseInt(getSelectedChipValue('editChipPeople') || filter.people, 10);
-            applyResourceToFilter(filter, getSelectedChipValue('editChipResource') || 'd90');
-            closeModals(); saveDB(); showToast('Фильтр обновлён');
+            f.name = name;
+            f.buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
+            f.hardness = parseFloat(getSelectedChipValue('editChipHardness') || f.hardness);
+            f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
+            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
+            /* Для тест-режима стартуем цикл «сейчас», чтобы пуш был через 1/5/60 мин */
+            if (f.cycleMs) f.lastDate = Date.now();
+            closeModals(); saveDB();
+            showToast(f.cycleMs ? 'Тест запущен — сверните приложение' : 'Фильтр обновлён');
         }
 
         function onCartIconClick() {
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            if (filter.buyUrl && String(filter.buyUrl).trim()) {
-                showToast('Открываем магазин…'); openExternalUrl(filter.buyUrl); return;
-            }
+            var f = getCurrentFilter();
+            if (!f) return;
+            if (f.buyUrl && String(f.buyUrl).trim()) { showToast('Открываем магазин…'); openExternalUrl(f.buyUrl); return; }
             document.getElementById('noLinkUrlInput').value = '';
             document.getElementById('noLinkModal').style.display = 'flex';
         }
         function saveBuyUrlFromNoLinkModal() {
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            var buyUrl = normalizeUrl(document.getElementById('noLinkUrlInput').value);
-            if (!buyUrl) { showToast('Вставьте ссылку'); return; }
-            filter.buyUrl = buyUrl; closeModals(); saveDB(); showToast('Ссылка сохранена');
+            var f = getCurrentFilter();
+            if (!f) return;
+            var u = normalizeUrl(document.getElementById('noLinkUrlInput').value);
+            if (!u) { showToast('Вставьте ссылку'); return; }
+            f.buyUrl = u; closeModals(); saveDB(); showToast('Ссылка сохранена');
         }
-
         function openHistoryModal() {
             var list = document.getElementById('historyList');
             var total = 0, n = appData.history.length;
-            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">История пуста</div>';
+            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пусто</div>';
             else list.innerHTML = appData.history.map(function (h) {
                 total += Number(h.cost || 0);
                 return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
             }).join('');
             document.getElementById('ecoBottles').innerText = n * 200;
-            document.getElementById('ecoMoney').innerText = (n * 200 * 45).toLocaleString('ru-RU');
+            document.getElementById('ecoMoney').innerText = (n * 9000).toLocaleString('ru-RU');
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
             document.getElementById('historyModal').style.display = 'flex';
         }
@@ -875,72 +860,68 @@
             document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
             pendingRenameLocationId = null;
         }
-
-        function confirmReplacement(skipDetails) {
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            var brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
-            var cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
-            filter.lastDate = Date.now();
-            if (!skipDetails && brand) filter.brand = brand;
-            appData.history.unshift({ filterName: filter.name, date: new Date().toLocaleDateString('ru-RU'), cost: cost, note: skipDetails ? 'Быстрая замена' : '' });
-            closeModals(); saveDB(); showToast('Замена зафиксирована!');
+        function confirmReplacement(skip) {
+            var f = getCurrentFilter();
+            if (!f) return;
+            var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
+            var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
+            f.lastDate = Date.now();
+            if (!skip && brand) f.brand = brand;
+            appData.history.unshift({ filterName: f.name, date: new Date().toLocaleDateString('ru-RU'), cost: cost, note: skip ? 'Быстрая замена' : '' });
+            closeModals(); saveDB(); showToast('Замена зафиксирована');
         }
-
         function addNewFilter() {
             var name = document.getElementById('newFilterName').value || 'Фильтр';
             var type = getSelectedChipValue('chipType') || 'Кувшин';
             var hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
             var people = parseInt(getSelectedChipValue('chipPeople') || '2', 10);
             var buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
-            var newId = 'f_' + Date.now();
-            var filter = {
-                id: newId, locationId: appData.currentLocationId, name: name, type: type,
+            var id = 'f_' + Date.now();
+            var f = {
+                id: id, locationId: appData.currentLocationId, name: name, type: type,
                 baseDays: 90, cycleMs: null, hardness: hardness, people: people,
                 lastDate: Date.now(), brand: '', buyUrl: buyUrl
             };
-            applyResourceToFilter(filter, getSelectedChipValue('chipResource') || 'd90');
-            appData.filters.push(filter);
-            appData.currentFilterId = newId;
+            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90');
+            appData.filters.push(f);
+            appData.currentFilterId = id;
             closeModals(); saveDB();
-            showToast(filter.cycleMs ? 'Тест-фильтр создан! Сверните приложение' : 'Фильтр создан!');
+            showToast(f.cycleMs ? 'Тест-фильтр создан — сверните приложение' : 'Фильтр создан');
         }
-
         function addNewLocation() {
             var name = document.getElementById('newLocName').value;
             if (!name) return;
-            var newId = 'loc_' + Date.now();
-            appData.locations.push({ id: newId, name: name });
-            appData.currentLocationId = newId;
-            closeModals(); saveDB(); showToast('Локация добавлена!');
+            var id = 'loc_' + Date.now();
+            appData.locations.push({ id: id, name: name });
+            appData.currentLocationId = id;
+            closeModals(); saveDB(); showToast('Добавлено');
         }
-
         function deleteCurrentFilter() {
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            showCustomConfirm('Удаление', 'Удалить "' + filter.name + '"?', function () {
-                appData.filters = appData.filters.filter(function (f) { return f.id !== appData.currentFilterId; });
+            var f = getCurrentFilter();
+            if (!f) return;
+            showCustomConfirm('Удаление', 'Удалить "' + f.name + '"?', function () {
+                appData.filters = appData.filters.filter(function (x) { return x.id !== appData.currentFilterId; });
                 saveDB(); showToast('Удалено');
             });
         }
         function deleteSpecificLocation(locId) {
-            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный объект'); return; }
+            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный'); return; }
             var loc = appData.locations.find(function (l) { return l.id === locId; });
             if (!loc) return;
-            showCustomConfirm('Удаление объекта', 'Удалить "' + loc.name + '" и все фильтры?', function () {
+            showCustomConfirm('Удаление', 'Удалить "' + loc.name + '" и фильтры?', function () {
                 appData.filters = appData.filters.filter(function (f) { return f.locationId !== locId; });
                 appData.locations = appData.locations.filter(function (l) { return l.id !== locId; });
                 if (appData.currentLocationId === locId) {
                     appData.currentLocationId = appData.locations[0].id;
                     appData.currentFilterId = null;
                 }
-                closeModals(); saveDB(); showToast('Объект удален');
+                closeModals(); saveDB(); showToast('Удалено');
             });
         }
         function showToast(text) {
-            var toast = document.getElementById('toast');
-            toast.innerText = text; toast.classList.add('show');
-            setTimeout(function () { toast.classList.remove('show'); }, 2500);
+            var t = document.getElementById('toast');
+            t.innerText = text; t.classList.add('show');
+            setTimeout(function () { t.classList.remove('show'); }, 2800);
         }
 
         updateUI();
