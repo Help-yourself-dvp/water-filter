@@ -78,7 +78,7 @@
         .history-item { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; }
         .eco-badge { background: rgba(76, 217, 100, 0.15); border: 1px solid rgba(76, 217, 100, 0.3); color: #4cd964; padding: 10px; border-radius: 12px; font-size: 11px; margin-bottom: 12px; text-align: left; line-height: 1.4; }
         
-        .loc-option-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .loc-option-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
         .loc-option-item.active { border-color: #00f2fe; background: rgba(0,242,254,0.12); color: #00f2fe; }
     </style>
 </head>
@@ -176,7 +176,6 @@
         <div class="modal-content">
             <h2>Выберите объект</h2>
             <div id="locationsListContainer" style="margin-top:12px;"></div>
-            <button class="btn btn-danger-outline" style="width:100%; margin-top:10px;" onclick="deleteCurrentLocation()">🗑 Удалить этот объект</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
@@ -602,29 +601,38 @@
             panel.classList.toggle('open');
         }
 
+        // РУЧНОЙ ТЕСТ: РАБОТАЕТ НА 100% ДЛЯ ВСЕХ ТАЙМЕРОВ (0s, 10s, 10m, 1h)
         async function runCustomTest() {
             const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
-            const locObj = appData.locations.find(l => l.id === filter.locationId);
-            const locText = locObj ? ` [${locObj.name}]` : '';
-
-            // Состариваем фильтр в базе данных
-            filter.lastDate = new Date().getTime() - (365 * 24 * 60 * 60 * 1000);
-            saveDB();
+            if (!filter) return;
 
             let ms = 500;
             if (val === '10s') ms = 10000;
             if (val === '10m') ms = 600000;
             if (val === '1h') ms = 3600000;
 
-            showToast(`Тест запущен! Заблокируйте экран...`);
+            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
+            let hardnessMult = 1 / (filter.hardness || 1);
+            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
+
+            // Состариваем фильтр в базе данных к моменту срабатывания таймера
+            const msPerDay = 1000 * 60 * 60 * 24;
+            filter.lastDate = (Date.now() + ms) - (realMaxDays * msPerDay + 2000);
+            saveDB();
+
+            const locObj = appData.locations.find(l => l.id === filter.locationId);
+            const locText = locObj ? ` [${locObj.name}]` : '';
+
+            showToast(`Тест запущен (${val})!`);
+
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
                 await ln.schedule({
                     notifications: [{
                         title: "AquaControl",
                         body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
-                        id: Math.floor(Math.random() * 88888),
+                        id: Math.floor(Math.random() * 88888) + 1,
                         schedule: { at: new Date(Date.now() + ms) },
                         smallIcon: "ic_stat_icon",
                         iconColor: "#00F2FE",
@@ -636,14 +644,20 @@
             }
         }
 
+        // ОТОБРАЖЕНИЕ КОРЗИНКИ УДАЛЕНИЯ РЯДОМ С КАЖДЫМ ОБЪЕКТОМ
         function openLocationSelectModal() {
             const container = document.getElementById('locationsListContainer');
+            const canDelete = appData.locations.length > 1;
+
             container.innerHTML = appData.locations.map(l => `
-                <div class="loc-option-item ${l.id === appData.currentLocationId ? 'active' : ''}" onclick="selectLocationDirect('${l.id}')">
-                    <span>${l.name}</span>
-                    ${l.id === appData.currentLocationId ? '✓' : ''}
+                <div class="loc-option-item ${l.id === appData.currentLocationId ? 'active' : ''}">
+                    <span onclick="selectLocationDirect('${l.id}')" style="flex:1; cursor:pointer; font-weight:600;">
+                        ${l.name} ${l.id === appData.currentLocationId ? '✓' : ''}
+                    </span>
+                    ${canDelete ? `<button class="btn btn-danger-outline" style="width:auto; padding:6px 12px; margin:0;" onclick="deleteSpecificLocation('${l.id}')">🗑</button>` : ''}
                 </div>
             `).join('');
+
             document.getElementById('locSelectModal').style.display = 'flex';
         }
 
@@ -783,12 +797,8 @@
             );
         }
 
-        function deleteCurrentLocation() {
-            if (appData.locations.length <= 1) {
-                showToast("Нельзя удалить единственный объект!");
-                return;
-            }
-            const loc = appData.locations.find(l => l.id === appData.currentLocationId);
+        function deleteSpecificLocation(locId) {
+            const loc = appData.locations.find(l => l.id === locId);
             if (!loc) return;
 
             showCustomConfirm(
