@@ -282,19 +282,19 @@
                 { id: 'loc2', name: 'Дом родителей' }
             ],
             filters: [
-                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, people: 2, hardness: 1, lastDate: new Date().getTime(), lastNotifiedDate: 0, brand: 'Аквафор', buyUrl: '' }
+                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, people: 2, hardness: 1, lastDate: new Date().getTime(), brand: 'Аквафор', buyUrl: '' }
             ],
             history: []
         };
 
         let appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
 
-        function saveDB(shouldUpdateUI = true) {
+        function saveDB() {
             localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
-            if (shouldUpdateUI) updateUI();
+            updateUI();
         }
 
-        // CANVAS ENGINE
+        // CANVAS ANIMATION ENGINE
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -355,6 +355,7 @@
             return selected ? selected.getAttribute('data-value') : null;
         }
 
+        // ЧИСТАЯ ИНТЕРФЕЙСНАЯ ОТРИСОВКА (БЕЗ ВЫЗОВА УВЕДОМЛЕНИЙ)
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
@@ -413,18 +414,6 @@
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
                     btnPostponeMain.style.display = 'block';
                     if (filter.buyUrl) btnBuy.style.display = 'block';
-                    
-                    // ЗАЩИТА ОТ СПАМА УВЕДОМЛЕНИЙ: Напоминание 1 раз в 7 дней
-                    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-                    const lastNotified = filter.lastNotifiedDate || 0;
-
-                    if (now - lastNotified > SEVEN_DAYS_MS) {
-                        filter.lastNotifiedDate = now;
-                        saveDB(false); // Сохраняем без рекурсивной перерисовки
-                        const locObj = appData.locations.find(l => l.id === filter.locationId);
-                        const locNameText = locObj ? ` [${locObj.name}]` : '';
-                        triggerNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}"${locNameText} истек! Замените фильтр.`, 500, filter.locationId, filter.id);
-                    }
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255, 170, 0, 0.15)';
@@ -445,47 +434,101 @@
             }
         }
 
-        // НА ТИВНЫЙ МОСТ PUSH С ВЫСОКИМ ПРИОРИТЕТОМ ДЛЯ HONOR/MAGICOS
-        async function triggerNativeNotification(title, bodyText, delayMs = 500, locId = '', filterId = '') {
-            const notifId = Math.floor(Math.random() * 10000) + 1;
-            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                try {
-                    const ln = window.Capacitor.Plugins.LocalNotifications;
-                    
-                    // Создаем канал максимального приоритета (Importance 5 = High/Max)
-                    await ln.createChannel({
-                        id: 'aqua_high_priority',
-                        name: 'AquaControl Важные Напоминания',
-                        description: 'Уведомления о замене фильтра для воды',
-                        importance: 5,
-                        visibility: 1,
-                        sound: 'default',
-                        vibrates: true
-                    });
+        // ВЫЧИСЛЕНИЕ ПРОСТОГО ХЕШ-КОДА ДЛЯ ID УВЕДОМЛЕНИЙ
+        function getFilterNotifId(filterId, isReminder = false) {
+            let hash = 0;
+            for (let i = 0; i < filterId.length; i++) {
+                hash = (hash << 5) - hash + filterId.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash) + (isReminder ? 500000 : 0);
+        }
 
-                    await ln.schedule({
-                        notifications: [{
-                            title: title,
-                            body: bodyText,
-                            id: notifId,
-                            schedule: { at: new Date(Date.now() + delayMs) },
-                            smallIcon: "ic_stat_icon",
-                            iconColor: "#00F2FE",
-                            autoCancel: true,
-                            channelId: 'aqua_high_priority',
-                            extra: { locationId: locId, filterId: filterId }
-                        }]
+        // НА ТИВНОЕ УПРЕЖДАЮЩЕЕ ПЛАНИРОВАНИЕ УВЕДОМЛЕНИЙ В ANDROID (ФОНОВЫЕ БУДИЛЬНИКИ)
+        async function syncNativeFilterSchedule(filter) {
+            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.LocalNotifications) return;
+
+            const ln = window.Capacitor.Plugins.LocalNotifications;
+            const notifIdMain = getFilterNotifId(filter.id, false);
+            const notifIdReminder = getFilterNotifId(filter.id, true);
+
+            try {
+                // 1. Отменяем старые запланированные уведомления для этого фильтра
+                await ln.cancel({ notifications: [{ id: notifIdMain }, { id: notifIdReminder }] });
+
+                // 2. Рассчитываем точную дату истечения
+                let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
+                let hardnessMult = 1 / (filter.hardness || 1);
+                let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
+                
+                const expireTimestamp = filter.lastDate + (realMaxDays * 24 * 60 * 60 * 1000);
+                const reminderTimestamp = expireTimestamp + (7 * 24 * 60 * 60 * 1000); // Повтор через 7 дней
+                const now = Date.now();
+
+                const locObj = appData.locations.find(l => l.id === filter.locationId);
+                const locText = locObj ? ` [${locObj.name}]` : '';
+
+                await ln.createChannel({
+                    id: 'aqua_high_priority',
+                    name: 'AquaControl Напоминания',
+                    description: 'Уведомления о замене фильтра для воды',
+                    importance: 5,
+                    visibility: 1,
+                    sound: 'default',
+                    vibrates: true
+                });
+
+                let notificationsToSchedule = [];
+
+                // Запланировать Первое уведомление (если дата в будущем)
+                if (expireTimestamp > now) {
+                    notificationsToSchedule.push({
+                        title: "AquaControl",
+                        body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
+                        id: notifIdMain,
+                        schedule: { at: new Date(expireTimestamp) },
+                        smallIcon: "ic_stat_icon",
+                        iconColor: "#00F2FE",
+                        autoCancel: true,
+                        channelId: 'aqua_high_priority',
+                        extra: { locationId: filter.locationId, filterId: filter.id }
                     });
-                } catch(e) { console.log('Capacitor Push err:', e); }
-            } else if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body: bodyText });
+                }
+
+                // Запланировать Напоминание +7 дней (если дата в будущем)
+                if (reminderTimestamp > now) {
+                    notificationsToSchedule.push({
+                        title: "AquaControl",
+                        body: `Напоминание: замена картриджа в фильтре "${filter.name}"${locText} просрочена.`,
+                        id: notifIdReminder,
+                        schedule: { at: new Date(reminderTimestamp) },
+                        smallIcon: "ic_stat_icon",
+                        iconColor: "#00F2FE",
+                        autoCancel: true,
+                        channelId: 'aqua_high_priority',
+                        extra: { locationId: filter.locationId, filterId: filter.id }
+                    });
+                }
+
+                if (notificationsToSchedule.length > 0) {
+                    await ln.schedule({ notifications: notificationsToSchedule });
+                }
+            } catch(e) { console.log('Schedule Error:', e); }
+        }
+
+        // Синхронизируем фоновое расписание для ВСЕХ фильтров в базе
+        function syncAllSchedules() {
+            if (appData.filters) {
+                appData.filters.forEach(f => syncNativeFilterSchedule(f));
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
-                ln.requestPermissions();
+                ln.requestPermissions().then(() => {
+                    syncAllSchedules(); // Планируем будильники Android при запуске
+                });
                 
                 ln.addListener('localNotificationActionPerformed', (notification) => {
                     if (notification.notification && notification.notification.id) {
@@ -515,9 +558,9 @@
                 let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
 
                 filter.lastDate = now - ((realMaxDays - days) * msPerDay);
-                filter.lastNotifiedDate = 0; // Сбрасываем таймер спама
                 closeModals();
                 saveDB();
+                syncNativeFilterSchedule(filter); // Пересчитываем уведомления в Android!
                 showToast(`Продлено на ${days} дней!`);
             }
         }
@@ -543,7 +586,8 @@
             panel.classList.toggle('open');
         }
 
-        function runCustomTest() {
+        // РУЧНОЙ ТЕСТ ДЛЯ ПРОВЕРКИ СБРАБАТЫВАНИЯ УВЕДОМЛЕНИЙ
+        async function runCustomTest() {
             const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
             const locObj = appData.locations.find(l => l.id === filter.locationId);
@@ -551,7 +595,6 @@
 
             if (val === '0') {
                 filter.lastDate = new Date().getTime() - (365 * 24 * 60 * 60 * 1000);
-                filter.lastNotifiedDate = 0;
                 saveDB();
             } else {
                 let ms = 500;
@@ -560,7 +603,22 @@
                 if (val === '1h') ms = 3600000;
 
                 showToast(`Тест запущен! Заблокируйте экран...`);
-                triggerNativeNotification("AquaControl 🚨 (Тест)", `Срок службы фильтра "${filter.name}"${locText} истек! Замените фильтр.`, ms, filter.locationId, filter.id);
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                    const ln = window.Capacitor.Plugins.LocalNotifications;
+                    await ln.schedule({
+                        notifications: [{
+                            title: "AquaControl",
+                            body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
+                            id: Math.floor(Math.random() * 88888),
+                            schedule: { at: new Date(Date.now() + ms) },
+                            smallIcon: "ic_stat_icon",
+                            iconColor: "#00F2FE",
+                            autoCancel: true,
+                            channelId: 'aqua_high_priority',
+                            extra: { locationId: filter.locationId, filterId: filter.id }
+                        }]
+                    });
+                }
             }
         }
 
@@ -630,7 +688,6 @@
                 const cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
 
                 filter.lastDate = new Date().getTime();
-                filter.lastNotifiedDate = 0; // Сбрасываем таймер спама
                 if (!skipDetails && brand) filter.brand = brand;
 
                 appData.history.unshift({
@@ -642,6 +699,7 @@
 
                 closeModals();
                 saveDB();
+                syncNativeFilterSchedule(filter); // Пересчитываем уведомления в Android!
                 showToast("Замена зафиксирована!");
             }
         }
@@ -655,7 +713,7 @@
             const buyUrl = document.getElementById('newFilterUrl').value;
 
             const newId = 'f_' + Date.now();
-            appData.filters.push({
+            const newFilterObj = {
                 id: newId,
                 locationId: appData.currentLocationId,
                 name: name,
@@ -664,14 +722,15 @@
                 hardness: hardness,
                 people: people,
                 lastDate: new Date().getTime(),
-                lastNotifiedDate: 0,
                 brand: '',
                 buyUrl: buyUrl
-            });
+            };
 
+            appData.filters.push(newFilterObj);
             appData.currentFilterId = newId;
             closeModals();
             saveDB();
+            syncNativeFilterSchedule(newFilterObj); // Пересчитываем уведомления в Android!
             showToast("Фильтр создан!");
         }
 
@@ -690,6 +749,14 @@
         function deleteCurrentFilter() {
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
             if (filter && confirm(`Удалить устройство "${filter.name}"?`)) {
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                    window.Capacitor.Plugins.LocalNotifications.cancel({ 
+                        notifications: [
+                            { id: getFilterNotifId(filter.id, false) }, 
+                            { id: getFilterNotifId(filter.id, true) }
+                        ] 
+                    });
+                }
                 appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
                 saveDB();
                 showToast("Устройство удалено");
