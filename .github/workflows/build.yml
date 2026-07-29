@@ -38,8 +38,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 8/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.7"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 9/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.8"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -51,7 +51,6 @@ jobs:
           from pathlib import Path
           from PIL import Image
 
-          # permissions
           man = Path('android/app/src/main/AndroidManifest.xml')
           t = man.read_text(encoding='utf-8')
           perms = [
