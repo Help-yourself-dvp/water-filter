@@ -19,7 +19,9 @@
         .icon-home-3d { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #29b6f6, #0052d4 60%, #002171); box-shadow: 0 6px 15px rgba(0, 114, 255, 0.5), inset 0 2px 4px rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3); }
         .icon-home-3d svg { width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
         
-        .location-select { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 8px 12px; border-radius: 14px; font-size: 14px; font-weight: 600; outline: none; }
+        /* ТЕМНЫЙ СТИЛИЗОВАННЫЙ ВЫПАДАЮЩИЙ СПИСОК */
+        .location-select { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 8px 12px; border-radius: 14px; font-size: 14px; font-weight: 600; outline: none; cursor: pointer; }
+        select option { background-color: #121724; color: #00f2fe; padding: 10px; }
         
         .btn-chart-icon { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-chart-icon svg { width: 22px; height: 22px; }
@@ -33,21 +35,22 @@
         .days-left.large { font-size: 96px; text-shadow: 0 0 45px rgba(0, 242, 254, 0.65); }
         .days-label { font-size: 11px; color: #6e7d93; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
         
-        /* ПЛАВНОЕ СВОРАЧИВАНИЕ ИНФО-БЛОКА */
         .info-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
         .info-title { font-size: 11px; color: #8f9cae; text-transform: uppercase; letter-spacing: 1px; }
         .btn-toggle { background: none; border: none; color: #00f2fe; font-size: 12px; cursor: pointer; font-weight: 600; outline: none; }
         
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; max-height: 200px; opacity: 1; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s ease, margin 0.4s ease; }
-        .info-grid.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 5px; border: none; }
+        /* ШЕЛКОВИСТАЯ CSS GRID АНИМАЦИЯ СВОРАЧИВАНИЯ */
+        .info-grid-wrapper { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; opacity: 1; }
+        .info-grid-wrapper.collapsed { grid-template-rows: 0fr; opacity: 0; }
+        .info-grid-inner { overflow: hidden; min-height: 0; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
 
-        /* КНОПКИ РАЗНЫХ РАЗМЕРОВ */
         .btn { width: 100%; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary { padding: 16px; font-size: 14px; background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); margin-top: 8px; }
         .btn-buy { padding: 14px; font-size: 13px; background: linear-gradient(135deg, #ff9900, #ff5500); color: #fff; box-shadow: 0 8px 20px rgba(255, 153, 0, 0.4); display: none; margin-top: 8px; }
         
-        /* Уменьшенная кнопка добавления */
         .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #8f9cae; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
 
@@ -105,11 +108,17 @@
             <span class="info-title">Параметры системы</span>
             <button class="btn-toggle" id="toggleBtn" onclick="toggleInfoBlock()">Свернуть ▲</button>
         </div>
-        <div class="info-grid" id="infoGrid">
-            <div class="info-item">Тип: <span id="infoType">--</span></div>
-            <div class="info-item">Нагрузка: <span id="infoPeople">-- чел</span></div>
-            <div class="info-item">Вода: <span id="infoHardness">--</span></div>
-            <div class="info-item">Картридж: <span id="infoBrand">--</span></div>
+
+        <!-- ОБОЛОЧКА С БЕСШОВНОЙ АНИМАЦИЕЙ -->
+        <div class="info-grid-wrapper" id="infoGridWrapper">
+            <div class="info-grid-inner">
+                <div class="info-grid">
+                    <div class="info-item">Тип: <span id="infoType">--</span></div>
+                    <div class="info-item">Нагрузка: <span id="infoPeople">-- чел</span></div>
+                    <div class="info-item">Вода: <span id="infoHardness">--</span></div>
+                    <div class="info-item">Картридж: <span id="infoBrand">--</span></div>
+                </div>
+            </div>
         </div>
 
         <button class="btn btn-buy" id="btnBuyCartridge" onclick="openBuyLink()">🛒 Заказать новый картридж</button>
@@ -241,13 +250,11 @@
             updateUI();
         }
 
-        // ОБНОВЛЕННЫЕ ПУЗЫРЬКИ И ВОЛНЫ ПО ВСЕЙ ШИРИНЕ
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
         let waveColor = 'rgba(0, 242, 254, 0.12)';
         
-        // 50 Пузырьков с анимацией покачивания
         const particles = Array.from({ length: 50 }, () => ({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
@@ -263,18 +270,16 @@
         function drawWaves() {
             ctx.clearRect(0, 0, width, height);
 
-            // Отрисовка пузырьков с дрейфом
             ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
             particles.forEach(p => {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                 ctx.fill();
                 p.y -= p.s;
-                p.x += Math.sin(step * 0.02 + p.wobble) * 0.4; // Покачивание
+                p.x += Math.sin(step * 0.02 + p.wobble) * 0.4;
                 if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
             });
 
-            // 3 Слоя Волн
             const isMobile = width < 600;
             const amp = isMobile ? 100 : 65;
 
@@ -296,7 +301,6 @@
         }
         drawWaves();
 
-        // ЛОГИКА
         function updateUI() {
             const locSelect = document.getElementById('locationSelect');
             locSelect.innerHTML = appData.locations.map(l => `<option value="${l.id}" ${l.id === appData.currentLocationId ? 'selected' : ''}>${l.name}</option>`).join('');
@@ -356,17 +360,18 @@
             }
         }
 
+        // ШЕЛКОВИСТАЯ АНИМАЦИЯ СВОРАЧИВАНИЯ
         function toggleInfoBlock() {
-            const grid = document.getElementById('infoGrid');
+            const wrapper = document.getElementById('infoGridWrapper');
             const btn = document.getElementById('toggleBtn');
             const daysDisplay = document.getElementById('daysDisplay');
 
-            if (grid.classList.contains('collapsed')) {
-                grid.classList.remove('collapsed');
+            if (wrapper.classList.contains('collapsed')) {
+                wrapper.classList.remove('collapsed');
                 btn.innerText = 'Свернуть ▲';
                 daysDisplay.classList.remove('large');
             } else {
-                grid.classList.add('collapsed');
+                wrapper.classList.add('collapsed');
                 btn.innerText = 'Развернуть ▼';
                 daysDisplay.classList.add('large');
             }
