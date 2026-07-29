@@ -8,82 +8,62 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #04060e; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; }
-        
         canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        
         .card { position: relative; z-index: 2; background: rgba(16, 22, 38, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 32px; padding: 22px 16px; width: 92%; max-width: 400px; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85); margin-bottom: 30px; }
-        
         .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 8px; }
         .location-wrapper { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-        
         .icon-home-3d { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #29b6f6, #0052d4 60%, #002171); box-shadow: 0 6px 15px rgba(0, 114, 255, 0.5), inset 0 2px 4px rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3); }
         .icon-home-3d svg { width: 22px; height: 22px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-        
         .location-btn-picker { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.15); color: #00f2fe; padding: 10px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
         .location-btn-picker span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
         .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .btn-header-icon { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
         .btn-header-icon svg { width: 22px; height: 22px; }
         .btn-header-icon.cart-active { border-color: rgba(255, 153, 0, 0.45); background: rgba(255, 153, 0, 0.12); }
         .btn-header-icon.cart-empty { opacity: 0.7; }
         .btn-header-icon .cart-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; background: #ff9900; border-radius: 50%; box-shadow: 0 0 6px rgba(255,153,0,0.8); }
-
         .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
         .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #8f9cae; transition: all 0.3s; }
         .tab.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         .tab.tab-danger { background: rgba(255, 71, 87, 0.25) !important; border-color: #ff4757 !important; color: #ff4757 !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
         .tab.tab-warning { background: rgba(255, 170, 0, 0.2) !important; border-color: #ffaa00 !important; color: #ffaa00 !important; box-shadow: 0 0 12px rgba(255, 170, 0, 0.3); }
-
         .timer-box { text-align: center; margin: 10px 0 15px; }
         .days-left { font-size: 68px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.4); line-height: 1; transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s; }
         .days-left.large { font-size: 96px; text-shadow: 0 0 45px rgba(0, 242, 254, 0.65); }
         .days-label { font-size: 11px; color: #6e7d93; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-        
         .info-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
         .info-title { font-size: 11px; color: #8f9cae; text-transform: uppercase; letter-spacing: 1px; }
         .btn-toggle { background: none; border: none; color: #00f2fe; font-size: 12px; cursor: pointer; font-weight: 600; outline: none; }
-        
         .info-grid-wrapper { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; opacity: 1; }
         .info-grid-wrapper.collapsed { grid-template-rows: 0fr; opacity: 0; }
         .info-grid-inner { overflow: hidden; min-height: 0; }
-        
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
-
         .btn { width: 100%; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary { padding: 16px; font-size: 14px; background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); margin-top: 8px; }
         .btn-warning { padding: 12px; font-size: 13px; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); margin-top: 8px; }
         .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #8f9cae; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
-
         .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
         .dev-panel-content.open { display: block; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; }
         .modal-subtitle { font-size: 11px; color: #00f2fe; text-align: center; margin-bottom: 15px; }
-
         #confirmModal { z-index: 200 !important; }
-
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
-
         .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
         .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
         .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
-
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
-
         .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
         .history-item { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; }
         .eco-badge { background: rgba(76, 217, 100, 0.15); border: 1px solid rgba(76, 217, 100, 0.3); color: #4cd964; padding: 10px; border-radius: 12px; font-size: 11px; margin-bottom: 12px; text-align: left; line-height: 1.4; }
-        
         .loc-option-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .loc-option-item.active { border-color: #00f2fe; background: rgba(0,242,254,0.12); color: #00f2fe; }
         .loc-actions { display: flex; gap: 6px; flex-shrink: 0; }
@@ -93,9 +73,7 @@
     </style>
 </head>
 <body>
-
     <canvas id="waveCanvas"></canvas>
-
     <div class="card">
         <div class="header-nav">
             <div class="location-wrapper">
@@ -106,7 +84,6 @@
                     <span id="currentLocName">Моя квартира</span> ▼
                 </div>
             </div>
-            
             <div class="header-actions">
                 <div class="btn-header-icon cart-empty" id="btnCartIcon" onclick="onCartIconClick()" title="Магазин картриджа" style="display:none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -116,7 +93,6 @@
                     </svg>
                     <span class="cart-dot" id="cartDot" style="display:none;"></span>
                 </div>
-
                 <div class="btn-header-icon" onclick="openHistoryModal()" title="Статистика и Расходы">
                     <svg viewBox="0 0 24 24">
                         <defs>
@@ -133,17 +109,14 @@
         </div>
 
         <div class="filter-tabs" id="filterTabs"></div>
-
         <div class="timer-box">
             <div class="days-left" id="daysDisplay">--</div>
             <div class="days-label" id="statusLabel">дней осталось</div>
         </div>
-
         <div class="info-card-header">
             <span class="info-title">Параметры системы</span>
             <button class="btn-toggle" id="toggleBtn" onclick="toggleInfoBlock()">Свернуть ▲</button>
         </div>
-
         <div class="info-grid-wrapper" id="infoGridWrapper">
             <div class="info-grid-inner">
                 <div class="info-grid">
@@ -159,7 +132,6 @@
         <button class="btn btn-warning" id="btnPostponeMain" style="display:none;" onclick="postponeCurrentFilter(15)">⏸ Отложить на 15 дней</button>
         <button class="btn btn-edit-outline" id="btnEditFilter" onclick="openEditFilterModal()">✏️ Изменить фильтр</button>
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
-        
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
 
         <div class="dev-panel-wrapper">
@@ -231,9 +203,7 @@
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
             <h2>Ссылка не указана</h2>
-            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">
-                Для этого фильтра ещё нет ссылки на магазин. Добавьте её, чтобы быстро заказывать картридж в один тап.
-            </p>
+            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Для этого фильтра ещё нет ссылки на магазин. Добавьте её, чтобы быстро заказывать картридж.</p>
             <div class="form-group">
                 <label>Ссылка на покупку (Ozon / WB):</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
@@ -269,7 +239,6 @@
                 <label>Название устройства:</label>
                 <input type="text" id="newFilterName" placeholder="Кувшин на кухне">
             </div>
-            
             <div class="form-group">
                 <label>Тип устройства:</label>
                 <div class="chip-group" id="chipType">
@@ -279,7 +248,6 @@
                     <div class="chip-btn" data-value="Насадка" onclick="selectChip('chipType', this)">Насадка</div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Паспортный ресурс (дней):</label>
                 <div class="chip-group" id="chipBaseDays">
@@ -290,7 +258,6 @@
                     <div class="chip-btn" data-value="365" onclick="selectChip('chipBaseDays', this)">1 год</div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Жесткость воды:</label>
                 <div class="chip-group" id="chipHardness">
@@ -299,7 +266,6 @@
                     <div class="chip-btn" data-value="1.5" onclick="selectChip('chipHardness', this)">Оч. жесткая (-50%)</div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Количество чел.:</label>
                 <div class="chip-group" id="chipPeople">
@@ -308,12 +274,10 @@
                     <div class="chip-btn" data-value="3" onclick="selectChip('chipPeople', this)">3–4 чел</div>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Ссылка на покупку (Ozon / WB):</label>
                 <input type="url" id="newFilterUrl" placeholder="https://ozon.ru/...">
             </div>
-            
             <button class="btn btn-primary" onclick="addNewFilter()">Создать фильтр</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
@@ -334,7 +298,7 @@
     <div class="modal" id="historyModal">
         <div class="modal-content">
             <h2>Статистика и Расходы</h2>
-            <div class="eco-badge" id="ecoBadge" style="margin-top:10px;">
+            <div class="eco-badge" style="margin-top:10px;">
                 🌱 <b>Эко-вклад:</b> Вы сберегли ~<span id="ecoBottles">0</span> пластиковых бутылок 1.5л.<br>
                 💰 <b>Экономия:</b> ~<span id="ecoMoney">0</span> ₽ по сравнению с бутилированной водой.
             </div>
@@ -385,7 +349,6 @@
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
         let waveColor = 'rgba(0, 242, 254, 0.12)';
-        
         const particles = Array.from({ length: 50 }, () => ({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
@@ -393,14 +356,11 @@
             s: Math.random() * 0.8 + 0.3,
             wobble: Math.random() * Math.PI * 2
         }));
-
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
-
         function drawWaves() {
             ctx.clearRect(0, 0, width, height);
-
             ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
             particles.forEach(p => {
                 ctx.beginPath();
@@ -410,9 +370,7 @@
                 p.x += Math.sin(step * 0.02 + p.wobble) * 0.4;
                 if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
             });
-
             const amp = width < 600 ? 90 : 65;
-
             for (let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 ctx.fillStyle = waveColor;
@@ -425,47 +383,37 @@
                 ctx.closePath();
                 ctx.fill();
             }
-
             step++;
             requestAnimationFrame(drawWaves);
         }
         drawWaves();
 
         function selectChip(groupId, element) {
-            document.querySelectorAll(`#${groupId} .chip-btn`).forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('#' + groupId + ' .chip-btn').forEach(btn => btn.classList.remove('selected'));
             element.classList.add('selected');
         }
-
         function getSelectedChipValue(groupId) {
-            const selected = document.querySelector(`#${groupId} .chip-btn.selected`);
+            const selected = document.querySelector('#' + groupId + ' .chip-btn.selected');
             return selected ? selected.getAttribute('data-value') : null;
         }
-
         function getCurrentFilter() {
             return appData.filters.find(f => f.id === appData.currentFilterId) || null;
         }
-
         function normalizeUrl(url) {
             const u = (url || '').trim();
             if (!u) return '';
             if (!/^https?:\/\//i.test(u)) return 'https://' + u;
             return u;
         }
-
         async function openExternalUrl(url) {
-            if (!url) return;
             const target = normalizeUrl(url);
             if (!target) return;
-
             try {
                 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
                     await window.Capacitor.Plugins.Browser.open({ url: target });
                     return;
                 }
-            } catch (e) {
-                console.warn('Browser plugin failed', e);
-            }
-
+            } catch (e) {}
             try {
                 const a = document.createElement('a');
                 a.href = target;
@@ -482,7 +430,6 @@
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
-
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
 
             const currentFilters = appData.filters.filter(f => f.locationId === appData.currentLocationId);
@@ -497,22 +444,17 @@
                     appData.currentFilterId = currentFilters[0].id;
                 }
                 filter = currentFilters.find(f => f.id === appData.currentFilterId);
-
                 const now = new Date().getTime();
                 tabsContainer.innerHTML = currentFilters.map(f => {
                     let pM = f.people == 1 ? 1 : (f.people == 2 ? 0.75 : 0.5);
                     let hM = 1 / (f.hardness || 1);
                     let maxD = Math.round(f.baseDays * pM * hM);
                     let dLeft = maxD - Math.floor((now - f.lastDate) / (1000 * 60 * 60 * 24));
-                    
                     let tabStatusClass = '';
                     let badgeIcon = '';
                     if (dLeft <= 0) { tabStatusClass = 'tab-danger'; badgeIcon = '🔴 '; }
                     else if (dLeft <= 10) { tabStatusClass = 'tab-warning'; badgeIcon = '🟡 '; }
-
-                    return `<div class="tab ${f.id === appData.currentFilterId ? 'active' : ''} ${tabStatusClass}" onclick="selectFilter('${f.id}')">
-                        ${badgeIcon}${f.name}
-                    </div>`;
+                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active' : '') + ' ' + tabStatusClass + '" onclick="selectFilter(\'' + f.id + '\')">' + badgeIcon + f.name + '</div>';
                 }).join('');
             }
 
@@ -526,7 +468,6 @@
                 let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
                 let hardnessMult = 1 / (filter.hardness || 1);
                 let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-
                 const now = new Date().getTime();
                 const elapsedDays = Math.floor((now - filter.lastDate) / (1000 * 60 * 60 * 24));
                 const daysLeft = realMaxDays - elapsedDays;
@@ -584,28 +525,21 @@
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
                 ln.requestPermissions();
-                
                 ln.addListener('localNotificationActionPerformed', (notification) => {
                     if (notification.notification && notification.notification.id) {
-                        ln.removeDeliveredNotifications({
-                            notifications: [{ id: notification.notification.id }]
-                        });
+                        ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
                     }
-
                     const extraData = notification.notification.extra;
                     if (extraData && extraData.locationId && extraData.filterId) {
                         appData.currentLocationId = extraData.locationId;
                         appData.currentFilterId = extraData.filterId;
-
                         const filter = appData.filters.find(f => f.id === extraData.filterId);
                         if (filter) {
                             let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
                             let hardnessMult = 1 / (filter.hardness || 1);
                             let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-                            const msPerDay = 1000 * 60 * 60 * 24;
-                            filter.lastDate = Date.now() - (realMaxDays * msPerDay + 5000);
+                            filter.lastDate = Date.now() - (realMaxDays * 86400000 + 5000);
                         }
-
                         saveDB();
                         openReplaceModal();
                     }
@@ -615,25 +549,21 @@
 
         function postponeCurrentFilter(days) {
             const filter = getCurrentFilter();
-            if (filter) {
-                const now = new Date().getTime();
-                const msPerDay = 1000 * 60 * 60 * 24;
-                let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-                let hardnessMult = 1 / (filter.hardness || 1);
-                let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-
-                filter.lastDate = now - ((realMaxDays - days) * msPerDay);
-                closeModals();
-                saveDB();
-                showToast(`Продлено на ${days} дней!`);
-            }
+            if (!filter) return;
+            const now = new Date().getTime();
+            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
+            let hardnessMult = 1 / (filter.hardness || 1);
+            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
+            filter.lastDate = now - ((realMaxDays - days) * 86400000);
+            closeModals();
+            saveDB();
+            showToast('Продлено на ' + days + ' дней!');
         }
 
         function toggleInfoBlock() {
             const wrapper = document.getElementById('infoGridWrapper');
             const btn = document.getElementById('toggleBtn');
             const daysDisplay = document.getElementById('daysDisplay');
-
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
                 btn.innerText = 'Свернуть ▲';
@@ -646,74 +576,59 @@
         }
 
         function toggleDevPanel() {
-            const panel = document.getElementById('devPanel');
-            panel.classList.toggle('open');
+            document.getElementById('devPanel').classList.toggle('open');
         }
 
         async function runCustomTest() {
             const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = getCurrentFilter();
             if (!filter) return;
-
             let ms = 500;
             if (val === '10s') ms = 10000;
             if (val === '10m') ms = 600000;
             if (val === '1h') ms = 3600000;
-
             const locObj = appData.locations.find(l => l.id === filter.locationId);
-            const locText = locObj ? ` [${locObj.name}]` : '';
-
-            showToast(`Тест запущен (${val})! Сверните приложение...`);
-
+            const locText = locObj ? ' [' + locObj.name + ']' : '';
+            showToast('Тест запущен (' + val + ')! Сверните приложение...');
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
-                
                 await ln.createChannel({
                     id: 'aqua_high_priority',
                     name: 'AquaControl Напоминания',
-                    description: 'Уведомления о замене фильтра для воды',
+                    description: 'Уведомления о замене фильтра',
                     importance: 5,
                     visibility: 1,
                     sound: 'default',
                     vibrates: true
                 });
-
                 await ln.schedule({
                     notifications: [{
-                        title: "AquaControl",
-                        body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
+                        title: 'AquaControl',
+                        body: 'Рекомендуем заменить картридж в фильтре "' + filter.name + '"' + locText + '.',
                         id: Math.floor(Math.random() * 88888) + 1,
                         schedule: { at: new Date(Date.now() + ms) },
-                        smallIcon: "ic_stat_icon",
-                        iconColor: "#00F2FE",
+                        smallIcon: 'ic_stat_icon',
+                        iconColor: '#00F2FE',
                         autoCancel: true,
                         channelId: 'aqua_high_priority',
                         extra: { locationId: filter.locationId, filterId: filter.id }
                     }]
                 });
-            } else if ("Notification" in window && Notification.permission === "granted") {
-                setTimeout(() => {
-                    new Notification("AquaControl", { body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.` });
-                }, ms);
             }
         }
 
         function openLocationSelectModal() {
             const container = document.getElementById('locationsListContainer');
             const canDelete = appData.locations.length > 1;
-
-            container.innerHTML = appData.locations.map(l => `
-                <div class="loc-option-item ${l.id === appData.currentLocationId ? 'active' : ''}">
-                    <span onclick="selectLocationDirect('${l.id}')" style="flex:1; cursor:pointer; font-weight:600; padding:6px 0; min-width:0; overflow:hidden; text-overflow:ellipsis;">
-                        ${l.name} ${l.id === appData.currentLocationId ? '✓' : ''}
-                    </span>
-                    <div class="loc-actions">
-                        <button class="loc-icon-btn edit" onclick="event.stopPropagation(); openRenameLocationModal('${l.id}')" title="Переименовать">✏️</button>
-                        ${canDelete ? `<button class="loc-icon-btn delete" onclick="event.stopPropagation(); deleteSpecificLocation('${l.id}')" title="Удалить">🗑</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-
+            container.innerHTML = appData.locations.map(l => {
+                return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
+                    '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
+                    l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span>' +
+                    '<div class="loc-actions">' +
+                    '<button class="loc-icon-btn edit" onclick="event.stopPropagation();openRenameLocationModal(\'' + l.id + '\')">✏️</button>' +
+                    (canDelete ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
+                    '</div></div>';
+            }).join('');
             document.getElementById('locSelectModal').style.display = 'flex';
         }
 
@@ -727,17 +642,14 @@
             const loc = appData.locations.find(l => l.id === locId);
             if (!loc) return;
             pendingRenameLocationId = locId;
-            document.getElementById('renameLocContext').innerText = `Сейчас: ${loc.name}`;
+            document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
             document.getElementById('renameLocInput').value = loc.name;
             document.getElementById('renameLocationModal').style.display = 'flex';
         }
 
         function confirmRenameLocation() {
             const name = (document.getElementById('renameLocInput').value || '').trim();
-            if (!name) {
-                showToast('Введите название');
-                return;
-            }
+            if (!name) { showToast('Введите название'); return; }
             const loc = appData.locations.find(l => l.id === pendingRenameLocationId);
             if (!loc) return;
             loc.name = name;
@@ -749,22 +661,22 @@
 
         function selectFilter(id) { appData.currentFilterId = id; saveDB(); }
 
-        function openReplaceModal() { 
+        function openReplaceModal() {
             const filter = getCurrentFilter();
             const locObj = appData.locations.find(l => l.id === appData.currentLocationId);
             if (filter && locObj) {
-                document.getElementById('replaceModalContext').innerText = `Объект: ${locObj.name} • Устройство: ${filter.name}`;
+                document.getElementById('replaceModalContext').innerText = 'Объект: ' + locObj.name + ' • Устройство: ' + filter.name;
             }
-            document.getElementById('replaceModal').style.display = 'flex'; 
+            document.getElementById('replaceModal').style.display = 'flex';
         }
-        
+
         function openAddFilterModal() { document.getElementById('addFilterModal').style.display = 'flex'; }
         function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
 
         function openEditFilterModal() {
             const filter = getCurrentFilter();
             if (!filter) return;
-            document.getElementById('editFilterContext').innerText = `Текущее: ${filter.name}`;
+            document.getElementById('editFilterContext').innerText = 'Текущее: ' + filter.name;
             document.getElementById('editFilterName').value = filter.name || '';
             document.getElementById('editFilterUrl').value = filter.buyUrl || '';
             document.getElementById('editFilterModal').style.display = 'flex';
@@ -775,10 +687,7 @@
             if (!filter) return;
             const name = (document.getElementById('editFilterName').value || '').trim();
             const buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
-            if (!name) {
-                showToast('Введите название фильтра');
-                return;
-            }
+            if (!name) { showToast('Введите название фильтра'); return; }
             filter.name = name;
             filter.buyUrl = buyUrl;
             closeModals();
@@ -789,13 +698,11 @@
         function onCartIconClick() {
             const filter = getCurrentFilter();
             if (!filter) return;
-
             if (filter.buyUrl && String(filter.buyUrl).trim()) {
                 showToast('Открываем магазин…');
                 openExternalUrl(filter.buyUrl);
                 return;
             }
-
             document.getElementById('noLinkUrlInput').value = '';
             document.getElementById('noLinkModal').style.display = 'flex';
         }
@@ -804,39 +711,28 @@
             const filter = getCurrentFilter();
             if (!filter) return;
             const buyUrl = normalizeUrl(document.getElementById('noLinkUrlInput').value);
-            if (!buyUrl) {
-                showToast('Вставьте ссылку на магазин');
-                return;
-            }
+            if (!buyUrl) { showToast('Вставьте ссылку на магазин'); return; }
             filter.buyUrl = buyUrl;
             closeModals();
             saveDB();
             showToast('Ссылка сохранена');
         }
-        
+
         function openHistoryModal() {
             const list = document.getElementById('historyList');
             let total = 0;
             let replacementsCount = appData.history.length;
-
             if (replacementsCount === 0) {
-                list.innerHTML = '<div style="color:#6e7d93; text-align:center;">История замен пуста</div>';
+                list.innerHTML = '<div style="color:#6e7d93;text-align:center;">История замен пуста</div>';
             } else {
                 list.innerHTML = appData.history.map(h => {
                     total += Number(h.cost || 0);
-                    return `<div class="history-item">
-                        <div><b>${h.filterName}</b><br><small style="color:#6e7d93">${h.date} ${h.note ? '• '+h.note : ''}</small></div>
-                        <div style="color:#00f2fe;">${h.cost ? h.cost + ' ₽' : '0 ₽'}</div>
-                    </div>`;
+                    return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
                 }).join('');
             }
-
-            const bottles = replacementsCount * 200;
-            const savedMoney = bottles * 45;
-            document.getElementById('ecoBottles').innerText = bottles;
-            document.getElementById('ecoMoney').innerText = savedMoney.toLocaleString('ru-RU');
+            document.getElementById('ecoBottles').innerText = replacementsCount * 200;
+            document.getElementById('ecoMoney').innerText = (replacementsCount * 200 * 45).toLocaleString('ru-RU');
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
-            
             document.getElementById('historyModal').style.display = 'flex';
         }
 
@@ -847,24 +743,20 @@
 
         function confirmReplacement(skipDetails) {
             const filter = getCurrentFilter();
-            if (filter) {
-                const brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
-                const cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
-
-                filter.lastDate = new Date().getTime();
-                if (!skipDetails && brand) filter.brand = brand;
-
-                appData.history.unshift({
-                    filterName: filter.name,
-                    date: new Date().toLocaleDateString('ru-RU'),
-                    cost: cost,
-                    note: skipDetails ? 'Быстрая замена' : ''
-                });
-
-                closeModals();
-                saveDB();
-                showToast("Замена зафиксирована!");
-            }
+            if (!filter) return;
+            const brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
+            const cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
+            filter.lastDate = new Date().getTime();
+            if (!skipDetails && brand) filter.brand = brand;
+            appData.history.unshift({
+                filterName: filter.name,
+                date: new Date().toLocaleDateString('ru-RU'),
+                cost: cost,
+                note: skipDetails ? 'Быстрая замена' : ''
+            });
+            closeModals();
+            saveDB();
+            showToast('Замена зафиксирована!');
         }
 
         function addNewFilter() {
@@ -874,7 +766,6 @@
             const hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
             const people = parseInt(getSelectedChipValue('chipPeople') || '2');
             const buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
-
             const newId = 'f_' + Date.now();
             appData.filters.push({
                 id: newId,
@@ -888,64 +779,48 @@
                 brand: '',
                 buyUrl: buyUrl
             });
-
             appData.currentFilterId = newId;
             closeModals();
             saveDB();
-            showToast("Фильтр создан!");
+            showToast('Фильтр создан!');
         }
 
         function addNewLocation() {
             const name = document.getElementById('newLocName').value;
-            if (name) {
-                const newId = 'loc_' + Date.now();
-                appData.locations.push({ id: newId, name: name });
-                appData.currentLocationId = newId;
-                closeModals();
-                saveDB();
-                showToast("Локация добавлена!");
-            }
+            if (!name) return;
+            const newId = 'loc_' + Date.now();
+            appData.locations.push({ id: newId, name: name });
+            appData.currentLocationId = newId;
+            closeModals();
+            saveDB();
+            showToast('Локация добавлена!');
         }
 
         function deleteCurrentFilter() {
             const filter = getCurrentFilter();
             if (!filter) return;
-
-            showCustomConfirm(
-                "Удаление устройства",
-                `Вы действительно хотите удалить "${filter.name}"?`,
-                () => {
-                    appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
-                    saveDB();
-                    showToast("Устройство удалено");
-                }
-            );
+            showCustomConfirm('Удаление устройства', 'Вы действительно хотите удалить "' + filter.name + '"?', () => {
+                appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
+                saveDB();
+                showToast('Устройство удалено');
+            });
         }
 
         function deleteSpecificLocation(locId) {
-            if (appData.locations.length <= 1) {
-                showToast("Нельзя удалить единственный объект!");
-                return;
-            }
+            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный объект!'); return; }
             const loc = appData.locations.find(l => l.id === locId);
             if (!loc) return;
-
-            showCustomConfirm(
-                "Удаление объекта",
-                `Удалить объект "${loc.name}" и все связанные с ним фильтры?`,
-                () => {
-                    appData.filters = appData.filters.filter(f => f.locationId !== locId);
-                    appData.locations = appData.locations.filter(l => l.id !== locId);
-                    
-                    if (appData.currentLocationId === locId) {
-                        appData.currentLocationId = appData.locations[0].id;
-                        appData.currentFilterId = null;
-                    }
-                    closeModals();
-                    saveDB();
-                    showToast("Объект удален");
+            showCustomConfirm('Удаление объекта', 'Удалить объект "' + loc.name + '" и все связанные с ним фильтры?', () => {
+                appData.filters = appData.filters.filter(f => f.locationId !== locId);
+                appData.locations = appData.locations.filter(l => l.id !== locId);
+                if (appData.currentLocationId === locId) {
+                    appData.currentLocationId = appData.locations[0].id;
+                    appData.currentFilterId = null;
                 }
-            );
+                closeModals();
+                saveDB();
+                showToast('Объект удален');
+            });
         }
 
         function showToast(text) {
