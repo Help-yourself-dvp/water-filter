@@ -24,29 +24,24 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Build Android App with Capacitor
+    - name: Prepare Web Dir and Build APK
       run: |
-        # 1. Создаем чистый package.json
+        # 1. Создаем отдельную чистую папку для сайта
+        mkdir -p www
+        cp index.html manifest.json icon.png www/ 2>/dev/null || :
+
+        # 2. Устанавливаем инструменты сборки
         npm init -y
-        
-        # 2. Устанавливаем Capacitor
-        npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/local-notifications@latest
-        
-        # 3. Удаляем старые конфликтующие конфигурации (если есть)
-        rm -f capacitor.config.json capacitor.config.ts
-        rm -rf android
-        
-        # 4. Инициализируем проект с нуля
-        npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir .
-        
-        # 5. Добавляем платформу Android
+        npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+
+        # 3. Инициализируем проект из папки www
+        npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
+
+        # 4. Собираем нативный проект Android
         npx cap add android
-        
-        # 6. Синхронизируем файлы
-        npx cap copy android
         npx cap sync android
-        
-        # 7. Компилируем нативный APK файл
+
+        # 5. Компилируем готовый .APK
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
