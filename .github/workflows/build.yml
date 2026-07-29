@@ -49,6 +49,9 @@ jobs:
         sed -i 's/versionCode 1/versionCode 7/g' android/app/build.gradle
         sed -i 's/versionName "1.0"/versionName "1.0.6"/g' android/app/build.gradle
 
+        # Подавить warning AGP 8.0 + compileSdk 34
+        echo "android.suppressUnsupportedCompileSdk=34" >> android/gradle.properties
+
         # Разрешения для фоновых будильников и уведомлений
         sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>\n    <uses-permission android:name="android.permission.WAKE_LOCK" \/>' android/app/src/main/AndroidManifest.xml
 
@@ -59,13 +62,15 @@ jobs:
         sudo apt-get update -qq
         sudo apt-get install -y imagemagick
 
+        # Убираем дефолтные заготовки Capacitor (drawable + values), чтобы не было Duplicate resources
         rm -rf android/app/src/main/res/drawable*/ic_launcher*
+        rm -f android/app/src/main/res/values/ic_launcher_background.xml
 
         if [ -f "icon.png" ]; then
-          # Создаем растровую иконку с плотным сине-голубым фоном для меню "О приложении"
+          # Растровая иконка с плотным сине-голубым фоном для меню "О приложении"
           convert icon.png -background "#0284C7" -flatten -alpha off icon_solid.png 2>/dev/null || cp icon.png icon_solid.png
 
-          # 1. Заменяем растровые иконки во всех mipmap папках
+          # 1. Растровые иконки во всех mipmap-* (кроме anydpi-v26)
           for dir in android/app/src/main/res/mipmap-*; do
             if [ -d "$dir" ] && [ "$dir" != "android/app/src/main/res/mipmap-anydpi-v26" ]; then
               cp icon_solid.png "$dir/ic_launcher.png"
@@ -74,19 +79,20 @@ jobs:
             fi
           done
 
-          # 2. Системные цвета приложения
+          # 2. Цвета приложения — ic_launcher_background ТОЛЬКО здесь (без дубля)
           mkdir -p android/app/src/main/res/values
           printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#0284C7</color>\n    <color name="colorPrimaryDark">#0284C7</color>\n    <color name="ic_launcher_background">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
 
-          # 3. Векторный сине-голубой фон #0284C7 в drawable
+          # 3. Векторный фон в drawable
+          mkdir -p android/app/src/main/res/drawable
           printf '<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="108dp"\n    android:height="108dp"\n    android:viewportWidth="108"\n    android:viewportHeight="108">\n    <path\n        android:fillColor="#0284C7"\n        android:pathData="M0,0h108v108h-108z"/>\n</vector>\n' > android/app/src/main/res/drawable/ic_launcher_background.xml
 
           cp icon.png android/app/src/main/res/drawable/ic_launcher_foreground.png
           cp icon.png android/app/src/main/res/drawable/ic_stat_icon.png
 
-          # 4. Адаптивные иконки в mipmap-anydpi-v26
+          # 4. Адаптивные иконки
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
-          
+
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background"/>\n    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n</adaptive-icon>\n' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background"/>\n    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n</adaptive-icon>\n' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
