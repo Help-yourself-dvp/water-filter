@@ -1,4 +1,4 @@
-name: Build Native Android APK
+name: Build Native Signed Android APK
 
 on:
   push:
@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 1. Скачивание исходного кода
+    - name: 1. Скачивание кода
       uses: actions/checkout@v4
 
-    - name: 2. Настройка Java 17
+    - name: 2. Настройка JDK 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 3. Настройка Android SDK
+    - name: 3. Настройка Android SDK 34
       uses: android-actions/setup-android@v3
 
     - name: 4. Настройка Node.js 20
@@ -27,32 +27,53 @@ jobs:
       with:
         node-version: '20'
 
-    - name: 5. Подготовка файлов проекта
+    - name: 5. Подготовка папки www
       run: |
         mkdir -p www
         cp index.html www/
-        cp manifest.json www/ 2>/dev/null || true
-        cp icon.png www/ 2>/dev/null || true
+        cp manifest.json www/
+        cp icon.png www/
 
-    - name: 6. Установка зависимостей Capacitor
+    - name: 6. Установка Capacitor и генератора Иконок
       run: |
         npm init -y
-        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
+        npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7 @capacitor/assets@3.0.5
 
-    - name: 7. Инициализация платформы Android
+    - name: 7. Инициализация и Настройка Android
       run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
+        
+        # Генерация нативных HD-иконок для Android из icon.png
+        npx cap-assets generate --android
+
+        # Принудительная установка Target SDK 34 в Gradle
+        sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
+        sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
+
+        # Добавление разрешения на Уведомления в AndroidManifest.xml
+        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
+
         npx cap sync android
 
-    - name: 8. Компиляция нативного APK
+    - name: 8. Создание Цифрового Сертификата Подписи (Keystore)
+      run: |
+        keytool -genkey -v -keystore release.keystore -alias aquakey -keyalg RSA -keysize 2048 -validity 10000 -storepass aquapass123 -keypass aquapass123 -dname "CN=AquaControl, OU=Dev, O=Aqua, L=City, S=State, C=RU"
+
+    - name: 9. Сборка и Подпись APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleRelease
+        
+        # Подпись файла ключом
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore ../release.keystore -storepass aquapass123 app/build/outputs/apk/release/app-release-unsigned.apk aquakey
+        
+        # Переименование в итоговый подписанный файл
+        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/AquaControlPro-Signed.apk
 
-    - name: 9. Выгрузка готового APK файла
+    - name: 10. Выгрузка ГОТОВОГО Подписанного APK
       uses: actions/upload-artifact@v4
       with:
-        name: AquaControlPro-Native
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: AquaControlPro-Signed-APK
+        path: android/app/build/outputs/apk/release/AquaControlPro-Signed.apk
