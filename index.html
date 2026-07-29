@@ -167,7 +167,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ЗАМЕНЫ С КОНТЕКСТОМ ЛОКАЦИИ И УСТРОЙСТВА -->
     <div class="modal" id="replaceModal">
         <div class="modal-content">
             <h2>Фиксация замены</h2>
@@ -352,7 +351,6 @@
                     appData.currentFilterId = currentFilters[0].id;
                 }
                 
-                // ПОДСВЕТКА ВКЛАДОК ФИЛЬТРОВ
                 const now = new Date().getTime();
                 tabsContainer.innerHTML = currentFilters.map(f => {
                     let pM = f.people == 1 ? 1 : (f.people == 2 ? 0.75 : 0.5);
@@ -400,7 +398,7 @@
                     
                     const locObj = appData.locations.find(l => l.id === filter.locationId);
                     const locNameText = locObj ? ` [${locObj.name}]` : '';
-                    triggerNativeNotification("AquaControl 🚨", `Срок фильтра "${filter.name}"${locNameText} истек! Пожалуйста, замените фильтр.`, 500, filter.locationId, filter.id);
+                    triggerNativeNotification("AquaControl 🚨", `Срок службы фильтра "${filter.name}"${locNameText} истек! Замените фильтр.`, 500, filter.locationId, filter.id);
                 } else if (daysLeft <= 10) {
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255, 170, 0, 0.15)';
@@ -421,8 +419,9 @@
             }
         }
 
-        // НА ТИВНЫЙ МОСТ PUSH С ПЕРЕДАЧЕЙ КОНТЕКСТА ДОМА И ФИЛЬТРА
+        // НА ТИВНЫЙ МОСТ PUSH С АВТО-УДАЛЕНИЕМ ИЗ ШТОРКИ ПРИ КЛИКЕ
         async function triggerNativeNotification(title, bodyText, delayMs = 500, locId = '', filterId = '') {
+            const notifId = Math.floor(Math.random() * 10000) + 1;
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 try {
                     const ln = window.Capacitor.Plugins.LocalNotifications;
@@ -431,10 +430,11 @@
                         notifications: [{
                             title: title,
                             body: bodyText,
-                            id: Math.floor(Math.random() * 10000) + 1,
+                            id: notifId,
                             schedule: { at: new Date(Date.now() + delayMs) },
                             smallIcon: "ic_stat_icon",
                             iconColor: "#00F2FE",
+                            autoCancel: true, // АВТО-УДАЛЕНИЕ ИЗ ШТОРКИ
                             extra: { locationId: locId, filterId: filterId }
                         }]
                     });
@@ -444,20 +444,25 @@
             }
         }
 
-        // ОБРАБОТЧИК КЛИКА ПО УВЕДОМЛЕНИЮ ИЗ ШТОРКИ HONOR (DEEP LINKING)
+        // ОБРАБОТКА КЛИКА ПО УВЕДОМЛЕНИЮ (DEEP LINKING + ОЧИСТКА ШТОРКИ)
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
                 ln.requestPermissions();
                 
                 ln.addListener('localNotificationActionPerformed', (notification) => {
+                    // Гарантированно удаляем уведомление из шторки
+                    if (notification.notification && notification.notification.id) {
+                        ln.removeDeliveredNotifications({
+                            notifications: [{ id: notification.notification.id }]
+                        });
+                    }
+
                     const extraData = notification.notification.extra;
                     if (extraData && extraData.locationId && extraData.filterId) {
-                        // Автоматически переключаем дом и фильтр
                         appData.currentLocationId = extraData.locationId;
                         appData.currentFilterId = extraData.filterId;
                         saveDB();
-                        // Вызываем открывающееся окно замены
                         openReplaceModal();
                     }
                 });
@@ -473,7 +478,6 @@
                 let hardnessMult = 1 / (filter.hardness || 1);
                 let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
 
-                // Сдвигаем дату так, будто осталось ровно 'days' дней
                 filter.lastDate = now - ((realMaxDays - days) * msPerDay);
                 closeModals();
                 saveDB();
