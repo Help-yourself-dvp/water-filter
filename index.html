@@ -147,6 +147,7 @@
                     </div>
                 </div>
                 <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Запустить тест</button>
+                <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Пересоздать все авто-пуши</button>
             </div>
         </div>
     </div>
@@ -190,6 +191,32 @@
             <div class="form-group">
                 <label>Название устройства:</label>
                 <input type="text" id="editFilterName" placeholder="Кувшин на кухне">
+            </div>
+            <div class="form-group">
+                <label>Паспортный ресурс (дней):</label>
+                <div class="chip-group" id="editChipBaseDays">
+                    <div class="chip-btn" data-value="30" onclick="selectChip('editChipBaseDays', this)">30 дн</div>
+                    <div class="chip-btn" data-value="60" onclick="selectChip('editChipBaseDays', this)">60 дн</div>
+                    <div class="chip-btn" data-value="90" onclick="selectChip('editChipBaseDays', this)">90 дн</div>
+                    <div class="chip-btn" data-value="180" onclick="selectChip('editChipBaseDays', this)">180 дн</div>
+                    <div class="chip-btn" data-value="365" onclick="selectChip('editChipBaseDays', this)">1 год</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Жесткость воды:</label>
+                <div class="chip-group" id="editChipHardness">
+                    <div class="chip-btn" data-value="1" onclick="selectChip('editChipHardness', this)">Мягкая (100%)</div>
+                    <div class="chip-btn" data-value="1.25" onclick="selectChip('editChipHardness', this)">Жесткая (-25%)</div>
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('editChipHardness', this)">Оч. жесткая (-50%)</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Количество чел.:</label>
+                <div class="chip-group" id="editChipPeople">
+                    <div class="chip-btn" data-value="1" onclick="selectChip('editChipPeople', this)">1 чел</div>
+                    <div class="chip-btn" data-value="2" onclick="selectChip('editChipPeople', this)">2 чел</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('editChipPeople', this)">3–4 чел</div>
+                </div>
             </div>
             <div class="form-group">
                 <label>Ссылка на покупку (Ozon / WB):</label>
@@ -311,7 +338,10 @@
     </div>
 
     <script>
-        let defaultData = {
+        var MS_DAY = 1000 * 60 * 60 * 24;
+        var NOTIF_CHANNEL = 'aqua_high_priority';
+
+        var defaultData = {
             currentLocationId: 'loc1',
             currentFilterId: 'f1',
             locations: [
@@ -324,13 +354,15 @@
             history: []
         };
 
-        let appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
-        let pendingConfirmAction = null;
-        let pendingRenameLocationId = null;
+        var appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
+        var pendingConfirmAction = null;
+        var pendingRenameLocationId = null;
+        var notificationsReady = false;
 
         function saveDB() {
             localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
             updateUI();
+            scheduleAllFilterNotifications();
         }
 
         function showCustomConfirm(title, message, onConfirm) {
@@ -340,29 +372,31 @@
             document.getElementById('confirmModal').style.display = 'flex';
         }
 
-        document.getElementById('confirmOkBtn').onclick = () => {
+        document.getElementById('confirmOkBtn').onclick = function () {
             if (pendingConfirmAction) pendingConfirmAction();
             closeModals();
         };
 
-        const canvas = document.getElementById('waveCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, step = 0;
-        let waveColor = 'rgba(0, 242, 254, 0.12)';
-        const particles = Array.from({ length: 50 }, () => ({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            r: Math.random() * 2.5 + 1,
-            s: Math.random() * 0.8 + 0.3,
-            wobble: Math.random() * Math.PI * 2
-        }));
+        var canvas = document.getElementById('waveCanvas');
+        var ctx = canvas.getContext('2d');
+        var width, height, step = 0;
+        var waveColor = 'rgba(0, 242, 254, 0.12)';
+        var particles = Array.from({ length: 50 }, function () {
+            return {
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                r: Math.random() * 2.5 + 1,
+                s: Math.random() * 0.8 + 0.3,
+                wobble: Math.random() * Math.PI * 2
+            };
+        });
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
         function drawWaves() {
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
-            particles.forEach(p => {
+            particles.forEach(function (p) {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                 ctx.fill();
@@ -370,13 +404,13 @@
                 p.x += Math.sin(step * 0.02 + p.wobble) * 0.4;
                 if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
             });
-            const amp = width < 600 ? 90 : 65;
-            for (let i = 0; i < 3; i++) {
+            var amp = width < 600 ? 90 : 65;
+            for (var i = 0; i < 3; i++) {
                 ctx.beginPath();
                 ctx.fillStyle = waveColor;
                 ctx.moveTo(0, height);
-                for (let x = 0; x <= width; x += 10) {
-                    let y = Math.sin((x * 0.002) + (step * 0.012) + (i * 2.2)) * amp + (height * 0.58);
+                for (var x = 0; x <= width; x += 10) {
+                    var y = Math.sin((x * 0.002) + (step * 0.012) + (i * 2.2)) * amp + (height * 0.58);
                     ctx.lineTo(x, y);
                 }
                 ctx.lineTo(width, height);
@@ -389,24 +423,63 @@
         drawWaves();
 
         function selectChip(groupId, element) {
-            document.querySelectorAll('#' + groupId + ' .chip-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('#' + groupId + ' .chip-btn').forEach(function (btn) {
+                btn.classList.remove('selected');
+            });
             element.classList.add('selected');
         }
+
         function getSelectedChipValue(groupId) {
-            const selected = document.querySelector('#' + groupId + ' .chip-btn.selected');
+            var selected = document.querySelector('#' + groupId + ' .chip-btn.selected');
             return selected ? selected.getAttribute('data-value') : null;
         }
-        function getCurrentFilter() {
-            return appData.filters.find(f => f.id === appData.currentFilterId) || null;
+
+        function setChipValue(groupId, value) {
+            var buttons = document.querySelectorAll('#' + groupId + ' .chip-btn');
+            var found = false;
+            buttons.forEach(function (btn) {
+                var match = String(btn.getAttribute('data-value')) === String(value);
+                btn.classList.toggle('selected', match);
+                if (match) found = true;
+            });
+            if (!found && buttons.length) {
+                buttons.forEach(function (b) { b.classList.remove('selected'); });
+                buttons[0].classList.add('selected');
+            }
         }
+
+        function getCurrentFilter() {
+            return appData.filters.find(function (f) { return f.id === appData.currentFilterId; }) || null;
+        }
+
+        function getPeopleMult(people) {
+            return people == 1 ? 1 : (people == 2 ? 0.75 : 0.5);
+        }
+
+        function getFilterTiming(filter) {
+            var peopleMult = getPeopleMult(filter.people);
+            var hardnessMult = 1 / (filter.hardness || 1);
+            var realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
+            var expiryMs = Number(filter.lastDate) + realMaxDays * MS_DAY;
+            var followUpMs = expiryMs + 7 * MS_DAY;
+            var daysLeft = realMaxDays - Math.floor((Date.now() - filter.lastDate) / MS_DAY);
+            return {
+                realMaxDays: realMaxDays,
+                expiryMs: expiryMs,
+                followUpMs: followUpMs,
+                daysLeft: daysLeft
+            };
+        }
+
         function normalizeUrl(url) {
-            const u = (url || '').trim();
+            var u = (url || '').trim();
             if (!u) return '';
             if (!/^https?:\/\//i.test(u)) return 'https://' + u;
             return u;
         }
+
         async function openExternalUrl(url) {
-            const target = normalizeUrl(url);
+            var target = normalizeUrl(url);
             if (!target) return;
             try {
                 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
@@ -415,7 +488,7 @@
                 }
             } catch (e) {}
             try {
-                const a = document.createElement('a');
+                var a = document.createElement('a');
                 a.href = target;
                 a.target = '_blank';
                 a.rel = 'noopener noreferrer';
@@ -427,50 +500,154 @@
             }
         }
 
+        function getLocalNotifications() {
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                return window.Capacitor.Plugins.LocalNotifications;
+            }
+            return null;
+        }
+
+        /* Стабильный числовой id уведомления (Android требует int) */
+        function notifId(filterId, kind) {
+            var s = String(filterId) + '|' + String(kind);
+            var h = 2166136261;
+            for (var i = 0; i < s.length; i++) {
+                h ^= s.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            var id = (h >>> 0) % 2000000000;
+            return id === 0 ? 1 : id;
+        }
+
+        async function ensureNotifChannel(ln) {
+            await ln.createChannel({
+                id: NOTIF_CHANNEL,
+                name: 'AquaControl Напоминания',
+                description: 'Авто-напоминания о замене фильтра',
+                importance: 5,
+                visibility: 1,
+                sound: 'default',
+                vibrates: true
+            });
+        }
+
+        async function cancelAllPendingNotifications(ln) {
+            try {
+                var pending = await ln.getPending();
+                if (pending && pending.notifications && pending.notifications.length) {
+                    await ln.cancel({
+                        notifications: pending.notifications.map(function (n) {
+                            return { id: n.id };
+                        })
+                    });
+                }
+            } catch (e) {}
+        }
+
+        /**
+         * Авто-пуши:
+         *  - kind=exp  — в момент истечения срока (день 0)
+         *  - kind=p7   — через 7 дней после истечения, если замену не зафиксировали
+         * Пересоздаётся при каждом saveDB() и при запуске приложения.
+         */
+        async function scheduleAllFilterNotifications() {
+            var ln = getLocalNotifications();
+            if (!ln || !notificationsReady) return;
+
+            try {
+                await ensureNotifChannel(ln);
+                await cancelAllPendingNotifications(ln);
+
+                var now = Date.now();
+                var batch = [];
+
+                appData.filters.forEach(function (filter) {
+                    var t = getFilterTiming(filter);
+                    var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
+                    var locText = loc ? ' [' + loc.name + ']' : '';
+                    var extra = { locationId: filter.locationId, filterId: filter.id };
+
+                    /* День 0 — срок истёк (только если ещё в будущем) */
+                    if (t.expiryMs > now + 3000) {
+                        batch.push({
+                            title: 'AquaControl — срок истёк',
+                            body: 'Пора заменить картридж: "' + filter.name + '"' + locText + '.',
+                            id: notifId(filter.id, 'exp'),
+                            schedule: { at: new Date(t.expiryMs), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon',
+                            iconColor: '#00F2FE',
+                            autoCancel: true,
+                            channelId: NOTIF_CHANNEL,
+                            extra: extra
+                        });
+                    }
+
+                    /* +7 дней после просрочки — повтор, если данные о замене не внесли */
+                    if (t.followUpMs > now + 3000) {
+                        batch.push({
+                            title: 'AquaControl — всё ещё не заменён',
+                            body: 'Уже больше недели просрочен фильтр "' + filter.name + '"' + locText + '. Зафиксируйте замену или отложите срок.',
+                            id: notifId(filter.id, 'p7'),
+                            schedule: { at: new Date(t.followUpMs), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon',
+                            iconColor: '#FF4757',
+                            autoCancel: true,
+                            channelId: NOTIF_CHANNEL,
+                            extra: extra
+                        });
+                    }
+                });
+
+                if (batch.length) {
+                    await ln.schedule({ notifications: batch });
+                }
+            } catch (e) {
+                console.warn('scheduleAllFilterNotifications failed', e);
+            }
+        }
+
+        async function forceRescheduleAll() {
+            notificationsReady = true;
+            await scheduleAllFilterNotifications();
+            showToast('Авто-пуши пересозданы');
+        }
+
         function updateUI() {
-            const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
+            var currentLoc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; }) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
 
-            const currentFilters = appData.filters.filter(f => f.locationId === appData.currentLocationId);
-            const tabsContainer = document.getElementById('filterTabs');
-            let filter = null;
+            var currentFilters = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
+            var tabsContainer = document.getElementById('filterTabs');
+            var filter = null;
 
             if (currentFilters.length === 0) {
                 tabsContainer.innerHTML = '<div style="font-size:12px; color:#6e7d93;">Нет устройств в этой локации</div>';
                 appData.currentFilterId = null;
             } else {
-                if (!currentFilters.some(f => f.id === appData.currentFilterId)) {
+                if (!currentFilters.some(function (f) { return f.id === appData.currentFilterId; })) {
                     appData.currentFilterId = currentFilters[0].id;
                 }
-                filter = currentFilters.find(f => f.id === appData.currentFilterId);
-                const now = new Date().getTime();
-                tabsContainer.innerHTML = currentFilters.map(f => {
-                    let pM = f.people == 1 ? 1 : (f.people == 2 ? 0.75 : 0.5);
-                    let hM = 1 / (f.hardness || 1);
-                    let maxD = Math.round(f.baseDays * pM * hM);
-                    let dLeft = maxD - Math.floor((now - f.lastDate) / (1000 * 60 * 60 * 24));
-                    let tabStatusClass = '';
-                    let badgeIcon = '';
-                    if (dLeft <= 0) { tabStatusClass = 'tab-danger'; badgeIcon = '🔴 '; }
-                    else if (dLeft <= 10) { tabStatusClass = 'tab-warning'; badgeIcon = '🟡 '; }
+                filter = currentFilters.find(function (f) { return f.id === appData.currentFilterId; });
+                tabsContainer.innerHTML = currentFilters.map(function (f) {
+                    var t = getFilterTiming(f);
+                    var tabStatusClass = '';
+                    var badgeIcon = '';
+                    if (t.daysLeft <= 0) { tabStatusClass = 'tab-danger'; badgeIcon = '🔴 '; }
+                    else if (t.daysLeft <= 10) { tabStatusClass = 'tab-warning'; badgeIcon = '🟡 '; }
                     return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active' : '') + ' ' + tabStatusClass + '" onclick="selectFilter(\'' + f.id + '\')">' + badgeIcon + f.name + '</div>';
                 }).join('');
             }
 
-            const btnCart = document.getElementById('btnCartIcon');
-            const cartDot = document.getElementById('cartDot');
-            const btnPostponeMain = document.getElementById('btnPostponeMain');
-            const btnEditFilter = document.getElementById('btnEditFilter');
-            const daysDisplay = document.getElementById('daysDisplay');
+            var btnCart = document.getElementById('btnCartIcon');
+            var cartDot = document.getElementById('cartDot');
+            var btnPostponeMain = document.getElementById('btnPostponeMain');
+            var btnEditFilter = document.getElementById('btnEditFilter');
+            var daysDisplay = document.getElementById('daysDisplay');
 
             if (filter) {
-                let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-                let hardnessMult = 1 / (filter.hardness || 1);
-                let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-                const now = new Date().getTime();
-                const elapsedDays = Math.floor((now - filter.lastDate) / (1000 * 60 * 60 * 24));
-                const daysLeft = realMaxDays - elapsedDays;
+                var timing = getFilterTiming(filter);
+                var daysLeft = timing.daysLeft;
 
                 daysDisplay.innerText = daysLeft > 0 ? daysLeft : 0;
                 document.getElementById('infoType').innerText = filter.type;
@@ -521,49 +698,61 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                const ln = window.Capacitor.Plugins.LocalNotifications;
-                ln.requestPermissions();
-                ln.addListener('localNotificationActionPerformed', (notification) => {
+        document.addEventListener('DOMContentLoaded', async function () {
+            var ln = getLocalNotifications();
+            if (!ln) return;
+
+            try {
+                await ln.requestPermissions();
+                await ensureNotifChannel(ln);
+                notificationsReady = true;
+
+                ln.addListener('localNotificationActionPerformed', function (notification) {
                     if (notification.notification && notification.notification.id) {
-                        ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
+                        ln.removeDeliveredNotifications({
+                            notifications: [{ id: notification.notification.id }]
+                        });
                     }
-                    const extraData = notification.notification.extra;
-                    if (extraData && extraData.locationId && extraData.filterId) {
+
+                    var extraData = notification.notification.extra || {};
+                    if (extraData.locationId && extraData.filterId) {
                         appData.currentLocationId = extraData.locationId;
                         appData.currentFilterId = extraData.filterId;
-                        const filter = appData.filters.find(f => f.id === extraData.filterId);
+
+                        var filter = appData.filters.find(function (f) { return f.id === extraData.filterId; });
                         if (filter) {
-                            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-                            let hardnessMult = 1 / (filter.hardness || 1);
-                            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-                            filter.lastDate = Date.now() - (realMaxDays * 86400000 + 5000);
+                            var t = getFilterTiming(filter);
+                            /* Показать как просроченный, если ещё не заменён */
+                            if (t.daysLeft > 0) {
+                                filter.lastDate = Date.now() - (t.realMaxDays * MS_DAY + 5000);
+                            }
                         }
                         saveDB();
                         openReplaceModal();
                     }
                 });
+
+                /* Восстановление расписания после freeze/reboot/обновления */
+                await scheduleAllFilterNotifications();
+            } catch (e) {
+                console.warn('Notifications init failed', e);
             }
         });
 
         function postponeCurrentFilter(days) {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
-            const now = new Date().getTime();
-            let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
-            let hardnessMult = 1 / (filter.hardness || 1);
-            let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
-            filter.lastDate = now - ((realMaxDays - days) * 86400000);
+            var t = getFilterTiming(filter);
+            filter.lastDate = Date.now() - ((t.realMaxDays - days) * MS_DAY);
             closeModals();
             saveDB();
             showToast('Продлено на ' + days + ' дней!');
         }
 
         function toggleInfoBlock() {
-            const wrapper = document.getElementById('infoGridWrapper');
-            const btn = document.getElementById('toggleBtn');
-            const daysDisplay = document.getElementById('daysDisplay');
+            var wrapper = document.getElementById('infoGridWrapper');
+            var btn = document.getElementById('toggleBtn');
+            var daysDisplay = document.getElementById('daysDisplay');
             if (wrapper.classList.contains('collapsed')) {
                 wrapper.classList.remove('collapsed');
                 btn.innerText = 'Свернуть ▲';
@@ -580,47 +769,42 @@
         }
 
         async function runCustomTest() {
-            const val = getSelectedChipValue('testTimerChips') || '0';
-            const filter = getCurrentFilter();
+            var val = getSelectedChipValue('testTimerChips') || '0';
+            var filter = getCurrentFilter();
             if (!filter) return;
-            let ms = 500;
+
+            var ms = 500;
             if (val === '10s') ms = 10000;
             if (val === '10m') ms = 600000;
             if (val === '1h') ms = 3600000;
-            const locObj = appData.locations.find(l => l.id === filter.locationId);
-            const locText = locObj ? ' [' + locObj.name + ']' : '';
+
+            var locObj = appData.locations.find(function (l) { return l.id === filter.locationId; });
+            var locText = locObj ? ' [' + locObj.name + ']' : '';
             showToast('Тест запущен (' + val + ')! Сверните приложение...');
-            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                const ln = window.Capacitor.Plugins.LocalNotifications;
-                await ln.createChannel({
-                    id: 'aqua_high_priority',
-                    name: 'AquaControl Напоминания',
-                    description: 'Уведомления о замене фильтра',
-                    importance: 5,
-                    visibility: 1,
-                    sound: 'default',
-                    vibrates: true
-                });
-                await ln.schedule({
-                    notifications: [{
-                        title: 'AquaControl',
-                        body: 'Рекомендуем заменить картридж в фильтре "' + filter.name + '"' + locText + '.',
-                        id: Math.floor(Math.random() * 88888) + 1,
-                        schedule: { at: new Date(Date.now() + ms) },
-                        smallIcon: 'ic_stat_icon',
-                        iconColor: '#00F2FE',
-                        autoCancel: true,
-                        channelId: 'aqua_high_priority',
-                        extra: { locationId: filter.locationId, filterId: filter.id }
-                    }]
-                });
-            }
+
+            var ln = getLocalNotifications();
+            if (!ln) return;
+
+            await ensureNotifChannel(ln);
+            await ln.schedule({
+                notifications: [{
+                    title: 'AquaControl (тест)',
+                    body: 'Рекомендуем заменить картридж в фильтре "' + filter.name + '"' + locText + '.',
+                    id: Math.floor(Math.random() * 80000) + 1000000,
+                    schedule: { at: new Date(Date.now() + ms), allowWhileIdle: true },
+                    smallIcon: 'ic_stat_icon',
+                    iconColor: '#00F2FE',
+                    autoCancel: true,
+                    channelId: NOTIF_CHANNEL,
+                    extra: { locationId: filter.locationId, filterId: filter.id }
+                }]
+            });
         }
 
         function openLocationSelectModal() {
-            const container = document.getElementById('locationsListContainer');
-            const canDelete = appData.locations.length > 1;
-            container.innerHTML = appData.locations.map(l => {
+            var container = document.getElementById('locationsListContainer');
+            var canDelete = appData.locations.length > 1;
+            container.innerHTML = appData.locations.map(function (l) {
                 return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
                     '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
                     l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span>' +
@@ -639,7 +823,7 @@
         }
 
         function openRenameLocationModal(locId) {
-            const loc = appData.locations.find(l => l.id === locId);
+            var loc = appData.locations.find(function (l) { return l.id === locId; });
             if (!loc) return;
             pendingRenameLocationId = locId;
             document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
@@ -648,9 +832,9 @@
         }
 
         function confirmRenameLocation() {
-            const name = (document.getElementById('renameLocInput').value || '').trim();
+            var name = (document.getElementById('renameLocInput').value || '').trim();
             if (!name) { showToast('Введите название'); return; }
-            const loc = appData.locations.find(l => l.id === pendingRenameLocationId);
+            var loc = appData.locations.find(function (l) { return l.id === pendingRenameLocationId; });
             if (!loc) return;
             loc.name = name;
             pendingRenameLocationId = null;
@@ -662,8 +846,8 @@
         function selectFilter(id) { appData.currentFilterId = id; saveDB(); }
 
         function openReplaceModal() {
-            const filter = getCurrentFilter();
-            const locObj = appData.locations.find(l => l.id === appData.currentLocationId);
+            var filter = getCurrentFilter();
+            var locObj = appData.locations.find(function (l) { return l.id === appData.currentLocationId; });
             if (filter && locObj) {
                 document.getElementById('replaceModalContext').innerText = 'Объект: ' + locObj.name + ' • Устройство: ' + filter.name;
             }
@@ -674,29 +858,39 @@
         function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
 
         function openEditFilterModal() {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
             document.getElementById('editFilterContext').innerText = 'Текущее: ' + filter.name;
             document.getElementById('editFilterName').value = filter.name || '';
             document.getElementById('editFilterUrl').value = filter.buyUrl || '';
+            setChipValue('editChipBaseDays', filter.baseDays);
+            setChipValue('editChipHardness', filter.hardness);
+            setChipValue('editChipPeople', filter.people);
             document.getElementById('editFilterModal').style.display = 'flex';
         }
 
         function confirmEditFilter() {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
-            const name = (document.getElementById('editFilterName').value || '').trim();
-            const buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
+            var name = (document.getElementById('editFilterName').value || '').trim();
+            var buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
+            var baseDays = parseInt(getSelectedChipValue('editChipBaseDays') || filter.baseDays, 10);
+            var hardness = parseFloat(getSelectedChipValue('editChipHardness') || filter.hardness);
+            var people = parseInt(getSelectedChipValue('editChipPeople') || filter.people, 10);
             if (!name) { showToast('Введите название фильтра'); return; }
             filter.name = name;
             filter.buyUrl = buyUrl;
+            filter.baseDays = baseDays;
+            filter.hardness = hardness;
+            filter.people = people;
+            /* lastDate не трогаем — только пересчёт срока и пушей */
             closeModals();
             saveDB();
             showToast('Фильтр обновлён');
         }
 
         function onCartIconClick() {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
             if (filter.buyUrl && String(filter.buyUrl).trim()) {
                 showToast('Открываем магазин…');
@@ -708,9 +902,9 @@
         }
 
         function saveBuyUrlFromNoLinkModal() {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
-            const buyUrl = normalizeUrl(document.getElementById('noLinkUrlInput').value);
+            var buyUrl = normalizeUrl(document.getElementById('noLinkUrlInput').value);
             if (!buyUrl) { showToast('Вставьте ссылку на магазин'); return; }
             filter.buyUrl = buyUrl;
             closeModals();
@@ -719,13 +913,13 @@
         }
 
         function openHistoryModal() {
-            const list = document.getElementById('historyList');
-            let total = 0;
-            let replacementsCount = appData.history.length;
+            var list = document.getElementById('historyList');
+            var total = 0;
+            var replacementsCount = appData.history.length;
             if (replacementsCount === 0) {
                 list.innerHTML = '<div style="color:#6e7d93;text-align:center;">История замен пуста</div>';
             } else {
-                list.innerHTML = appData.history.map(h => {
+                list.innerHTML = appData.history.map(function (h) {
                     total += Number(h.cost || 0);
                     return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
                 }).join('');
@@ -737,15 +931,15 @@
         }
 
         function closeModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
             pendingRenameLocationId = null;
         }
 
         function confirmReplacement(skipDetails) {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
-            const brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
-            const cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
+            var brand = skipDetails ? filter.brand : (document.getElementById('repBrand').value || filter.brand);
+            var cost = skipDetails ? 0 : (document.getElementById('repCost').value || 0);
             filter.lastDate = new Date().getTime();
             if (!skipDetails && brand) filter.brand = brand;
             appData.history.unshift({
@@ -760,13 +954,13 @@
         }
 
         function addNewFilter() {
-            const name = document.getElementById('newFilterName').value || 'Фильтр';
-            const type = getSelectedChipValue('chipType') || 'Кувшин';
-            const baseDays = parseInt(getSelectedChipValue('chipBaseDays') || '90');
-            const hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
-            const people = parseInt(getSelectedChipValue('chipPeople') || '2');
-            const buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
-            const newId = 'f_' + Date.now();
+            var name = document.getElementById('newFilterName').value || 'Фильтр';
+            var type = getSelectedChipValue('chipType') || 'Кувшин';
+            var baseDays = parseInt(getSelectedChipValue('chipBaseDays') || '90', 10);
+            var hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
+            var people = parseInt(getSelectedChipValue('chipPeople') || '2', 10);
+            var buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
+            var newId = 'f_' + Date.now();
             appData.filters.push({
                 id: newId,
                 locationId: appData.currentLocationId,
@@ -786,9 +980,9 @@
         }
 
         function addNewLocation() {
-            const name = document.getElementById('newLocName').value;
+            var name = document.getElementById('newLocName').value;
             if (!name) return;
-            const newId = 'loc_' + Date.now();
+            var newId = 'loc_' + Date.now();
             appData.locations.push({ id: newId, name: name });
             appData.currentLocationId = newId;
             closeModals();
@@ -797,10 +991,10 @@
         }
 
         function deleteCurrentFilter() {
-            const filter = getCurrentFilter();
+            var filter = getCurrentFilter();
             if (!filter) return;
-            showCustomConfirm('Удаление устройства', 'Вы действительно хотите удалить "' + filter.name + '"?', () => {
-                appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
+            showCustomConfirm('Удаление устройства', 'Вы действительно хотите удалить "' + filter.name + '"?', function () {
+                appData.filters = appData.filters.filter(function (f) { return f.id !== appData.currentFilterId; });
                 saveDB();
                 showToast('Устройство удалено');
             });
@@ -808,11 +1002,11 @@
 
         function deleteSpecificLocation(locId) {
             if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный объект!'); return; }
-            const loc = appData.locations.find(l => l.id === locId);
+            var loc = appData.locations.find(function (l) { return l.id === locId; });
             if (!loc) return;
-            showCustomConfirm('Удаление объекта', 'Удалить объект "' + loc.name + '" и все связанные с ним фильтры?', () => {
-                appData.filters = appData.filters.filter(f => f.locationId !== locId);
-                appData.locations = appData.locations.filter(l => l.id !== locId);
+            showCustomConfirm('Удаление объекта', 'Удалить объект "' + loc.name + '" и все связанные с ним фильтры?', function () {
+                appData.filters = appData.filters.filter(function (f) { return f.locationId !== locId; });
+                appData.locations = appData.locations.filter(function (l) { return l.id !== locId; });
                 if (appData.currentLocationId === locId) {
                     appData.currentLocationId = appData.locations[0].id;
                     appData.currentFilterId = null;
@@ -824,10 +1018,10 @@
         }
 
         function showToast(text) {
-            const toast = document.getElementById('toast');
+            var toast = document.getElementById('toast');
             toast.innerText = text;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+            setTimeout(function () { toast.classList.remove('show'); }, 2500);
         }
 
         updateUI();
