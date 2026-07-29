@@ -161,12 +161,23 @@
 
     <div class="toast" id="toast">Уведомление</div>
 
+    <!-- ЕДИНОЕ СТЕКЛЯННОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h2 id="confirmTitle">Подтверждение</h2>
+            <p id="confirmMessage" style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;"></p>
+            <button class="btn btn-danger-outline" id="confirmOkBtn" style="width:100%; padding: 14px; font-size:13px; margin-top:0;">Да, удалить</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
+        </div>
+    </div>
+
     <!-- МОДАЛЬНЫЕ ОКНА -->
     <div class="modal" id="locSelectModal">
         <div class="modal-content">
             <h2>Выберите объект</h2>
             <div id="locationsListContainer" style="margin-top:12px;"></div>
-            <button class="btn btn-secondary-small" style="width:100%; margin-top:10px;" onclick="closeModals()">Отмена</button>
+            <button class="btn btn-danger-outline" style="width:100%; margin-top:10px;" onclick="deleteCurrentLocation()">🗑 Удалить этот объект</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
 
@@ -288,13 +299,26 @@
         };
 
         let appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
+        let pendingConfirmAction = null;
 
         function saveDB() {
             localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
             updateUI();
         }
 
-        // CANVAS ANIMATION ENGINE
+        function showCustomConfirm(title, message, onConfirm) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            pendingConfirmAction = onConfirm;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        document.getElementById('confirmOkBtn').onclick = () => {
+            if (pendingConfirmAction) pendingConfirmAction();
+            closeModals();
+        };
+
+        // CANVAS ENGINE
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -355,7 +379,6 @@
             return selected ? selected.getAttribute('data-value') : null;
         }
 
-        // ЧИСТАЯ ИНТЕРФЕЙСНАЯ ОТРИСОВКА (БЕЗ ВЫЗОВА УВЕДОМЛЕНИЙ)
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
@@ -434,7 +457,6 @@
             }
         }
 
-        // ВЫЧИСЛЕНИЕ ПРОСТОГО ХЕШ-КОДА ДЛЯ ID УВЕДОМЛЕНИЙ
         function getFilterNotifId(filterId, isReminder = false) {
             let hash = 0;
             for (let i = 0; i < filterId.length; i++) {
@@ -444,7 +466,6 @@
             return Math.abs(hash) + (isReminder ? 500000 : 0);
         }
 
-        // НА ТИВНОЕ УПРЕЖДАЮЩЕЕ ПЛАНИРОВАНИЕ УВЕДОМЛЕНИЙ В ANDROID (ФОНОВЫЕ БУДИЛЬНИКИ)
         async function syncNativeFilterSchedule(filter) {
             if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.LocalNotifications) return;
 
@@ -453,16 +474,14 @@
             const notifIdReminder = getFilterNotifId(filter.id, true);
 
             try {
-                // 1. Отменяем старые запланированные уведомления для этого фильтра
                 await ln.cancel({ notifications: [{ id: notifIdMain }, { id: notifIdReminder }] });
 
-                // 2. Рассчитываем точную дату истечения
                 let peopleMult = filter.people == 1 ? 1 : (filter.people == 2 ? 0.75 : 0.5);
                 let hardnessMult = 1 / (filter.hardness || 1);
                 let realMaxDays = Math.round(filter.baseDays * peopleMult * hardnessMult);
                 
                 const expireTimestamp = filter.lastDate + (realMaxDays * 24 * 60 * 60 * 1000);
-                const reminderTimestamp = expireTimestamp + (7 * 24 * 60 * 60 * 1000); // Повтор через 7 дней
+                const reminderTimestamp = expireTimestamp + (7 * 24 * 60 * 60 * 1000);
                 const now = Date.now();
 
                 const locObj = appData.locations.find(l => l.id === filter.locationId);
@@ -480,7 +499,6 @@
 
                 let notificationsToSchedule = [];
 
-                // Запланировать Первое уведомление (если дата в будущем)
                 if (expireTimestamp > now) {
                     notificationsToSchedule.push({
                         title: "AquaControl",
@@ -495,7 +513,6 @@
                     });
                 }
 
-                // Запланировать Напоминание +7 дней (если дата в будущем)
                 if (reminderTimestamp > now) {
                     notificationsToSchedule.push({
                         title: "AquaControl",
@@ -516,7 +533,6 @@
             } catch(e) { console.log('Schedule Error:', e); }
         }
 
-        // Синхронизируем фоновое расписание для ВСЕХ фильтров в базе
         function syncAllSchedules() {
             if (appData.filters) {
                 appData.filters.forEach(f => syncNativeFilterSchedule(f));
@@ -527,7 +543,7 @@
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
                 const ln = window.Capacitor.Plugins.LocalNotifications;
                 ln.requestPermissions().then(() => {
-                    syncAllSchedules(); // Планируем будильники Android при запуске
+                    syncAllSchedules();
                 });
                 
                 ln.addListener('localNotificationActionPerformed', (notification) => {
@@ -560,7 +576,7 @@
                 filter.lastDate = now - ((realMaxDays - days) * msPerDay);
                 closeModals();
                 saveDB();
-                syncNativeFilterSchedule(filter); // Пересчитываем уведомления в Android!
+                syncNativeFilterSchedule(filter);
                 showToast(`Продлено на ${days} дней!`);
             }
         }
@@ -586,39 +602,37 @@
             panel.classList.toggle('open');
         }
 
-        // РУЧНОЙ ТЕСТ ДЛЯ ПРОВЕРКИ СБРАБАТЫВАНИЯ УВЕДОМЛЕНИЙ
         async function runCustomTest() {
             const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
             const locObj = appData.locations.find(l => l.id === filter.locationId);
             const locText = locObj ? ` [${locObj.name}]` : '';
 
-            if (val === '0') {
-                filter.lastDate = new Date().getTime() - (365 * 24 * 60 * 60 * 1000);
-                saveDB();
-            } else {
-                let ms = 500;
-                if (val === '10s') ms = 10000;
-                if (val === '10m') ms = 600000;
-                if (val === '1h') ms = 3600000;
+            // Состариваем фильтр в базе данных
+            filter.lastDate = new Date().getTime() - (365 * 24 * 60 * 60 * 1000);
+            saveDB();
 
-                showToast(`Тест запущен! Заблокируйте экран...`);
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                    const ln = window.Capacitor.Plugins.LocalNotifications;
-                    await ln.schedule({
-                        notifications: [{
-                            title: "AquaControl",
-                            body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
-                            id: Math.floor(Math.random() * 88888),
-                            schedule: { at: new Date(Date.now() + ms) },
-                            smallIcon: "ic_stat_icon",
-                            iconColor: "#00F2FE",
-                            autoCancel: true,
-                            channelId: 'aqua_high_priority',
-                            extra: { locationId: filter.locationId, filterId: filter.id }
-                        }]
-                    });
-                }
+            let ms = 500;
+            if (val === '10s') ms = 10000;
+            if (val === '10m') ms = 600000;
+            if (val === '1h') ms = 3600000;
+
+            showToast(`Тест запущен! Заблокируйте экран...`);
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                const ln = window.Capacitor.Plugins.LocalNotifications;
+                await ln.schedule({
+                    notifications: [{
+                        title: "AquaControl",
+                        body: `Рекомендуем заменить картридж в фильтре "${filter.name}"${locText}.`,
+                        id: Math.floor(Math.random() * 88888),
+                        schedule: { at: new Date(Date.now() + ms) },
+                        smallIcon: "ic_stat_icon",
+                        iconColor: "#00F2FE",
+                        autoCancel: true,
+                        channelId: 'aqua_high_priority',
+                        extra: { locationId: filter.locationId, filterId: filter.id }
+                    }]
+                });
             }
         }
 
@@ -699,7 +713,7 @@
 
                 closeModals();
                 saveDB();
-                syncNativeFilterSchedule(filter); // Пересчитываем уведомления в Android!
+                syncNativeFilterSchedule(filter);
                 showToast("Замена зафиксирована!");
             }
         }
@@ -730,7 +744,7 @@
             appData.currentFilterId = newId;
             closeModals();
             saveDB();
-            syncNativeFilterSchedule(newFilterObj); // Пересчитываем уведомления в Android!
+            syncNativeFilterSchedule(newFilterObj);
             showToast("Фильтр создан!");
         }
 
@@ -748,19 +762,58 @@
 
         function deleteCurrentFilter() {
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
-            if (filter && confirm(`Удалить устройство "${filter.name}"?`)) {
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-                    window.Capacitor.Plugins.LocalNotifications.cancel({ 
-                        notifications: [
-                            { id: getFilterNotifId(filter.id, false) }, 
-                            { id: getFilterNotifId(filter.id, true) }
-                        ] 
-                    });
+            if (!filter) return;
+
+            showCustomConfirm(
+                "Удаление устройства",
+                `Вы действительно хотите удалить "${filter.name}"?`,
+                () => {
+                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                        window.Capacitor.Plugins.LocalNotifications.cancel({ 
+                            notifications: [
+                                { id: getFilterNotifId(filter.id, false) }, 
+                                { id: getFilterNotifId(filter.id, true) }
+                            ] 
+                        });
+                    }
+                    appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
+                    saveDB();
+                    showToast("Устройство удалено");
                 }
-                appData.filters = appData.filters.filter(f => f.id !== appData.currentFilterId);
-                saveDB();
-                showToast("Устройство удалено");
+            );
+        }
+
+        function deleteCurrentLocation() {
+            if (appData.locations.length <= 1) {
+                showToast("Нельзя удалить единственный объект!");
+                return;
             }
+            const loc = appData.locations.find(l => l.id === appData.currentLocationId);
+            if (!loc) return;
+
+            showCustomConfirm(
+                "Удаление объекта",
+                `Удалить объект "${loc.name}" и все связанные с ним фильтры?`,
+                () => {
+                    const filtersToDelete = appData.filters.filter(f => f.locationId === loc.id);
+                    filtersToDelete.forEach(f => {
+                        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                            window.Capacitor.Plugins.LocalNotifications.cancel({ 
+                                notifications: [
+                                    { id: getFilterNotifId(f.id, false) }, 
+                                    { id: getFilterNotifId(f.id, true) }
+                                ] 
+                            });
+                        }
+                    });
+                    appData.filters = appData.filters.filter(f => f.locationId !== loc.id);
+                    appData.locations = appData.locations.filter(l => l.id !== loc.id);
+                    appData.currentLocationId = appData.locations[0].id;
+                    closeModals();
+                    saveDB();
+                    showToast("Объект удален");
+                }
+            );
         }
 
         function openBuyLink() {
