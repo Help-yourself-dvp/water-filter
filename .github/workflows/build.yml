@@ -31,7 +31,7 @@ jobs:
         cp manifest.json www/ 2>/dev/null || true
         cp icon.png www/ 2>/dev/null || true
 
-    - name: 5. Установка Capacitor и плагина Нативных Уведомлений
+    - name: 5. Установка Capacitor и плагина Уведомлений
       run: |
         npm init -y
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7
@@ -40,20 +40,14 @@ jobs:
       run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
-
-        # Установка Target SDK 34 (Убирает предупреждение про устаревшую версию!)
-        sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
-        sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-
-        # Авто-добавление разрешения на Push Уведомления в AndroidManifest.xml
-        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
-
         npx cap sync android
 
-    - name: 7. Замена Адаптивных Иконок (И в системе, и в настройках Honor)
+    - name: 7. Замена Иконок и очистка XML дубликатов
       run: |
+        # Удаляем конфликтную XML-папку, вызвавшую дублирование ресурсов
+        rm -rf android/app/src/main/res/mipmap-anydpi-v26
+        
         if [ -f "icon.png" ]; then
-          # Замена классических иконок
           for dir in android/app/src/main/res/mipmap-*; do
             if [ -d "$dir" ]; then
               cp icon.png "$dir/ic_launcher.png"
