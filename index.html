@@ -9,7 +9,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: #04060e; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 15px 0; }
         
-        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         
         .card { position: relative; z-index: 2; background: rgba(16, 22, 38, 0.75); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 32px; padding: 22px 16px; width: 92%; max-width: 400px; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85); margin-bottom: 30px; }
         
@@ -58,14 +58,20 @@
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
         .dev-panel-content.open { display: block; }
 
+        /* GLASSMORPHISM МОДАЛЬНЫЕ ОКНА */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 10; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-        .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 340px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; }
         .modal-subtitle { font-size: 11px; color: #00f2fe; text-align: center; margin-bottom: 15px; }
 
         .form-group { margin-bottom: 12px; text-align: left; }
-        .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 4px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
+        .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
+        .form-group input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
+
+        /* ИНТЕРАКТИВНЫЕ ЧИПЫ (ЗАМЕНА БРАУЗЕРНЫХ SELECT) */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
+        .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
 
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 20; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
@@ -143,26 +149,25 @@
             <div class="dev-panel-content" id="devPanel">
                 <div class="form-group">
                     <label style="color:#ffaa00;">Таймер теста Push-уведомления:</label>
-                    <select id="testTimerSelect">
-                        <option value="0">0 дней (Истёк прямо сейчас)</option>
-                        <option value="10s">10 секунд (Сверните приложение!)</option>
-                        <option value="10m">10 минут</option>
-                        <option value="1h">1 час</option>
-                        <option value="1d">1 день</option>
-                    </select>
+                    <div class="chip-group" id="testTimerChips">
+                        <div class="chip-btn selected" data-value="0" onclick="selectChip('testTimerChips', this)">0 сек (Сразу)</div>
+                        <div class="chip-btn" data-value="10s" onclick="selectChip('testTimerChips', this)">10 сек</div>
+                        <div class="chip-btn" data-value="10m" onclick="selectChip('testTimerChips', this)">10 мин</div>
+                        <div class="chip-btn" data-value="1h" onclick="selectChip('testTimerChips', this)">1 час</div>
+                    </div>
                 </div>
-                <button class="btn btn-danger-outline" style="margin-top:0;" onclick="runCustomTest()">⚡ Запустить тест</button>
+                <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Запустить тест</button>
             </div>
         </div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
 
-    <!-- МОДАЛКИ -->
+    <!-- МОДАЛЬНЫЕ ОКНА -->
     <div class="modal" id="locSelectModal">
         <div class="modal-content">
             <h2>Выберите объект</h2>
-            <div id="locationsListContainer"></div>
+            <div id="locationsListContainer" style="margin-top:12px;"></div>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:10px;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
@@ -181,7 +186,7 @@
             </div>
             <button class="btn btn-primary" onclick="confirmReplacement(false)">Сохранить и сбросить таймер</button>
             <button class="btn btn-warning" onclick="postponeCurrentFilter(15)">Отложить замену на 15 дней</button>
-            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">Быстрая замена (Пропустить ввод)</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">Быстрая замена (Без заполнения)</button>
             <button class="btn btn-secondary-small" style="width:100%; border:none;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
@@ -193,46 +198,51 @@
                 <label>Название устройства:</label>
                 <input type="text" id="newFilterName" placeholder="Кувшин на кухне">
             </div>
+            
             <div class="form-group">
                 <label>Тип устройства:</label>
-                <select id="newFilterType">
-                    <option value="Кувшин">Кувшин для воды</option>
-                    <option value="Проточный (под раковину)">Проточный под раковину</option>
-                    <option value="Осмос (Мембрана)">Система Осмос</option>
-                    <option value="Насадка на кран">Насадка на кран</option>
-                    <option value="Фильтр для душа">Фильтр для душа</option>
-                </select>
+                <div class="chip-group" id="chipType">
+                    <div class="chip-btn selected" data-value="Кувшин" onclick="selectChip('chipType', this)">Кувшин</div>
+                    <div class="chip-btn" data-value="Проточный" onclick="selectChip('chipType', this)">Проточный</div>
+                    <div class="chip-btn" data-value="Осмос" onclick="selectChip('chipType', this)">Осмос</div>
+                    <div class="chip-btn" data-value="Насадка" onclick="selectChip('chipType', this)">Насадка</div>
+                </div>
             </div>
+
             <div class="form-group">
                 <label>Паспортный ресурс (дней):</label>
-                <select id="newFilterBaseDays">
-                    <option value="30">30 дней (1 мес)</option>
-                    <option value="60">60 дней (2 мес)</option>
-                    <option value="90" selected>90 дней (3 мес)</option>
-                    <option value="180">180 дней (6 мес)</option>
-                    <option value="365">365 дней (1 год)</option>
-                </select>
+                <div class="chip-group" id="chipBaseDays">
+                    <div class="chip-btn" data-value="30" onclick="selectChip('chipBaseDays', this)">30 дн</div>
+                    <div class="chip-btn" data-value="60" onclick="selectChip('chipBaseDays', this)">60 дн</div>
+                    <div class="chip-btn selected" data-value="90" onclick="selectChip('chipBaseDays', this)">90 дн</div>
+                    <div class="chip-btn" data-value="180" onclick="selectChip('chipBaseDays', this)">180 дн</div>
+                    <div class="chip-btn" data-value="365" onclick="selectChip('chipBaseDays', this)">1 год</div>
+                </div>
             </div>
+
             <div class="form-group">
-                <label>Качество/Жесткость воды:</label>
-                <select id="newFilterHardness">
-                    <option value="1">Мягкая / Нормальная (100% ресурса)</option>
-                    <option value="1.25">Жесткая (+25% износа)</option>
-                    <option value="1.5">Очень жесткая (+50% износа)</option>
-                </select>
+                <label>Жесткость воды:</label>
+                <div class="chip-group" id="chipHardness">
+                    <div class="chip-btn selected" data-value="1" onclick="selectChip('chipHardness', this)">Мягкая (100%)</div>
+                    <div class="chip-btn" data-value="1.25" onclick="selectChip('chipHardness', this)">Жесткая (-25%)</div>
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipHardness', this)">Оч. жесткая (-50%)</div>
+                </div>
             </div>
+
             <div class="form-group">
-                <label>Количество пользователей:</label>
-                <select id="newFilterPeople">
-                    <option value="1">1 человек</option>
-                    <option value="2" selected>2 человека</option>
-                    <option value="3">3–4 человека</option>
-                </select>
+                <label>Количество чел.:</label>
+                <div class="chip-group" id="chipPeople">
+                    <div class="chip-btn" data-value="1" onclick="selectChip('chipPeople', this)">1 чел</div>
+                    <div class="chip-btn selected" data-value="2" onclick="selectChip('chipPeople', this)">2 чел</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('chipPeople', this)">3–4 чел</div>
+                </div>
             </div>
+
             <div class="form-group">
-                <label>Ссылка на покупку (Ozon / WB / Маркет):</label>
+                <label>Ссылка на покупку (Ozon / WB):</label>
                 <input type="url" id="newFilterUrl" placeholder="https://ozon.ru/...">
             </div>
+            
             <button class="btn btn-primary" onclick="addNewFilter()">Создать фильтр</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
@@ -241,7 +251,7 @@
     <div class="modal" id="addLocationModal">
         <div class="modal-content">
             <h2>Новый объект / Дом</h2>
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 12px;">
                 <label>Название локации:</label>
                 <input type="text" id="newLocName" placeholder="например, Дача или Родители">
             </div>
@@ -253,7 +263,7 @@
     <div class="modal" id="historyModal">
         <div class="modal-content">
             <h2>Статистика и Расходы</h2>
-            <div class="eco-badge" id="ecoBadge">
+            <div class="eco-badge" id="ecoBadge" style="margin-top:10px;">
                 🌱 <b>Эко-вклад:</b> Вы сберегли ~<span id="ecoBottles">0</span> пластиковых бутылок 1.5л.<br>
                 💰 <b>Экономия:</b> ~<span id="ecoMoney">0</span> ₽ по сравнению с бутилированной водой.
             </div>
@@ -286,6 +296,7 @@
             updateUI();
         }
 
+        // ДВИЖОК CANVAS (ВОЛНЫ И ПУЗЫРЬКИ)
         const canvas = document.getElementById('waveCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, step = 0;
@@ -316,15 +327,14 @@
                 if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
             });
 
-            const isMobile = width < 600;
-            const amp = isMobile ? 100 : 65;
+            const amp = width < 600 ? 90 : 65;
 
             for (let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 ctx.fillStyle = waveColor;
                 ctx.moveTo(0, height);
                 for (let x = 0; x <= width; x += 10) {
-                    let y = Math.sin((x * 0.002) + (step * 0.012) + (i * 2.2)) * amp + (height * 0.55);
+                    let y = Math.sin((x * 0.002) + (step * 0.012) + (i * 2.2)) * amp + (height * 0.58);
                     ctx.lineTo(x, y);
                 }
                 ctx.lineTo(width, height);
@@ -336,6 +346,17 @@
             requestAnimationFrame(drawWaves);
         }
         drawWaves();
+
+        // ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ВЫБОРА ИНТЕРАКТИВНЫХ ЧИПОВ
+        function selectChip(groupId, element) {
+            document.querySelectorAll(`#${groupId} .chip-btn`).forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function getSelectedChipValue(groupId) {
+            const selected = document.querySelector(`#${groupId} .chip-btn.selected`);
+            return selected ? selected.getAttribute('data-value') : null;
+        }
 
         function updateUI() {
             const currentLoc = appData.locations.find(l => l.id === appData.currentLocationId) || appData.locations[0];
@@ -434,13 +455,13 @@
                             schedule: { at: new Date(Date.now() + delayMs) },
                             smallIcon: "ic_stat_icon",
                             iconColor: "#00F2FE",
-                            autoCancel: true, // АВТО-УДАЛЕНИЕ ИЗ ШТОРКИ
+                            autoCancel: true,
                             extra: { locationId: locId, filterId: filterId }
                         }]
                     });
                 } catch(e) { console.log('Capacitor Push err:', e); }
             } else if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body: bodyText, icon: 'icon.png' });
+                new Notification(title, { body: bodyText });
             }
         }
 
@@ -451,7 +472,6 @@
                 ln.requestPermissions();
                 
                 ln.addListener('localNotificationActionPerformed', (notification) => {
-                    // Гарантированно удаляем уведомление из шторки
                     if (notification.notification && notification.notification.id) {
                         ln.removeDeliveredNotifications({
                             notifications: [{ id: notification.notification.id }]
@@ -507,7 +527,7 @@
         }
 
         function runCustomTest() {
-            const val = document.getElementById('testTimerSelect').value;
+            const val = getSelectedChipValue('testTimerChips') || '0';
             const filter = appData.filters.find(f => f.id === appData.currentFilterId);
             const locObj = appData.locations.find(l => l.id === filter.locationId);
             const locText = locObj ? ` [${locObj.name}]` : '';
@@ -520,7 +540,6 @@
                 if (val === '10s') ms = 10000;
                 if (val === '10m') ms = 600000;
                 if (val === '1h') ms = 3600000;
-                if (val === '1d') ms = 86400000;
 
                 showToast(`Тест запущен! Заблокируйте экран...`);
                 triggerNativeNotification("AquaControl 🚨 (Тест)", `Срок службы фильтра "${filter.name}"${locText} истек! Замените фильтр.`, ms, filter.locationId, filter.id);
@@ -610,10 +629,10 @@
 
         function addNewFilter() {
             const name = document.getElementById('newFilterName').value || 'Фильтр';
-            const type = document.getElementById('newFilterType').value;
-            const baseDays = parseInt(document.getElementById('newFilterBaseDays').value);
-            const hardness = parseFloat(document.getElementById('newFilterHardness').value);
-            const people = parseInt(document.getElementById('newFilterPeople').value);
+            const type = getSelectedChipValue('chipType') || 'Кувшин';
+            const baseDays = parseInt(getSelectedChipValue('chipBaseDays') || '90');
+            const hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
+            const people = parseInt(getSelectedChipValue('chipPeople') || '2');
             const buyUrl = document.getElementById('newFilterUrl').value;
 
             const newId = 'f_' + Date.now();
