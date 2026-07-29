@@ -19,57 +19,48 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 3. Настройка Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: 4. Настройка Node.js 22
+    - name: 3. Настройка Node.js 20
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '20'
 
-    - name: 5. Подготовка веб-файлов
+    - name: 4. Подготовка файлов приложения
       run: |
         mkdir -p www
         cp index.html www/
         cp manifest.json www/ 2>/dev/null || true
         cp icon.png www/ 2>/dev/null || true
 
-    - name: 6. Установка Capacitor
+    - name: 5. Установка Capacitor и плагина Уведомлений
       run: |
         npm init -y
         npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7
 
-    - name: 7. Инициализация платформы Android
+    - name: 6. Инициализация и синхронизация Android
       run: |
         npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
         npx cap add android
-
-        # Установка Target SDK 34 (для Android 14/15/16)
-        sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
-        sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-
-        # Добавление системных разрешений на Уведомления в AndroidManifest.xml
-        sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" \/>' android/app/src/main/AndroidManifest.xml
-
         npx cap sync android
 
-    - name: 8. Замена иконок приложения на капельку воды
+    - name: 7. Замена иконок на капельку воды
       run: |
-        for dir in android/app/src/main/res/mipmap-*; do
-          if [ -d "$dir" ]; then
-            cp icon.png "$dir/ic_launcher.png"
-            cp icon.png "$dir/ic_launcher_round.png"
-            cp icon.png "$dir/ic_launcher_foreground.png"
-          fi
-        done
+        if [ -f "icon.png" ]; then
+          for dir in android/app/src/main/res/mipmap-*; do
+            if [ -d "$dir" ]; then
+              cp icon.png "$dir/ic_launcher.png"
+              cp icon.png "$dir/ic_launcher_round.png"
+              cp icon.png "$dir/ic_launcher_foreground.png"
+            fi
+          done
+        fi
 
-    - name: 9. Компиляция готового APK
+    - name: 8. Компиляция готового APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
 
-    - name: 10. Выгрузка файла APK
+    - name: 9. Выгрузка готового APK файла
       uses: actions/upload-artifact@v4
       with:
         name: AquaControlPro-Native
