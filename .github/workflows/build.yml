@@ -45,16 +45,16 @@ jobs:
         sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
         sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
 
-        # Повышаем версию сборки для полной очистки кэша значков MagicOS
+        # Повышаем версию сборки для полного сброса кэша значков MagicOS
         sed -i 's/versionCode 1/versionCode 2/g' android/app/build.gradle
         sed -i 's/versionName "1.0"/versionName "1.0.1"/g' android/app/build.gradle
 
-        # Разрешения для фоновых уведомлений MagicOS
+        # Разрешения для фоновых уведомлений
         sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>\n    <uses-permission android:name="android.permission.WAKE_LOCK" \/>' android/app/src/main/AndroidManifest.xml
 
         npx cap sync android
 
-    - name: 7. Глубокая замена всех цветовых ресурсов (#0284C7 для MagicOS)
+    - name: 7. Настройка иконок и цветов (Без дублирования ресурсов)
       run: |
         # Удаляем дефолтные растровые заготовки Capacitor
         rm -rf android/app/src/main/res/drawable*/ic_launcher*
@@ -69,17 +69,22 @@ jobs:
             fi
           done
 
-          # 2. Перезаписываем системные цвета во всех палитрах Android (Fix "О приложении")
+          # 2. Настройка файлов ресурсов без конфликтов дубликатов
           mkdir -p android/app/src/main/res/values
           
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0284C7</color>\n    <color name="colorPrimary">#0284C7</color>\n    <color name="colorPrimaryDark">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
+          # Системные цвета приложения
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#0284C7</color>\n    <color name="colorPrimaryDark">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
 
+          # Фон значка для системных настроек MagicOS
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/ic_launcher_background.xml
+
+          # Векторный фон в drawable для адаптивных иконок
           printf '<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="108dp"\n    android:height="108dp"\n    android:viewportWidth="108"\n    android:viewportHeight="108">\n    <path\n        android:fillColor="#0284C7"\n        android:pathData="M0,0h108v108h-108z"/>\n</vector>\n' > android/app/src/main/res/drawable/ic_launcher_background.xml
 
           cp icon.png android/app/src/main/res/drawable/ic_launcher_foreground.png
           cp icon.png android/app/src/main/res/drawable/ic_stat_icon.png
 
-          # 3. Конфигурация адаптивной иконки
+          # 3. Конфигурация адаптивной иконки в mipmap-anydpi-v26
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@drawable/ic_launcher_background"/>\n    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n</adaptive-icon>\n' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
