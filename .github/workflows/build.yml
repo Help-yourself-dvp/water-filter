@@ -45,34 +45,38 @@ jobs:
         sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
         sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
 
-        # Повышаем версию сборки до 1.0.4 (v5) для обязательного сброса кэша MagicOS
-        sed -i 's/versionCode 1/versionCode 5/g' android/app/build.gradle
-        sed -i 's/versionName "1.0"/versionName "1.0.4"/g' android/app/build.gradle
+        # Версия 1.0.6 (v7)
+        sed -i 's/versionCode 1/versionCode 7/g' android/app/build.gradle
+        sed -i 's/versionName "1.0"/versionName "1.0.6"/g' android/app/build.gradle
 
-        # Разрешения для работы фоновых будильников и уведомлений
+        # Разрешения для фоновых будильников и уведомлений
         sed -i '/<\/application>/a \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM" \/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>\n    <uses-permission android:name="android.permission.WAKE_LOCK" \/>' android/app/src/main/AndroidManifest.xml
 
         npx cap sync android
 
-    - name: 7. Сине-голубой векторный фон (#0284C7 ВЕЗДЕ, ВКЛЮЧАЯ О ПРИЛОЖЕНИИ)
+    - name: 7. Запекание сине-голубого фона #0284C7 в растровые и векторные иконки (Fix MagicOS)
       run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y imagemagick
+
         rm -rf android/app/src/main/res/drawable*/ic_launcher*
 
         if [ -f "icon.png" ]; then
-          # 1. Заменяем растровые иконки в mipmap
+          # Создаем растровую иконку с плотным сине-голубым фоном для меню "О приложении"
+          convert icon.png -background "#0284C7" -flatten -alpha off icon_solid.png 2>/dev/null || cp icon.png icon_solid.png
+
+          # 1. Заменяем растровые иконки во всех mipmap папках
           for dir in android/app/src/main/res/mipmap-*; do
             if [ -d "$dir" ] && [ "$dir" != "android/app/src/main/res/mipmap-anydpi-v26" ]; then
-              cp icon.png "$dir/ic_launcher.png"
-              cp icon.png "$dir/ic_launcher_round.png"
+              cp icon_solid.png "$dir/ic_launcher.png"
+              cp icon_solid.png "$dir/ic_launcher_round.png"
               cp icon.png "$dir/ic_launcher_foreground.png"
             fi
           done
 
-          # 2. Системные цвета приложения и фон шапки настроек MagicOS
+          # 2. Системные цвета приложения
           mkdir -p android/app/src/main/res/values
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#0284C7</color>\n    <color name="colorPrimaryDark">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
-
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/ic_launcher_background.xml
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#0284C7</color>\n    <color name="colorPrimaryDark">#0284C7</color>\n    <color name="ic_launcher_background">#0284C7</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
 
           # 3. Векторный сине-голубой фон #0284C7 в drawable
           printf '<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android"\n    android:width="108dp"\n    android:height="108dp"\n    android:viewportWidth="108"\n    android:viewportHeight="108">\n    <path\n        android:fillColor="#0284C7"\n        android:pathData="M0,0h108v108h-108z"/>\n</vector>\n' > android/app/src/main/res/drawable/ic_launcher_background.xml
@@ -80,7 +84,7 @@ jobs:
           cp icon.png android/app/src/main/res/drawable/ic_launcher_foreground.png
           cp icon.png android/app/src/main/res/drawable/ic_stat_icon.png
 
-          # 4. Адаптивные иконки в mipmap-anydpi-v26 через @color/ic_launcher_background
+          # 4. Адаптивные иконки в mipmap-anydpi-v26
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           
           printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@color/ic_launcher_background"/>\n    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n</adaptive-icon>\n' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
