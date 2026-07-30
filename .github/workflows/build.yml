@@ -20,6 +20,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Remove stale capacitor config (legacy PWA leftover)
+        run: |
+          if [ -f capacitor.config.json ]; then
+            echo "Найден устаревший capacitor.config.json (webDir указывал на весь репозиторий) — удаляю, чтобы cap init создал правильный."
+            rm -f capacitor.config.json
+          else
+            echo "Старого capacitor.config.json нет, всё чисто."
+          fi
+
       - name: Prepare www
         run: |
           mkdir -p www
@@ -38,10 +47,18 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 22/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.21"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 23/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.22"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
+
+      - name: Verify webDir is correct (safety check)
+        run: |
+          echo "Итоговый capacitor.config.json:"
+          cat capacitor.config.json
+          echo "---"
+          echo "Содержимое android/app/src/main/assets/public (должно быть похоже на www/, БЕЗ node_modules и android):"
+          ls -la android/app/src/main/assets/public | head -30
 
       - name: Patch MainActivity for exact alarms and battery optimization
         run: |
