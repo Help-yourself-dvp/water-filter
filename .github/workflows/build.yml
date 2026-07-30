@@ -38,10 +38,62 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 15/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.14"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 16/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.15"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
+
+      - name: Patch MainActivity for exact alarms and battery optimization
+        run: |
+          mkdir -p android/app/src/main/java/com/aquacontrol/pro
+          cat > android/app/src/main/java/com/aquacontrol/pro/MainActivity.java << 'EOF'
+          package com.aquacontrol.pro;
+
+          import android.app.AlarmManager;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.PowerManager;
+          import android.provider.Settings;
+
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  requestExactAlarmPermission();
+                  requestIgnoreBatteryOptimizations();
+              }
+
+              private void requestExactAlarmPermission() {
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                      try {
+                          AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                          if (am != null && !am.canScheduleExactAlarms()) {
+                              Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                              intent.setData(Uri.parse("package:" + getPackageName()));
+                              startActivity(intent);
+                          }
+                      } catch (Exception e) {
+                      }
+                  }
+              }
+
+              private void requestIgnoreBatteryOptimizations() {
+                  try {
+                      PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                      if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                          Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                          intent.setData(Uri.parse("package:" + getPackageName()));
+                          startActivity(intent);
+                      }
+                  } catch (Exception e) {
+                  }
+              }
+          }
+          EOF
 
       - name: Patch manifest and icons
         run: |
@@ -59,6 +111,7 @@ jobs:
               'android.permission.USE_EXACT_ALARM',
               'android.permission.RECEIVE_BOOT_COMPLETED',
               'android.permission.WAKE_LOCK',
+              'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
           ]
           for p in perms:
               tag = f'    <uses-permission android:name="{p}" />\n'
