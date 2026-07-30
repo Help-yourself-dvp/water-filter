@@ -185,6 +185,16 @@
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
 
+        <div class="backup-section" style="margin-top:15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
+            <div class="info-card-header" style="margin-bottom:8px;">
+                <span class="info-title">💾 Резервная копия</span>
+                <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('backup')" aria-label="Подсказка">?</button>
+            </div>
+            <button class="btn btn-secondary-small" style="width:100%;" onclick="exportData()">📤 Экспортировать данные</button>
+            <button class="btn btn-secondary-small" style="width:100%;" onclick="triggerImportPicker()">📥 Импортировать данные</button>
+            <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
+        </div>
+
         <div class="dev-panel-wrapper">
             <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
             <div class="dev-panel-content" id="devPanel">
@@ -201,7 +211,7 @@
                 <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Обновить напоминания</button>
             </div>
         </div>
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.20 (build 21)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.21 (build 22)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
@@ -446,6 +456,10 @@
             ecoStats: {
                 title: 'Как считаются бутылки и рубли',
                 body: 'Это примерная оценка, а не точный расчёт. Мы считаем, что один фильтр за время своей службы заменяет собой около 200 пластиковых бутылок воды и экономит примерно 9000 ₽ по сравнению с покупкой воды в магазине. Итоговое число просто умножается на количество зафиксированных вами замен.'
+            },
+            backup: {
+                title: 'Резервная копия',
+                body: 'Экспорт сохраняет все ваши дома, фильтры и историю в один файл — сохраните его в надёжном месте (облако, почта себе) на случай смены телефона или сброса настроек. Импорт полностью заменяет текущие данные приложения содержимым выбранного файла — используйте только файл, который создало это же приложение.'
             }
         };
 
@@ -654,6 +668,76 @@
                 document.body.appendChild(a); a.click(); a.remove();
             } catch (e2) { window.location.href = target; }
         }
+
+        /* ===== Экспорт / импорт данных ===== */
+        async function exportData() {
+            try {
+                var json = JSON.stringify(appData, null, 2);
+                var stamp = new Date().toISOString().slice(0, 10);
+                var fileName = 'aquacontrol-backup-' + stamp + '.json';
+                var FS = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+                var Share = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
+                if (FS && Share) {
+                    var res = await FS.writeFile({ path: fileName, data: json, directory: 'CACHE', encoding: 'utf8' });
+                    await Share.share({
+                        title: 'Резервная копия AquaControl Pro',
+                        text: 'Файл с данными фильтров: ' + fileName,
+                        url: res.uri,
+                        dialogTitle: 'Сохранить или отправить файл'
+                    });
+                    showToast('Выберите, куда сохранить файл');
+                } else {
+                    var blob = new Blob([json], { type: 'application/json' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url; a.download = fileName;
+                    document.body.appendChild(a); a.click(); a.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+                    showToast('Файл скачан');
+                }
+            } catch (e) {
+                console.warn(e);
+                showToast('Не удалось экспортировать данные');
+            }
+        }
+
+        function triggerImportPicker() {
+            document.getElementById('importFileInput').click();
+        }
+
+        async function handleImportFile(event) {
+            var file = event.target.files && event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+            try {
+                var text = await file.text();
+                var parsed = JSON.parse(text);
+                if (!parsed || !Array.isArray(parsed.locations) || !Array.isArray(parsed.filters)) {
+                    showToast('Файл не похож на резервную копию AquaControl Pro');
+                    return;
+                }
+                showCustomConfirm(
+                    'Импорт данных',
+                    'Все текущие дома, фильтры и история будут заменены данными из файла. Отменить это действие после подтверждения нельзя. Продолжить?',
+                    async function () {
+                        appData = parsed;
+                        if (!appData.history) appData.history = [];
+                        (appData.filters || []).forEach(function (f) {
+                            if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
+                            if (f.lastDate) f.lastDate = Number(f.lastDate);
+                        });
+                        persistOnly();
+                        updateUI();
+                        var ok = await scheduleAllFilterNotifications();
+                        showToast('Данные импортированы' + (ok ? '' : ' · нажмите «Обновить напоминания» в панели тестирования'));
+                    }
+                );
+            } catch (e) {
+                console.warn(e);
+                showToast('Не удалось прочитать файл — проверьте, что это JSON-резервная копия');
+            }
+        }
+        /* ===== конец экспорт/импорт ===== */
 
         function getLN() {
             if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
