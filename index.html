@@ -188,7 +188,7 @@
         <div class="dev-panel-wrapper">
             <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
             <div class="dev-panel-content" id="devPanel">
-                <p class="hint-test" style="margin-bottom:10px;">Чтобы проверить напоминания: в «Изменить фильтр» выберите срок «1 мин (тест)», сохраните, затем сверните приложение и подождите.</p>
+                <p class="hint-test" style="margin-bottom:10px;">Чтобы проверить напоминания: в «Изменить фильтр» выберите срок «5 мин (тест)», сохраните, затем сверните приложение и подождите — не открывайте приложение раньше времени.</p>
                 <div class="form-group">
                     <label style="color:#ffaa00;">Разовый тест:</label>
                     <div class="chip-group" id="testTimerChips">
@@ -201,7 +201,7 @@
                 <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Обновить напоминания</button>
             </div>
         </div>
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.18 (build 19)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.19 (build 20)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
@@ -908,15 +908,12 @@
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') {
                 persistOnly();
-                scheduleAllFilterNotifications();
             } else {
-                scheduleAllFilterNotifications();
                 updateUI();
             }
         });
         window.addEventListener('pagehide', function () {
             persistOnly();
-            scheduleAllFilterNotifications();
         });
 
         setInterval(function () {
