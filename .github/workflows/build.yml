@@ -30,7 +30,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm init -y
-          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7 @capacitor/browser@5.2.0
+          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7 @capacitor/browser@5.2.0 @capacitor/filesystem@5.2.2 @capacitor/share@5.0.7
 
       - name: Init Android
         run: |
@@ -38,8 +38,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 21/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.20"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 22/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.21"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
