@@ -39,21 +39,54 @@
         .info-grid-inner { overflow: hidden; min-height: 0; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
+
         .btn { width: 100%; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary { padding: 16px; font-size: 14px; background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); margin-top: 8px; }
         .btn-warning { padding: 12px; font-size: 13px; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); margin-top: 8px; }
         .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #8f9cae; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
+
+        /* Кнопка + ? */
+        .btn-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+        .btn-row .btn { margin-top: 0; flex: 1; }
+        .help-dot {
+            flex-shrink: 0; width: 36px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06); color: #8f9cae; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .help-dot:active { background: rgba(0, 242, 254, 0.15); color: #00f2fe; }
+
         .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
         .dev-panel-content.open { display: block; }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; }
         .modal-subtitle { font-size: 11px; color: #00f2fe; text-align: center; margin-bottom: 15px; }
-        .modal-hint { font-size: 11px; color: #8f9cae; text-align: left; margin: 0 0 12px; line-height: 1.4; }
         #confirmModal { z-index: 200 !important; }
+
+        /* Подсказка поверх всего */
+        #helpOverlay {
+            display: none; position: fixed; inset: 0; z-index: 500;
+            background: rgba(3, 5, 12, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            justify-content: center; align-items: center; padding: 24px;
+        }
+        #helpOverlay.open { display: flex; }
+        .help-card {
+            position: relative; width: 100%; max-width: 320px;
+            background: rgba(18, 23, 36, 0.92); border: 1px solid rgba(0, 242, 254, 0.35);
+            border-radius: 20px; padding: 20px 18px 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+        }
+        .help-card h3 { font-size: 15px; color: #00f2fe; margin-bottom: 10px; text-align: center; padding-right: 20px; }
+        .help-card p { font-size: 13px; color: #c5cdd8; line-height: 1.45; text-align: left; }
+        .help-close {
+            position: absolute; top: 10px; right: 12px; width: 28px; height: 28px; border: none;
+            border-radius: 50%; background: rgba(255,255,255,0.08); color: #fff; font-size: 16px; cursor: pointer;
+        }
+
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
@@ -132,8 +165,14 @@
             </div>
         </div>
 
-        <button class="btn btn-primary" onclick="openReplaceModal()">Зафиксировать замену</button>
-        <button class="btn btn-warning" id="btnPostponeMain" style="display:none;" type="button">⏸ <span id="btnPostponeMainLabel">Отложить</span></button>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="openReplaceModal()">Зафиксировать замену</button>
+            <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('replaceMain')" aria-label="Подсказка">?</button>
+        </div>
+        <div class="btn-row" id="postponeMainRow" style="display:none;">
+            <button class="btn btn-warning" id="btnPostponeMain" type="button">⏸ <span id="btnPostponeMainLabel">Отложить</span></button>
+            <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('postpone')" aria-label="Подсказка">?</button>
+        </div>
         <button class="btn btn-edit-outline" id="btnEditFilter" onclick="openEditFilterModal()">✏️ Изменить фильтр</button>
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
@@ -141,7 +180,7 @@
         <div class="dev-panel-wrapper">
             <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
             <div class="dev-panel-content" id="devPanel">
-                <p class="hint-test" style="margin-bottom:10px;">Авто-пуши: «1 мин (тест)» → подождите тост «Пуши записаны» → сверните приложение.</p>
+                <p class="hint-test" style="margin-bottom:10px;">Проверка пушей: ресурс «1 мин (тест)» → тост «пуши записаны» → сверните приложение.</p>
                 <div class="form-group">
                     <label style="color:#ffaa00;">Разовый тест:</label>
                     <div class="chip-group" id="testTimerChips">
@@ -157,6 +196,15 @@
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
+
+    <!-- Подсказка -->
+    <div id="helpOverlay" onclick="onHelpOverlayClick(event)">
+        <div class="help-card" onclick="event.stopPropagation()">
+            <button type="button" class="help-close" onclick="hideHelp()" aria-label="Закрыть">×</button>
+            <h3 id="helpTitle">Подсказка</h3>
+            <p id="helpBody"></p>
+        </div>
+    </div>
 
     <div class="modal" id="confirmModal">
         <div class="modal-content">
@@ -197,7 +245,7 @@
                 <input type="text" id="editFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
-                <label>Паспортный ресурс:</label>
+                <label>Срок службы:</label>
                 <div class="chip-group" id="editChipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('editChipResource', this)">1 мин (тест)</div>
                     <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('editChipResource', this)">5 мин (тест)</div>
@@ -209,18 +257,18 @@
                     <div class="chip-btn" data-value="d180" onclick="selectChip('editChipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('editChipResource', this)">1 год</div>
                 </div>
-                <p class="hint-test">Оранжевые — проверка пушей. Потом верните 30–90 дн.</p>
+                <p class="hint-test">Оранжевые пункты — только для проверки напоминаний.</p>
             </div>
             <div class="form-group">
-                <label>Жесткость воды:</label>
+                <label>Жёсткость воды:</label>
                 <div class="chip-group" id="editChipHardness">
                     <div class="chip-btn selected" data-value="1" onclick="selectChip('editChipHardness', this)">Мягкая</div>
-                    <div class="chip-btn" data-value="1.25" onclick="selectChip('editChipHardness', this)">Жесткая</div>
-                    <div class="chip-btn" data-value="1.5" onclick="selectChip('editChipHardness', this)">Оч. жесткая</div>
+                    <div class="chip-btn" data-value="1.25" onclick="selectChip('editChipHardness', this)">Жёсткая</div>
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('editChipHardness', this)">Оч. жёсткая</div>
                 </div>
             </div>
             <div class="form-group">
-                <label>Количество чел.:</label>
+                <label>Сколько человек пьют:</label>
                 <div class="chip-group" id="editChipPeople">
                     <div class="chip-btn" data-value="1" onclick="selectChip('editChipPeople', this)">1 чел</div>
                     <div class="chip-btn selected" data-value="2" onclick="selectChip('editChipPeople', this)">2 чел</div>
@@ -228,7 +276,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Ссылка на покупку:</label>
+                <label>Ссылка на магазин:</label>
                 <input type="url" id="editFilterUrl" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="confirmEditFilter()">Сохранить</button>
@@ -238,8 +286,8 @@
 
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
-            <h2>Ссылка не указана</h2>
-            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Добавьте ссылку на магазин.</p>
+            <h2>Ссылки пока нет</h2>
+            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Добавьте ссылку на картридж в магазине — потом откроется в один тап.</p>
             <div class="form-group">
                 <label>Ссылка:</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
@@ -253,22 +301,28 @@
         <div class="modal-content">
             <h2>Замена картриджа</h2>
             <div class="modal-subtitle" id="replaceModalContext">Объект • Фильтр</div>
-            <p class="modal-hint">
-                <b>С данными</b> — модель и цена в статистике.<br>
-                <b>Быстрая замена</b> — сброс таймера без модели/цены.<br>
-                <b>Отложить</b> — замену не делали, только сдвинуть срок (в историю не пишется).
-            </p>
+
             <div class="form-group">
-                <label>Модель (необязательно):</label>
-                <input type="text" id="repBrand" placeholder="Аквафор А5">
+                <label>Модель (по желанию):</label>
+                <input type="text" id="repBrand" placeholder="Например, Аквафор А5">
             </div>
             <div class="form-group">
-                <label>Стоимость, руб (необязательно):</label>
+                <label>Цена, ₽ (по желанию):</label>
                 <input type="number" id="repCost" placeholder="450">
             </div>
-            <button class="btn btn-primary" onclick="confirmReplacement(false)">💾 Сохранить замену (с данными)</button>
-            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">⚡ Быстрая замена (без данных)</button>
-            <button class="btn btn-warning" id="btnPostponeModal" type="button">⏸ <span id="btnPostponeModalLabel">Отложить</span></button>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="confirmReplacement(false)">Сохранить замену</button>
+                <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('saveReplace')" aria-label="Подсказка">?</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary-small" style="width:100%;" onclick="confirmReplacement(true)">Быстрая замена</button>
+                <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('quickReplace')" aria-label="Подсказка">?</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-warning" id="btnPostponeModal" type="button">⏸ <span id="btnPostponeModalLabel">Отложить</span></button>
+                <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('postpone')" aria-label="Подсказка">?</button>
+            </div>
             <button class="btn btn-secondary-small" style="width:100%; border:none;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
@@ -290,7 +344,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Паспортный ресурс:</label>
+                <label>Срок службы:</label>
                 <div class="chip-group" id="chipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('chipResource', this)">1 мин (тест)</div>
                     <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('chipResource', this)">5 мин (тест)</div>
@@ -302,18 +356,18 @@
                     <div class="chip-btn" data-value="d180" onclick="selectChip('chipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('chipResource', this)">1 год</div>
                 </div>
-                <p class="hint-test">Для пуша: «1 мин (тест)» → дождитесь тоста → сверните приложение.</p>
+                <p class="hint-test">Оранжевые — проверка напоминаний, потом верните обычный срок.</p>
             </div>
             <div class="form-group">
-                <label>Жесткость:</label>
+                <label>Жёсткость воды:</label>
                 <div class="chip-group" id="chipHardness">
                     <div class="chip-btn selected" data-value="1" onclick="selectChip('chipHardness', this)">Мягкая</div>
-                    <div class="chip-btn" data-value="1.25" onclick="selectChip('chipHardness', this)">Жесткая</div>
-                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipHardness', this)">Оч. жесткая</div>
+                    <div class="chip-btn" data-value="1.25" onclick="selectChip('chipHardness', this)">Жёсткая</div>
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipHardness', this)">Оч. жёсткая</div>
                 </div>
             </div>
             <div class="form-group">
-                <label>Людей:</label>
+                <label>Сколько человек пьют:</label>
                 <div class="chip-group" id="chipPeople">
                     <div class="chip-btn" data-value="1" onclick="selectChip('chipPeople', this)">1 чел</div>
                     <div class="chip-btn selected" data-value="2" onclick="selectChip('chipPeople', this)">2 чел</div>
@@ -321,7 +375,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Ссылка на покупку:</label>
+                <label>Ссылка на магазин:</label>
                 <input type="url" id="newFilterUrl" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="addNewFilter()">Создать</button>
@@ -343,7 +397,7 @@
 
     <div class="modal" id="historyModal">
         <div class="modal-content">
-            <h2>Статистика</h2>
+            <h2>Расходы и история</h2>
             <div class="eco-badge" style="margin-top:10px;">
                 🌱 ~<span id="ecoBottles">0</span> бутылок · 💰 ~<span id="ecoMoney">0</span> ₽
             </div>
@@ -360,6 +414,25 @@
         var MS_MIN = 60000;
         var NOTIF_CHANNEL = 'aqua_high_priority';
 
+        var HELP_TEXTS = {
+            replaceMain: {
+                title: 'Зафиксировать замену',
+                body: 'Нажмите, когда поставили новый картридж. Откроется окно: можно указать модель и цену или сделать быструю замену.'
+            },
+            saveReplace: {
+                title: 'Сохранить замену',
+                body: 'Таймер начнётся заново. Если укажете модель и цену — они попадут в историю расходов. Поля можно оставить пустыми.'
+            },
+            quickReplace: {
+                title: 'Быстрая замена',
+                body: 'Тоже сбрасывает таймер, но без ввода модели и цены. Удобно, если не хотите ничего заполнять. В истории будет пометка «быстрая замена».'
+            },
+            postpone: {
+                title: 'Отложить',
+                body: 'Если картридж ещё не меняли, но нужно чуть подождать. Срок продлится (обычно на 15 дней, в тестовом режиме — на 15 минут). В расходы это не записывается.'
+            }
+        };
+
         var defaultData = {
             currentLocationId: 'loc1',
             currentFilterId: 'f1',
@@ -374,7 +447,6 @@
         };
 
         var appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
-        /* починка старых записей */
         (appData.filters || []).forEach(function (f) {
             if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
             if (f.baseDays === 0 && !f.cycleMs) f.baseDays = 90;
@@ -387,21 +459,22 @@
         var scheduleChain = Promise.resolve();
         var scheduleBusy = false;
 
-        function persistOnly() {
-            localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
+        function showHelp(key) {
+            var item = HELP_TEXTS[key];
+            if (!item) return;
+            document.getElementById('helpTitle').innerText = item.title;
+            document.getElementById('helpBody').innerText = item.body;
+            document.getElementById('helpOverlay').classList.add('open');
+        }
+        function hideHelp() {
+            document.getElementById('helpOverlay').classList.remove('open');
+        }
+        function onHelpOverlayClick(e) {
+            if (e.target && e.target.id === 'helpOverlay') hideHelp();
         }
 
-        /** Сохранить + UI + дождаться записи пушей в Android */
-        async function saveDB(options) {
-            options = options || {};
-            persistOnly();
-            updateUI();
-            var ok = await scheduleAllFilterNotifications();
-            if (options.quiet) return ok;
-            if (ok && options.announce) {
-                showToast(options.announce);
-            }
-            return ok;
+        function persistOnly() {
+            localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
         }
 
         function showCustomConfirm(title, message, onConfirm) {
@@ -415,7 +488,6 @@
             closeModals();
         };
 
-        /* canvas */
         var canvas = document.getElementById('waveCanvas');
         var ctx = canvas.getContext('2d');
         var width, height, step = 0, waveColor = 'rgba(0, 242, 254, 0.12)';
@@ -500,16 +572,13 @@
             return appData.filters.find(function (f) { return f.id === appData.currentFilterId; }) || null;
         }
         function peopleMult(p) { return p == 1 ? 1 : (p == 2 ? 0.75 : 0.5); }
-        function isTestFilter(filter) {
-            return !!(filter && Number(filter.cycleMs) > 0);
-        }
+        function isTestFilter(filter) { return !!(filter && Number(filter.cycleMs) > 0); }
 
         function getFilterTiming(filter) {
             var isTest = isTestFilter(filter);
             var resourceMs;
-            if (isTest) {
-                resourceMs = Number(filter.cycleMs);
-            } else {
+            if (isTest) resourceMs = Number(filter.cycleMs);
+            else {
                 var days = Math.round((Number(filter.baseDays) || 90) * peopleMult(filter.people) * (1 / (filter.hardness || 1)));
                 resourceMs = Math.max(days, 1) * MS_DAY;
             }
@@ -518,50 +587,33 @@
             var followUpMs = expiryMs + (isTest ? resourceMs : 7 * MS_DAY);
             var leftMs = expiryMs - Date.now();
             return {
-                isTest: isTest,
-                resourceMs: resourceMs,
-                expiryMs: expiryMs,
-                followUpMs: followUpMs,
-                leftMs: leftMs,
-                daysLeft: Math.ceil(leftMs / MS_DAY),
-                minutesLeft: Math.ceil(leftMs / MS_MIN),
-                secondsLeft: Math.ceil(leftMs / 1000)
+                isTest: isTest, resourceMs: resourceMs, expiryMs: expiryMs, followUpMs: followUpMs, leftMs: leftMs,
+                daysLeft: Math.ceil(leftMs / MS_DAY), minutesLeft: Math.ceil(leftMs / MS_MIN), secondsLeft: Math.ceil(leftMs / 1000)
             };
         }
 
         function updatePostponeLabels(filter) {
-            var text = isTestFilter(filter) ? 'Отложить на 15 минут' : 'Отложить на 15 дней';
+            var text = isTestFilter(filter) ? 'Отложить на 15 мин' : 'Отложить на 15 дней';
             var a = document.getElementById('btnPostponeMainLabel');
             var b = document.getElementById('btnPostponeModalLabel');
             if (a) a.textContent = text;
             if (b) b.textContent = text;
         }
 
-        /**
-         * Отложить: выставить момент ИСТЕЧЕНИЯ = сейчас + 15 мин (тест) или + 15 дней (обычный).
-         * lastDate = expiry - resourceMs
-         */
         async function postponeCurrentFilter() {
             try {
                 var filter = getCurrentFilter();
-                if (!filter) {
-                    showToast('Фильтр не выбран');
-                    return;
-                }
+                if (!filter) { showToast('Сначала выберите фильтр'); return; }
                 var t = getFilterTiming(filter);
                 var addMs = isTestFilter(filter) ? (15 * MS_MIN) : (15 * MS_DAY);
-                var newExpiry = Date.now() + addMs;
-                filter.lastDate = newExpiry - t.resourceMs;
+                filter.lastDate = (Date.now() + addMs) - t.resourceMs;
                 closeModals();
                 persistOnly();
                 updateUI();
                 var ok = await scheduleAllFilterNotifications();
-                showToast(
-                    (isTestFilter(filter) ? 'Отложено на 15 минут' : 'Отложено на 15 дней') +
-                    (ok ? ' · пуши записаны' : ' · ошибка пушей')
-                );
+                showToast((isTestFilter(filter) ? 'Отложено на 15 минут' : 'Отложено на 15 дней') + (ok ? '' : ' · ошибка напоминаний'));
             } catch (e) {
-                showToast('Ошибка отложить: ' + (e && e.message ? e.message : e));
+                showToast('Не удалось отложить');
             }
         }
 
@@ -600,37 +652,25 @@
             var id = (h >>> 0) % 2000000000;
             return id === 0 ? 1 : id;
         }
-        function sleep(ms) {
-            return new Promise(function (resolve) { setTimeout(resolve, ms); });
-        }
+        function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
         async function ensureChannel(ln) {
             await ln.createChannel({
-                id: NOTIF_CHANNEL,
-                name: 'AquaControl Напоминания',
-                description: 'Авто-напоминания о замене фильтра',
-                importance: 5,
-                visibility: 1,
-                sound: 'default',
-                vibrates: true
+                id: NOTIF_CHANNEL, name: 'AquaControl Напоминания',
+                description: 'Напоминания о замене фильтра',
+                importance: 5, visibility: 1, sound: 'default', vibrates: true
             });
         }
-
         async function cancelOurPending(ln) {
             try {
                 var p = await ln.getPending();
                 if (p && p.notifications && p.notifications.length) {
-                    await ln.cancel({
-                        notifications: p.notifications.map(function (n) { return { id: n.id }; })
-                    });
+                    await ln.cancel({ notifications: p.notifications.map(function (n) { return { id: n.id }; }) });
                 }
             } catch (e) {}
             await sleep(120);
         }
 
-        /**
-         * Очередь: нельзя параллельно cancel/schedule — иначе второй вызов стирает первый.
-         */
         function scheduleAllFilterNotifications() {
             scheduleChain = scheduleChain.then(runScheduleJob, runScheduleJob);
             return scheduleChain;
@@ -639,14 +679,10 @@
         async function runScheduleJob() {
             var ln = getLN();
             if (!ln || !notificationsReady) return false;
-            if (scheduleBusy) {
-                await sleep(50);
-            }
             scheduleBusy = true;
             try {
                 await ensureChannel(ln);
                 await cancelOurPending(ln);
-
                 var now = Date.now();
                 var batch = [];
                 var minLead = 5000;
@@ -658,20 +694,15 @@
                     var extra = { locationId: filter.locationId, filterId: filter.id };
 
                     var expAt = t.expiryMs;
-                    if (expAt <= now + minLead && expAt > now) {
-                        expAt = now + minLead;
-                    }
+                    if (expAt <= now + minLead && expAt > now) expAt = now + minLead;
                     if (expAt > now + 2000) {
                         batch.push({
-                            title: 'AquaControl — срок истёк',
-                            body: 'Пора заменить картридж: "' + filter.name + '"' + locText + '.',
+                            title: 'Пора заменить фильтр',
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.',
                             id: notifId(filter.id, 'exp'),
                             schedule: { at: new Date(expAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon',
-                            iconColor: '#00F2FE',
-                            autoCancel: true,
-                            channelId: NOTIF_CHANNEL,
-                            extra: extra
+                            smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
+                            channelId: NOTIF_CHANNEL, extra: extra
                         });
                     }
 
@@ -679,15 +710,12 @@
                     if (fAt <= now + minLead && fAt > now) fAt = now + minLead + 1000;
                     if (fAt > now + 2000) {
                         batch.push({
-                            title: 'AquaControl — всё ещё не заменён',
-                            body: 'Фильтр "' + filter.name + '"' + locText + ' просрочен. Замените или отложите.',
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.',
                             id: notifId(filter.id, 'p7'),
                             schedule: { at: new Date(fAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon',
-                            iconColor: '#FF4757',
-                            autoCancel: true,
-                            channelId: NOTIF_CHANNEL,
-                            extra: extra
+                            smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
+                            channelId: NOTIF_CHANNEL, extra: extra
                         });
                     }
                 });
@@ -695,11 +723,10 @@
                 if (batch.length) {
                     await ln.schedule({ notifications: batch });
                     await sleep(80);
-                    /* проверка: если pending пуст — один повтор */
                     try {
                         var check = await ln.getPending();
                         var cnt = check && check.notifications ? check.notifications.length : 0;
-                        if (cnt === 0 && batch.length > 0) {
+                        if (cnt === 0) {
                             await sleep(200);
                             await ln.schedule({ notifications: batch });
                         }
@@ -707,7 +734,7 @@
                 }
                 return true;
             } catch (e) {
-                console.warn('schedule failed', e);
+                console.warn(e);
                 return false;
             } finally {
                 scheduleBusy = false;
@@ -717,18 +744,18 @@
         async function forceRescheduleAll() {
             notificationsReady = true;
             var ok = await scheduleAllFilterNotifications();
-            showToast(ok ? 'Авто-пуши пересозданы' : 'Не удалось записать пуши');
+            showToast(ok ? 'Напоминания обновлены' : 'Не удалось обновить напоминания');
         }
 
         function nextPushHint(filter) {
             if (!filter) return '';
             var t = getFilterTiming(filter);
-            if (t.leftMs <= 0) return 'Пуши: повтор по просрочке';
+            if (t.leftMs <= 0) return 'повторное напоминание позже';
             if (t.isTest) {
-                if (t.secondsLeft < 120) return 'Пуш через ~' + Math.max(1, t.secondsLeft) + ' сек';
-                return 'Пуш через ~' + Math.max(1, t.minutesLeft) + ' мин';
+                if (t.secondsLeft < 120) return 'напоминание через ~' + Math.max(1, t.secondsLeft) + ' сек';
+                return 'напоминание через ~' + Math.max(1, t.minutesLeft) + ' мин';
             }
-            return 'Пуш через ~' + t.daysLeft + ' дн';
+            return 'напоминание через ~' + t.daysLeft + ' дн';
         }
 
         function updateUI() {
@@ -757,7 +784,7 @@
 
             var btnCart = document.getElementById('btnCartIcon');
             var cartDot = document.getElementById('cartDot');
-            var btnPost = document.getElementById('btnPostponeMain');
+            var postponeRow = document.getElementById('postponeMainRow');
             var btnEdit = document.getElementById('btnEditFilter');
             var daysDisplay = document.getElementById('daysDisplay');
 
@@ -766,7 +793,7 @@
                 updatePostponeLabels(filter);
                 document.getElementById('infoType').innerText = filter.type;
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
-                document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жесткая' : (filter.hardness == 1.25 ? 'Жесткая' : 'Норма');
+                document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жёсткая' : (filter.hardness == 1.25 ? 'Жёсткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
                 btnCart.style.display = 'flex';
                 btnEdit.style.display = 'block';
@@ -780,8 +807,8 @@
                     daysDisplay.innerText = '0';
                     daysDisplay.style.color = '#ff4757';
                     waveColor = 'rgba(255,71,87,0.18)';
-                    document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
-                    btnPost.style.display = 'block';
+                    document.getElementById('statusLabel').innerText = 'Срок истёк — замените';
+                    postponeRow.style.display = 'flex';
                 } else if (t.isTest) {
                     if (t.secondsLeft < 120) {
                         daysDisplay.innerText = Math.max(1, t.secondsLeft);
@@ -792,19 +819,19 @@
                     }
                     daysDisplay.style.color = t.minutesLeft <= 1 ? '#ffaa00' : '#00f2fe';
                     waveColor = 'rgba(0,242,254,0.12)';
-                    btnPost.style.display = 'none';
+                    postponeRow.style.display = 'none';
                 } else if (t.daysLeft <= 10) {
                     daysDisplay.innerText = t.daysLeft;
                     daysDisplay.style.color = '#ffaa00';
                     waveColor = 'rgba(255,170,0,0.15)';
-                    document.getElementById('statusLabel').innerText = 'Скоро замена!';
-                    btnPost.style.display = 'none';
+                    document.getElementById('statusLabel').innerText = 'Скоро замена';
+                    postponeRow.style.display = 'none';
                 } else {
                     daysDisplay.innerText = t.daysLeft;
                     daysDisplay.style.color = '#00f2fe';
                     waveColor = 'rgba(0,242,254,0.12)';
                     document.getElementById('statusLabel').innerText = 'дней осталось';
-                    btnPost.style.display = 'none';
+                    postponeRow.style.display = 'none';
                 }
             } else {
                 daysDisplay.innerText = '--';
@@ -817,11 +844,10 @@
                 document.getElementById('infoBrand').innerText = '--';
                 btnCart.style.display = 'none';
                 btnEdit.style.display = 'none';
-                btnPost.style.display = 'none';
+                postponeRow.style.display = 'none';
             }
         }
 
-        /* кнопки отложить — только addEventListener, без голых inline-сбоев */
         document.getElementById('btnPostponeMain').addEventListener('click', function (e) {
             e.preventDefault();
             postponeCurrentFilter();
@@ -833,24 +859,17 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             var ln = getLN();
-            if (!ln) {
-                updateUI();
-                return;
-            }
+            if (!ln) { updateUI(); return; }
             try {
                 await ln.requestPermissions();
                 await ensureChannel(ln);
                 notificationsReady = true;
-
                 ln.addListener('localNotificationActionPerformed', async function (notification) {
                     try {
                         if (notification.notification && notification.notification.id != null) {
-                            await ln.removeDeliveredNotifications({
-                                notifications: [{ id: notification.notification.id }]
-                            });
+                            await ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
                         }
                     } catch (e) {}
-
                     var ex = (notification.notification && notification.notification.extra) || {};
                     if (ex.locationId && ex.filterId) {
                         appData.currentLocationId = ex.locationId;
@@ -862,24 +881,19 @@
                         }
                         persistOnly();
                         updateUI();
-                        /* не ждём schedule, чтобы модалка открылась сразу; schedule в фоне */
                         scheduleAllFilterNotifications();
                         openReplaceModal();
                     }
                 });
-
                 await scheduleAllFilterNotifications();
-            } catch (e) {
-                console.warn(e);
-            }
+            } catch (e) { console.warn(e); }
         });
 
-        /* При уходе в фон — ещё раз записать пуши (главный фикс после замены) */
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') {
                 persistOnly();
                 scheduleAllFilterNotifications();
-            } else if (document.visibilityState === 'visible') {
+            } else {
                 scheduleAllFilterNotifications();
                 updateUI();
             }
@@ -916,8 +930,8 @@
             var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
             await ln.schedule({
                 notifications: [{
-                    title: 'AquaControl (разовый тест)',
-                    body: 'Тест для "' + filter.name + '"' + (loc ? ' [' + loc.name + ']' : ''),
+                    title: 'Проверка напоминания',
+                    body: 'Тест для «' + filter.name + '»' + (loc ? ' [' + loc.name + ']' : ''),
                     id: Math.floor(Math.random() * 80000) + 1000000,
                     schedule: { at: new Date(Date.now() + ms), allowWhileIdle: true },
                     smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
@@ -925,7 +939,7 @@
                     extra: { locationId: filter.locationId, filterId: filter.id }
                 }]
             });
-            showToast('Разовый тест записан. Можно свернуть');
+            showToast('Тест записан — можно свернуть');
         }
 
         function openLocationSelectModal() {
@@ -955,7 +969,7 @@
             if (!name) { showToast('Введите название'); return; }
             var loc = appData.locations.find(function (l) { return l.id === pendingRenameLocationId; });
             if (!loc) return;
-            loc.name = name; pendingRenameLocationId = null; closeModals(); persistOnly(); updateUI(); showToast('Переименовано');
+            loc.name = name; pendingRenameLocationId = null; closeModals(); persistOnly(); updateUI(); showToast('Сохранено');
         }
         function selectFilter(id) { appData.currentFilterId = id; persistOnly(); updateUI(); }
 
@@ -977,7 +991,7 @@
         function openEditFilterModal() {
             var f = getCurrentFilter();
             if (!f) return;
-            document.getElementById('editFilterContext').innerText = 'Текущее: ' + f.name;
+            document.getElementById('editFilterContext').innerText = f.name;
             document.getElementById('editFilterName').value = f.name || '';
             document.getElementById('editFilterUrl').value = f.buyUrl || '';
             setChipValue('editChipResource', resourceChipFromFilter(f));
@@ -1001,7 +1015,7 @@
             persistOnly();
             updateUI();
             var ok = await scheduleAllFilterNotifications();
-            showToast((isTestFilter(f) ? 'Тест · ' + nextPushHint(f) : 'Фильтр обновлён') + (ok ? ' · пуши записаны' : ''));
+            showToast((isTestFilter(f) ? 'Тест: ' + nextPushHint(f) : 'Сохранено') + (ok ? ' · пуши записаны' : ''));
         }
 
         function onCartIconClick() {
@@ -1011,7 +1025,7 @@
             document.getElementById('noLinkUrlInput').value = '';
             document.getElementById('noLinkModal').style.display = 'flex';
         }
-        async function saveBuyUrlFromNoLinkModal() {
+        function saveBuyUrlFromNoLinkModal() {
             var f = getCurrentFilter();
             if (!f) return;
             var u = normalizeUrl(document.getElementById('noLinkUrlInput').value);
@@ -1021,7 +1035,7 @@
         function openHistoryModal() {
             var list = document.getElementById('historyList');
             var total = 0, n = appData.history.length;
-            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пусто</div>';
+            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пока пусто</div>';
             else list.innerHTML = appData.history.map(function (h) {
                 total += Number(h.cost || 0);
                 return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
@@ -1038,7 +1052,7 @@
 
         async function confirmReplacement(skip) {
             var f = getCurrentFilter();
-            if (!f) { showToast('Фильтр не выбран'); return; }
+            if (!f) { showToast('Выберите фильтр'); return; }
             var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
             var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
             f.lastDate = Date.now();
@@ -1052,13 +1066,8 @@
             closeModals();
             persistOnly();
             updateUI();
-            /* КРИТИЧНО: дождаться записи будильников ДО сворачивания */
             var ok = await scheduleAllFilterNotifications();
-            showToast(
-                (skip ? 'Быстрая замена' : 'Замена сохранена') +
-                ' · ' + nextPushHint(f) +
-                (ok ? ' · пуши записаны' : ' · пуши НЕ записаны')
-            );
+            showToast((skip ? 'Замена учтена' : 'Замена сохранена') + ' · ' + nextPushHint(f) + (ok ? ' · пуши записаны' : ''));
         }
 
         async function addNewFilter() {
@@ -1080,7 +1089,7 @@
             persistOnly();
             updateUI();
             var ok = await scheduleAllFilterNotifications();
-            showToast((isTestFilter(f) ? 'Тест · ' + nextPushHint(f) : 'Фильтр создан') + (ok ? ' · пуши записаны' : ''));
+            showToast((isTestFilter(f) ? 'Тест: ' + nextPushHint(f) : 'Фильтр добавлен') + (ok ? ' · пуши записаны' : ''));
         }
 
         function addNewLocation() {
@@ -1094,7 +1103,7 @@
         function deleteCurrentFilter() {
             var f = getCurrentFilter();
             if (!f) return;
-            showCustomConfirm('Удаление', 'Удалить "' + f.name + '"?', async function () {
+            showCustomConfirm('Удаление', 'Удалить «' + f.name + '»?', async function () {
                 appData.filters = appData.filters.filter(function (x) { return x.id !== appData.currentFilterId; });
                 persistOnly(); updateUI();
                 await scheduleAllFilterNotifications();
@@ -1102,10 +1111,10 @@
             });
         }
         function deleteSpecificLocation(locId) {
-            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный'); return; }
+            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный объект'); return; }
             var loc = appData.locations.find(function (l) { return l.id === locId; });
             if (!loc) return;
-            showCustomConfirm('Удаление', 'Удалить "' + loc.name + '" и фильтры?', async function () {
+            showCustomConfirm('Удаление', 'Удалить «' + loc.name + '» и все его фильтры?', async function () {
                 appData.filters = appData.filters.filter(function (f) { return f.locationId !== locId; });
                 appData.locations = appData.locations.filter(function (l) { return l.id !== locId; });
                 if (appData.currentLocationId === locId) {
@@ -1120,7 +1129,7 @@
         function showToast(text) {
             var t = document.getElementById('toast');
             t.innerText = text; t.classList.add('show');
-            setTimeout(function () { t.classList.remove('show'); }, 3200);
+            setTimeout(function () { t.classList.remove('show'); }, 3000);
         }
 
         updateUI();
