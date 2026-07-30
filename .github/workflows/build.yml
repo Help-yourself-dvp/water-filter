@@ -38,8 +38,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 20/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.19"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 21/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.20"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -203,6 +203,16 @@ jobs:
           (anydpi / 'ic_launcher_round.xml').write_text(adaptive, encoding='utf-8')
           print('OK icons + manifest')
           ENDSCRIPT
+
+      - name: Restore stable debug keystore (signing)
+        run: |
+          mkdir -p ~/.android
+          if [ -n "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
+            echo "Стабильный debug.keystore восстановлен из секрета — подпись будет постоянной."
+          else
+            echo "ВНИМАНИЕ: секрет DEBUG_KEYSTORE_BASE64 не найден. Будет создан временный ключ, обновление поверх старой версии не сработает."
+          fi
 
       - name: Build APK
         run: |
