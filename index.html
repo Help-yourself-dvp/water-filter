@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>AquaControl Pro</title>
     <link rel="manifest" href="manifest.json">
     <style>
@@ -47,19 +50,21 @@
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
 
-        /* Кнопка + ? */
+        /* Кнопка + ? — теперь заметная (голубая, с подсветкой) */
         .btn-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
         .btn-row .btn { margin-top: 0; flex: 1; }
         .help-dot {
-            flex-shrink: 0; width: 36px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.06); color: #8f9cae; font-size: 14px; font-weight: 700;
+            flex-shrink: 0; width: 40px; border-radius: 12px; border: 1px solid rgba(0, 242, 254, 0.5);
+            background: rgba(0, 242, 254, 0.12); color: #00f2fe; font-size: 16px; font-weight: 800;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
         }
-        .help-dot:active { background: rgba(0, 242, 254, 0.15); color: #00f2fe; }
+        .help-dot:active { background: rgba(0, 242, 254, 0.28); box-shadow: 0 0 18px rgba(0, 242, 254, 0.35); }
 
         .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
         .dev-panel-content.open { display: block; }
+        .app-version-tag { font-size: 10px; color: #6e7d93; text-align: center; margin-top: 10px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
@@ -191,6 +196,7 @@
                 </div>
                 <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Разовый тест</button>
                 <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Пересоздать авто-пуши</button>
+                <div class="app-version-tag">Версия приложения: 1.0.14 (build 15)</div>
             </div>
         </div>
     </div>
@@ -417,19 +423,19 @@
         var HELP_TEXTS = {
             replaceMain: {
                 title: 'Зафиксировать замену',
-                body: 'Нажмите, когда поставили новый картридж. Откроется окно: можно указать модель и цену или сделать быструю замену.'
+                body: 'Нажмите, когда поставите новый картридж. Таймер начнётся заново.'
             },
             saveReplace: {
                 title: 'Сохранить замену',
-                body: 'Таймер начнётся заново. Если укажете модель и цену — они попадут в историю расходов. Поля можно оставить пустыми.'
+                body: 'Запускает новый отсчёт срока. Модель и цену можно указать — они попадут в историю трат. Можно оставить пустыми.'
             },
             quickReplace: {
                 title: 'Быстрая замена',
-                body: 'Тоже сбрасывает таймер, но без ввода модели и цены. Удобно, если не хотите ничего заполнять. В истории будет пометка «быстрая замена».'
+                body: 'Тоже запускает новый отсчёт срока, но без ввода модели и цены. Просто и быстро.'
             },
             postpone: {
                 title: 'Отложить',
-                body: 'Если картридж ещё не меняли, но нужно чуть подождать. Срок продлится (обычно на 15 дней, в тестовом режиме — на 15 минут). В расходы это не записывается.'
+                body: 'Продлевает срок на 15 дней. Используйте, если картридж ещё не меняли, но нужно немного подождать.'
             }
         };
 
