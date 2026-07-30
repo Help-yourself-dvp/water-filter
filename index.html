@@ -52,6 +52,7 @@
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
         .modal h2 { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; }
         .modal-subtitle { font-size: 11px; color: #00f2fe; text-align: center; margin-bottom: 15px; }
+        .modal-hint { font-size: 11px; color: #8f9cae; text-align: left; margin: 0 0 12px; line-height: 1.4; }
         #confirmModal { z-index: 200 !important; }
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
@@ -132,7 +133,7 @@
         </div>
 
         <button class="btn btn-primary" onclick="openReplaceModal()">Зафиксировать замену</button>
-        <button class="btn btn-warning" id="btnPostponeMain" style="display:none;" onclick="postponeCurrentFilter(15)">⏸ Отложить на 15 дней</button>
+        <button class="btn btn-warning" id="btnPostponeMain" style="display:none;" onclick="postponeCurrentFilter()">⏸ <span id="btnPostponeMainLabel">Отложить на 15 дней</span></button>
         <button class="btn btn-edit-outline" id="btnEditFilter" onclick="openEditFilterModal()">✏️ Изменить фильтр</button>
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
@@ -140,9 +141,9 @@
         <div class="dev-panel-wrapper">
             <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
             <div class="dev-panel-content" id="devPanel">
-                <p class="hint-test" style="margin-bottom:10px;">Авто-пуши: создайте или измените фильтр → ресурс <b>1 мин (тест)</b> → сверните приложение → подождите ~1–2 мин.</p>
+                <p class="hint-test" style="margin-bottom:10px;">Авто-пуши: ресурс <b>1 мин (тест)</b> → сверните приложение → ~1–2 мин.</p>
                 <div class="form-group">
-                    <label style="color:#ffaa00;">Разовый тест (обход авто-логики):</label>
+                    <label style="color:#ffaa00;">Разовый тест:</label>
                     <div class="chip-group" id="testTimerChips">
                         <div class="chip-btn selected" data-value="0" onclick="selectChip('testTimerChips', this)">0 сек</div>
                         <div class="chip-btn" data-value="10s" onclick="selectChip('testTimerChips', this)">10 сек</div>
@@ -187,7 +188,6 @@
         </div>
     </div>
 
-    <!-- РЕДАКТИРОВАНИЕ: ресурс со ВСЕМИ чипами, включая тест -->
     <div class="modal" id="editFilterModal">
         <div class="modal-content">
             <h2>Изменить фильтр</h2>
@@ -209,7 +209,7 @@
                     <div class="chip-btn" data-value="d180" onclick="selectChip('editChipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('editChipResource', this)">1 год</div>
                 </div>
-                <p class="hint-test">Оранжевые = проверка авто-уведомлений. После теста верните 30–90 дней.</p>
+                <p class="hint-test">Оранжевые — только для проверки пушей. Потом верните 30–90 дней.</p>
             </div>
             <div class="form-group">
                 <label>Жесткость воды:</label>
@@ -251,24 +251,28 @@
 
     <div class="modal" id="replaceModal">
         <div class="modal-content">
-            <h2>Фиксация замены</h2>
+            <h2>Замена картриджа</h2>
             <div class="modal-subtitle" id="replaceModalContext">Объект • Фильтр</div>
+            <p class="modal-hint">
+                <b>С данными</b> — модель и цена попадут в статистику.<br>
+                <b>Быстрая замена</b> — сброс таймера в 1 тап, без модели и цены (в истории пометка «быстрая»).<br>
+                <b>Отложить</b> — замену ещё не делали, просто продлить срок. В историю не пишется.
+            </p>
             <div class="form-group">
-                <label>Модель картриджа:</label>
+                <label>Модель картриджа (необязательно):</label>
                 <input type="text" id="repBrand" placeholder="например, Аквафор А5">
             </div>
             <div class="form-group">
-                <label>Стоимость (руб):</label>
+                <label>Стоимость, руб (необязательно):</label>
                 <input type="number" id="repCost" placeholder="450">
             </div>
-            <button class="btn btn-primary" onclick="confirmReplacement(false)">Сохранить и сбросить таймер</button>
-            <button class="btn btn-warning" onclick="postponeCurrentFilter(15)">Отложить на 15 дней</button>
-            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">Быстрая замена</button>
+            <button class="btn btn-primary" onclick="confirmReplacement(false)">💾 Сохранить замену (с данными)</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="confirmReplacement(true)">⚡ Быстрая замена (без данных)</button>
+            <button class="btn btn-warning" id="btnPostponeModal" onclick="postponeCurrentFilter()">⏸ <span id="btnPostponeModalLabel">Отложить на 15 дней</span></button>
             <button class="btn btn-secondary-small" style="width:100%; border:none;" onclick="closeModals()">Отмена</button>
         </div>
     </div>
 
-    <!-- НОВЫЙ ФИЛЬТР: те же тестовые чипы в HTML -->
     <div class="modal" id="addFilterModal">
         <div class="modal-content">
             <h2>Новый фильтр</h2>
@@ -298,7 +302,7 @@
                     <div class="chip-btn" data-value="d180" onclick="selectChip('chipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('chipResource', this)">1 год</div>
                 </div>
-                <p class="hint-test">Чтобы проверить авто-пуш: выберите «1 мин (тест)», создайте фильтр, сверните приложение на 1–2 минуты.</p>
+                <p class="hint-test">Для проверки пуша выберите «1 мин (тест)» и сверните приложение.</p>
             </div>
             <div class="form-group">
                 <label>Жесткость воды:</label>
@@ -354,6 +358,7 @@
 
     <script>
         var MS_DAY = 86400000;
+        var MS_MIN = 60000;
         var NOTIF_CHANNEL = 'aqua_high_priority';
 
         var defaultData = {
@@ -451,7 +456,6 @@
             if (value === 'd365') return { cycleMs: null, baseDays: 365 };
             return { cycleMs: null, baseDays: 90 };
         }
-
         function resourceChipFromFilter(filter) {
             if (filter.cycleMs === 60000) return 't60';
             if (filter.cycleMs === 300000) return 't300';
@@ -465,7 +469,6 @@
             if (d === 365) return 'd365';
             return 'd90';
         }
-
         function applyResourceChip(filter, chipValue) {
             var r = parseResourceChip(chipValue);
             filter.cycleMs = r.cycleMs;
@@ -480,9 +483,8 @@
         function getFilterTiming(filter) {
             var isTest = !!(filter.cycleMs && filter.cycleMs > 0);
             var resourceMs;
-            if (isTest) {
-                resourceMs = filter.cycleMs;
-            } else {
+            if (isTest) resourceMs = filter.cycleMs;
+            else {
                 var days = Math.round((filter.baseDays || 90) * peopleMult(filter.people) * (1 / (filter.hardness || 1)));
                 resourceMs = Math.max(days, 1) * MS_DAY;
             }
@@ -496,9 +498,45 @@
                 followUpMs: followUpMs,
                 leftMs: leftMs,
                 daysLeft: Math.ceil(leftMs / MS_DAY),
-                minutesLeft: Math.ceil(leftMs / 60000),
+                minutesLeft: Math.ceil(leftMs / MS_MIN),
                 secondsLeft: Math.ceil(leftMs / 1000)
             };
+        }
+
+        function updatePostponeLabels(filter) {
+            var isTest = !!(filter && filter.cycleMs);
+            var text = isTest ? 'Отложить на 15 минут' : 'Отложить на 15 дней';
+            var main = document.getElementById('btnPostponeMainLabel');
+            var modal = document.getElementById('btnPostponeModalLabel');
+            if (main) main.innerText = text;
+            if (modal) modal.innerText = text;
+        }
+
+        /**
+         * Отложить срок БЕЗ записи в историю (замену не делали).
+         * Обычный фильтр: +15 дней.
+         * Тест-фильтр: +15 минут (чтобы кнопка работала при проверке пушей).
+         */
+        function postponeCurrentFilter() {
+            var filter = getCurrentFilter();
+            if (!filter) {
+                showToast('Фильтр не выбран');
+                return;
+            }
+            var t = getFilterTiming(filter);
+            if (filter.cycleMs) {
+                var addMs = 15 * MS_MIN;
+                filter.lastDate = Date.now() - t.resourceMs + addMs;
+                closeModals();
+                saveDB();
+                showToast('Тест: отложено на 15 минут');
+                return;
+            }
+            var addDays = 15;
+            filter.lastDate = Date.now() - t.resourceMs + addDays * MS_DAY;
+            closeModals();
+            saveDB();
+            showToast('Отложено на 15 дней');
         }
 
         function normalizeUrl(url) {
@@ -578,7 +616,7 @@
                     if (t.followUpMs > now + 2500) {
                         batch.push({
                             title: 'AquaControl — всё ещё не заменён',
-                            body: 'Фильтр "' + filter.name + '"' + locText + ' всё ещё просрочен. Зафиксируйте замену.',
+                            body: 'Фильтр "' + filter.name + '"' + locText + ' всё ещё просрочен. Зафиксируйте замену или отложите срок.',
                             id: notifId(filter.id, 'p7'),
                             schedule: { at: new Date(t.followUpMs), allowWhileIdle: true },
                             smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
@@ -589,7 +627,6 @@
                 if (batch.length) await ln.schedule({ notifications: batch });
             } catch (e) { console.warn(e); }
         }
-
         async function forceRescheduleAll() {
             notificationsReady = true;
             await scheduleAllFilterNotifications();
@@ -628,6 +665,7 @@
 
             if (filter) {
                 var t = getFilterTiming(filter);
+                updatePostponeLabels(filter);
                 document.getElementById('infoType').innerText = filter.type;
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жесткая' : (filter.hardness == 1.25 ? 'Жесткая' : 'Норма');
@@ -645,7 +683,7 @@
                     daysDisplay.style.color = '#ff4757';
                     waveColor = 'rgba(255,71,87,0.18)';
                     document.getElementById('statusLabel').innerText = 'Срок истек! Замените';
-                    btnPost.style.display = t.isTest ? 'none' : 'block';
+                    btnPost.style.display = 'block';
                 } else if (t.isTest) {
                     if (t.secondsLeft < 120) {
                         daysDisplay.innerText = Math.max(1, t.secondsLeft);
@@ -696,7 +734,7 @@
                     if (notification.notification && notification.notification.id) {
                         ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
                     }
-                    var ex = notification.notification.extra || {};
+                    var ex = (notification.notification && notification.notification.extra) || {};
                     if (ex.locationId && ex.filterId) {
                         appData.currentLocationId = ex.locationId;
                         appData.currentFilterId = ex.filterId;
@@ -718,13 +756,6 @@
             if (f && f.cycleMs) updateUI();
         }, 1000);
 
-        function postponeCurrentFilter(days) {
-            var filter = getCurrentFilter();
-            if (!filter || filter.cycleMs) return;
-            var t = getFilterTiming(filter);
-            filter.lastDate = Date.now() - (t.resourceMs - days * MS_DAY);
-            closeModals(); saveDB(); showToast('Продлено на ' + days + ' дней');
-        }
         function toggleInfoBlock() {
             var w = document.getElementById('infoGridWrapper');
             var b = document.getElementById('toggleBtn');
@@ -789,10 +820,14 @@
             loc.name = name; pendingRenameLocationId = null; closeModals(); saveDB(); showToast('Переименовано');
         }
         function selectFilter(id) { appData.currentFilterId = id; saveDB(); }
+
         function openReplaceModal() {
             var f = getCurrentFilter();
             var loc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; });
             if (f && loc) document.getElementById('replaceModalContext').innerText = loc.name + ' • ' + f.name;
+            document.getElementById('repBrand').value = (f && f.brand) ? f.brand : '';
+            document.getElementById('repCost').value = '';
+            updatePostponeLabels(f);
             document.getElementById('replaceModal').style.display = 'flex';
         }
         function openAddFilterModal() {
@@ -812,7 +847,6 @@
             setChipValue('editChipPeople', f.people);
             document.getElementById('editFilterModal').style.display = 'flex';
         }
-
         function confirmEditFilter() {
             var f = getCurrentFilter();
             if (!f) return;
@@ -823,7 +857,6 @@
             f.hardness = parseFloat(getSelectedChipValue('editChipHardness') || f.hardness);
             f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
             applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
-            /* Для тест-режима стартуем цикл «сейчас», чтобы пуш был через 1/5/60 мин */
             if (f.cycleMs) f.lastDate = Date.now();
             closeModals(); saveDB();
             showToast(f.cycleMs ? 'Тест запущен — сверните приложение' : 'Фильтр обновлён');
@@ -860,16 +893,26 @@
             document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
             pendingRenameLocationId = null;
         }
+
+        /** skip=true — быстрая замена без модели/цены */
         function confirmReplacement(skip) {
             var f = getCurrentFilter();
-            if (!f) return;
+            if (!f) { showToast('Фильтр не выбран'); return; }
             var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
             var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
             f.lastDate = Date.now();
             if (!skip && brand) f.brand = brand;
-            appData.history.unshift({ filterName: f.name, date: new Date().toLocaleDateString('ru-RU'), cost: cost, note: skip ? 'Быстрая замена' : '' });
-            closeModals(); saveDB(); showToast('Замена зафиксирована');
+            appData.history.unshift({
+                filterName: f.name,
+                date: new Date().toLocaleDateString('ru-RU'),
+                cost: cost,
+                note: skip ? 'Быстрая замена' : ''
+            });
+            closeModals();
+            saveDB();
+            showToast(skip ? 'Быстрая замена: таймер сброшен' : 'Замена сохранена');
         }
+
         function addNewFilter() {
             var name = document.getElementById('newFilterName').value || 'Фильтр';
             var type = getSelectedChipValue('chipType') || 'Кувшин';
@@ -886,7 +929,7 @@
             appData.filters.push(f);
             appData.currentFilterId = id;
             closeModals(); saveDB();
-            showToast(f.cycleMs ? 'Тест-фильтр создан — сверните приложение' : 'Фильтр создан');
+            showToast(f.cycleMs ? 'Тест-фильтр — сверните приложение' : 'Фильтр создан');
         }
         function addNewLocation() {
             var name = document.getElementById('newLocName').value;
