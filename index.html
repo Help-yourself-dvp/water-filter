@@ -493,4 +493,764 @@
         (appData.filters || []).forEach(function (f) {
             if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
             if (f.baseDays === 0 && !f.cycleMs) f.baseDays = 90;
-            if (f.lastDate) f.lastDate 
+            if (f.lastDate) f.lastDate = Number(f.lastDate);
+        });
+
+        var pendingConfirmAction = null;
+        var pendingRenameLocationId = null;
+        var notificationsReady = false;
+        var scheduleChain = Promise.resolve();
+        var scheduleBusy = false;
+
+        function showHelp(key) {
+            var item = HELP_TEXTS[key];
+            if (!item) return;
+            document.getElementById('helpTitle').innerText = item.title;
+            document.getElementById('helpBody').innerText = item.body;
+            document.getElementById('helpOverlay').classList.add('open');
+        }
+        function hideHelp() {
+            document.getElementById('helpOverlay').classList.remove('open');
+        }
+        function onHelpOverlayClick(e) {
+            if (e.target && e.target.id === 'helpOverlay') hideHelp();
+        }
+
+        function persistOnly() {
+            localStorage.setItem('aquaControlProDB', JSON.stringify(appData));
+        }
+
+        function showCustomConfirm(title, message, onConfirm) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            pendingConfirmAction = onConfirm;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        document.getElementById('confirmOkBtn').onclick = function () {
+            if (pendingConfirmAction) pendingConfirmAction();
+            closeModals();
+        };
+
+        var canvas = document.getElementById('waveCanvas');
+        var ctx = canvas.getContext('2d');
+        var width, height, step = 0, waveColor = 'rgba(0, 242, 254, 0.12)';
+        var particles = Array.from({ length: 50 }, function () {
+            return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 2.5 + 1, s: Math.random() * 0.8 + 0.3, wobble: Math.random() * Math.PI * 2 };
+        });
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+        function drawWaves() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
+            particles.forEach(function (p) {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                p.y -= p.s; p.x += Math.sin(step * 0.02 + p.wobble) * 0.4;
+                if (p.y < 0) { p.y = height; p.x = Math.random() * width; }
+            });
+            var amp = width < 600 ? 90 : 65;
+            for (var i = 0; i < 3; i++) {
+                ctx.beginPath(); ctx.fillStyle = waveColor; ctx.moveTo(0, height);
+                for (var x = 0; x <= width; x += 10) ctx.lineTo(x, Math.sin(x * 0.002 + step * 0.012 + i * 2.2) * amp + height * 0.58);
+                ctx.lineTo(width, height); ctx.closePath(); ctx.fill();
+            }
+            step++; requestAnimationFrame(drawWaves);
+        }
+        drawWaves();
+
+        function selectChip(groupId, el) {
+            document.querySelectorAll('#' + groupId + ' .chip-btn').forEach(function (b) { b.classList.remove('selected'); });
+            el.classList.add('selected');
+        }
+        function getSelectedChipValue(groupId) {
+            var s = document.querySelector('#' + groupId + ' .chip-btn.selected');
+            return s ? s.getAttribute('data-value') : null;
+        }
+        function setChipValue(groupId, value) {
+            var buttons = document.querySelectorAll('#' + groupId + ' .chip-btn');
+            var found = false;
+            buttons.forEach(function (btn) {
+                var m = String(btn.getAttribute('data-value')) === String(value);
+                btn.classList.toggle('selected', m);
+                if (m) found = true;
+            });
+            if (!found && buttons.length) {
+                buttons.forEach(function (b) { b.classList.remove('selected'); });
+                buttons[0].classList.add('selected');
+            }
+        }
+
+        function parseResourceChip(value) {
+            if (value === 't60') return { cycleMs: 60000, baseDays: 0 };
+            if (value === 't300') return { cycleMs: 300000, baseDays: 0 };
+            if (value === 't3600') return { cycleMs: 3600000, baseDays: 0 };
+            if (value === 'd1') return { cycleMs: null, baseDays: 1 };
+            if (value === 'd30') return { cycleMs: null, baseDays: 30 };
+            if (value === 'd60') return { cycleMs: null, baseDays: 60 };
+            if (value === 'd180') return { cycleMs: null, baseDays: 180 };
+            if (value === 'd365') return { cycleMs: null, baseDays: 365 };
+            return { cycleMs: null, baseDays: 90 };
+        }
+        function resourceChipFromFilter(filter) {
+            var c = Number(filter.cycleMs) || 0;
+            if (c === 60000) return 't60';
+            if (c === 300000) return 't300';
+            if (c === 3600000) return 't3600';
+            if (c > 0) return 't60';
+            var d = Number(filter.baseDays) || 90;
+            if (d === 1) return 'd1';
+            if (d === 30) return 'd30';
+            if (d === 60) return 'd60';
+            if (d === 180) return 'd180';
+            if (d === 365) return 'd365';
+            return 'd90';
+        }
+        function applyResourceChip(filter, chipValue) {
+            var r = parseResourceChip(chipValue);
+            filter.cycleMs = r.cycleMs;
+            filter.baseDays = r.baseDays;
+        }
+
+        function getCurrentFilter() {
+            return appData.filters.find(function (f) { return f.id === appData.currentFilterId; }) || null;
+        }
+        function peopleMult(p) { return p == 1 ? 1 : (p == 2 ? 0.75 : 0.5); }
+        function isTestFilter(filter) { return !!(filter && Number(filter.cycleMs) > 0); }
+
+        function getFilterTiming(filter) {
+            var isTest = isTestFilter(filter);
+            var resourceMs;
+            if (isTest) resourceMs = Number(filter.cycleMs);
+            else {
+                var days = Math.round((Number(filter.baseDays) || 90) * peopleMult(filter.people) * (1 / (filter.hardness || 1)));
+                resourceMs = Math.max(days, 1) * MS_DAY;
+            }
+            var last = Number(filter.lastDate) || Date.now();
+            var expiryMs = last + resourceMs;
+            var followUpMs = expiryMs + (isTest ? resourceMs : 7 * MS_DAY);
+            var leftMs = expiryMs - Date.now();
+            return {
+                isTest: isTest, resourceMs: resourceMs, expiryMs: expiryMs, followUpMs: followUpMs, leftMs: leftMs,
+                daysLeft: Math.ceil(leftMs / MS_DAY), minutesLeft: Math.ceil(leftMs / MS_MIN), secondsLeft: Math.ceil(leftMs / 1000)
+            };
+        }
+
+        function updatePostponeLabels(filter) {
+            var text = isTestFilter(filter) ? 'Отложить на 15 мин' : 'Отложить на 15 дней';
+            var a = document.getElementById('btnPostponeMainLabel');
+            var b = document.getElementById('btnPostponeModalLabel');
+            if (a) a.textContent = text;
+            if (b) b.textContent = text;
+        }
+
+        async function postponeCurrentFilter() {
+            try {
+                var filter = getCurrentFilter();
+                if (!filter) { showToast('Сначала выберите фильтр'); return; }
+                var t = getFilterTiming(filter);
+                var addMs = isTestFilter(filter) ? (15 * MS_MIN) : (15 * MS_DAY);
+                filter.lastDate = (Date.now() + addMs) - t.resourceMs;
+                closeModals();
+                persistOnly();
+                updateUI();
+                var ok = await scheduleAllFilterNotifications();
+                showToast((isTestFilter(filter) ? 'Отложено на 15 минут' : 'Отложено на 15 дней') + (ok ? '' : ' · не удалось запланировать напоминание'));
+            } catch (e) {
+                showToast('Не удалось отложить');
+            }
+        }
+
+        function normalizeUrl(url) {
+            var u = (url || '').trim();
+            if (!u) return '';
+            if (!/^https?:\/\//i.test(u)) return 'https://' + u;
+            return u;
+        }
+        async function openExternalUrl(url) {
+            var target = normalizeUrl(url);
+            if (!target) return;
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                    await window.Capacitor.Plugins.Browser.open({ url: target });
+                    return;
+                }
+            } catch (e) {}
+            try {
+                var a = document.createElement('a');
+                a.href = target; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                document.body.appendChild(a); a.click(); a.remove();
+            } catch (e2) { window.location.href = target; }
+        }
+
+        /* ===== Экспорт / импорт данных (без нативных плагинов) ===== */
+        function exportData() {
+            try {
+                var json = JSON.stringify(appData, null, 2);
+                var ta = document.getElementById('exportTextArea');
+                ta.value = json;
+                document.getElementById('exportModal').style.display = 'flex';
+                setTimeout(function () {
+                    ta.focus();
+                    ta.select();
+                }, 150);
+            } catch (e) {
+                console.warn(e);
+                showToast('Не удалось подготовить данные для экспорта');
+            }
+        }
+
+        function copyExportText() {
+            var ta = document.getElementById('exportTextArea');
+            ta.focus();
+            ta.select();
+            var copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (e) {}
+            if (copied) {
+                showToast('Скопировано в буфер обмена');
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(ta.value).then(function () {
+                    showToast('Скопировано в буфер обмена');
+                }).catch(function () {
+                    showToast('Не удалось скопировать — выделите текст вручную');
+                });
+            } else {
+                showToast('Не удалось скопировать — выделите текст вручную');
+            }
+        }
+
+        function triggerImportPicker() {
+            document.getElementById('importFileInput').click();
+        }
+
+        async function handleImportFile(event) {
+            var file = event.target.files && event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+            try {
+                var text = await file.text();
+                var parsed = JSON.parse(text);
+                if (!parsed || !Array.isArray(parsed.locations) || !Array.isArray(parsed.filters)) {
+                    showToast('Файл не похож на резервную копию AquaControl Pro');
+                    return;
+                }
+                showCustomConfirm(
+                    'Импорт данных',
+                    'Все текущие дома, фильтры и история будут заменены данными из файла. Отменить это действие после подтверждения нельзя. Продолжить?',
+                    async function () {
+                        appData = parsed;
+                        if (!appData.history) appData.history = [];
+                        (appData.filters || []).forEach(function (f) {
+                            if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
+                            if (f.lastDate) f.lastDate = Number(f.lastDate);
+                        });
+                        persistOnly();
+                        updateUI();
+                        var ok = await scheduleAllFilterNotifications();
+                        showToast('Данные импортированы' + (ok ? '' : ' · нажмите «Обновить напоминания» в панели тестирования'));
+                    }
+                );
+            } catch (e) {
+                console.warn(e);
+                showToast('Не удалось прочитать файл — проверьте, что это JSON-резервная копия');
+            }
+        }
+        /* ===== конец экспорт/импорт ===== */
+
+        function getLN() {
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                return window.Capacitor.Plugins.LocalNotifications;
+            }
+            return null;
+        }
+        function notifId(filterId, kind) {
+            var s = String(filterId) + '|' + kind;
+            var h = 2166136261;
+            for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+            var id = (h >>> 0) % 2000000000;
+            return id === 0 ? 1 : id;
+        }
+        function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+        async function ensureChannel(ln) {
+            await ln.createChannel({
+                id: NOTIF_CHANNEL, name: 'AquaControl Напоминания',
+                description: 'Напоминания о замене фильтра',
+                importance: 5, visibility: 1, sound: 'default', vibrates: true
+            });
+        }
+        async function cancelOurPending(ln) {
+            try {
+                var p = await ln.getPending();
+                if (p && p.notifications && p.notifications.length) {
+                    await ln.cancel({ notifications: p.notifications.map(function (n) { return { id: n.id }; }) });
+                }
+            } catch (e) {}
+            await sleep(120);
+        }
+
+        function scheduleAllFilterNotifications() {
+            scheduleChain = scheduleChain.then(runScheduleJob, runScheduleJob);
+            return scheduleChain;
+        }
+
+        async function runScheduleJob() {
+            var ln = getLN();
+            if (!ln || !notificationsReady) return false;
+            scheduleBusy = true;
+            try {
+                await ensureChannel(ln);
+                await cancelOurPending(ln);
+                var now = Date.now();
+                var batch = [];
+                var minLead = 5000;
+
+                appData.filters.forEach(function (filter) {
+                    var t = getFilterTiming(filter);
+                    var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
+                    var locText = loc ? ' [' + loc.name + ']' : '';
+                    var extra = { locationId: filter.locationId, filterId: filter.id };
+
+                    var expAt = t.expiryMs;
+                    if (expAt <= now + minLead && expAt > now) expAt = now + minLead;
+                    if (expAt > now + 2000) {
+                        batch.push({
+                            title: 'Пора заменить фильтр',
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.',
+                            id: notifId(filter.id, 'exp'),
+                            schedule: { at: new Date(expAt), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
+                            channelId: NOTIF_CHANNEL, extra: extra
+                        });
+                    }
+
+                    var fAt = t.followUpMs;
+                    if (fAt <= now + minLead && fAt > now) fAt = now + minLead + 1000;
+                    if (fAt > now + 2000) {
+                        batch.push({
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.',
+                            id: notifId(filter.id, 'p7'),
+                            schedule: { at: new Date(fAt), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
+                            channelId: NOTIF_CHANNEL, extra: extra
+                        });
+                    }
+                });
+
+                if (batch.length) {
+                    await ln.schedule({ notifications: batch });
+                    await sleep(80);
+                    try {
+                        var check = await ln.getPending();
+                        var cnt = check && check.notifications ? check.notifications.length : 0;
+                        if (cnt === 0) {
+                            await sleep(200);
+                            await ln.schedule({ notifications: batch });
+                        }
+                    } catch (e2) {}
+                }
+                return true;
+            } catch (e) {
+                console.warn(e);
+                return false;
+            } finally {
+                scheduleBusy = false;
+            }
+        }
+
+        async function forceRescheduleAll() {
+            notificationsReady = true;
+            var ok = await scheduleAllFilterNotifications();
+            showToast(ok ? 'Напоминания обновлены' : 'Не удалось обновить напоминания');
+        }
+
+        function nextPushHint(filter) {
+            if (!filter) return '';
+            var t = getFilterTiming(filter);
+            if (t.leftMs <= 0) return 'повторное напоминание позже';
+            if (t.isTest) {
+                if (t.secondsLeft < 120) return 'напоминание через ~' + Math.max(1, t.secondsLeft) + ' сек';
+                return 'напоминание через ~' + Math.max(1, t.minutesLeft) + ' мин';
+            }
+            return 'напоминание через ~' + t.daysLeft + ' дн';
+        }
+
+        function updateUI() {
+            var currentLoc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; }) || appData.locations[0];
+            if (currentLoc) appData.currentLocationId = currentLoc.id;
+            document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
+
+            var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
+            var tabs = document.getElementById('filterTabs');
+            var filter = null;
+
+            if (!list.length) {
+                tabs.innerHTML = '<div style="font-size:12px;color:#6e7d93;">Нет устройств</div>';
+                appData.currentFilterId = null;
+            } else {
+                if (!list.some(function (f) { return f.id === appData.currentFilterId; })) appData.currentFilterId = list[0].id;
+                filter = list.find(function (f) { return f.id === appData.currentFilterId; });
+                tabs.innerHTML = list.map(function (f) {
+                    var t = getFilterTiming(f);
+                    var cls = '', icon = '';
+                    if (t.leftMs <= 0) { cls = 'tab-danger'; icon = '🔴 '; }
+                    else if ((!t.isTest && t.daysLeft <= 10) || (t.isTest && t.leftMs <= t.resourceMs * 0.25)) { cls = 'tab-warning'; icon = '🟡 '; }
+                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + f.id + '\')">' + icon + f.name + '</div>';
+                }).join('');
+            }
+
+            var btnCart = document.getElementById('btnCartIcon');
+            var cartDot = document.getElementById('cartDot');
+            var postponeRow = document.getElementById('postponeMainRow');
+            var btnEdit = document.getElementById('btnEditFilter');
+            var daysDisplay = document.getElementById('daysDisplay');
+
+            if (filter) {
+                var t = getFilterTiming(filter);
+                updatePostponeLabels(filter);
+                document.getElementById('infoType').innerText = filter.type;
+                document.getElementById('infoPeople').innerText = filter.people + ' чел';
+                document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жёсткая' : (filter.hardness == 1.25 ? 'Жёсткая' : 'Норма');
+                document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
+                btnCart.style.display = 'flex';
+                btnEdit.style.display = 'block';
+                if (filter.buyUrl && String(filter.buyUrl).trim()) {
+                    btnCart.classList.add('cart-active'); btnCart.classList.remove('cart-empty'); cartDot.style.display = 'block';
+                } else {
+                    btnCart.classList.remove('cart-active'); btnCart.classList.add('cart-empty'); cartDot.style.display = 'none';
+                }
+
+                if (t.leftMs <= 0) {
+                    daysDisplay.innerText = '0';
+                    daysDisplay.style.color = '#ff4757';
+                    waveColor = 'rgba(255,71,87,0.18)';
+                    document.getElementById('statusLabel').innerText = 'Срок истёк — замените';
+                    postponeRow.style.display = 'flex';
+                } else if (t.isTest) {
+                    if (t.secondsLeft < 120) {
+                        daysDisplay.innerText = Math.max(1, t.secondsLeft);
+                        document.getElementById('statusLabel').innerText = 'секунд (тест)';
+                    } else {
+                        daysDisplay.innerText = Math.max(1, t.minutesLeft);
+                        document.getElementById('statusLabel').innerText = 'минут осталось (тест)';
+                    }
+                    daysDisplay.style.color = t.minutesLeft <= 1 ? '#ffaa00' : '#00f2fe';
+                    waveColor = 'rgba(0,242,254,0.12)';
+                    postponeRow.style.display = 'none';
+                } else if (t.daysLeft <= 10) {
+                    daysDisplay.innerText = t.daysLeft;
+                    daysDisplay.style.color = '#ffaa00';
+                    waveColor = 'rgba(255,170,0,0.15)';
+                    document.getElementById('statusLabel').innerText = 'Скоро замена';
+                    postponeRow.style.display = 'none';
+                } else {
+                    daysDisplay.innerText = t.daysLeft;
+                    daysDisplay.style.color = '#00f2fe';
+                    waveColor = 'rgba(0,242,254,0.12)';
+                    document.getElementById('statusLabel').innerText = 'дней осталось';
+                    postponeRow.style.display = 'none';
+                }
+            } else {
+                daysDisplay.innerText = '--';
+                daysDisplay.style.color = '#00f2fe';
+                document.getElementById('statusLabel').innerText = 'нет устройств';
+                waveColor = 'rgba(0,242,254,0.12)';
+                document.getElementById('infoType').innerText = '--';
+                document.getElementById('infoPeople').innerText = '-- чел';
+                document.getElementById('infoHardness').innerText = '--';
+                document.getElementById('infoBrand').innerText = '--';
+                btnCart.style.display = 'none';
+                btnEdit.style.display = 'none';
+                postponeRow.style.display = 'none';
+            }
+        }
+
+        document.getElementById('btnPostponeMain').addEventListener('click', function (e) {
+            e.preventDefault();
+            postponeCurrentFilter();
+        });
+        document.getElementById('btnPostponeModal').addEventListener('click', function (e) {
+            e.preventDefault();
+            postponeCurrentFilter();
+        });
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            var ln = getLN();
+            if (!ln) { updateUI(); return; }
+            try {
+                await ln.requestPermissions();
+                await ensureChannel(ln);
+                notificationsReady = true;
+                ln.addListener('localNotificationActionPerformed', async function (notification) {
+                    try {
+                        if (notification.notification && notification.notification.id != null) {
+                            await ln.removeDeliveredNotifications({ notifications: [{ id: notification.notification.id }] });
+                        }
+                    } catch (e) {}
+                    var ex = (notification.notification && notification.notification.extra) || {};
+                    if (ex.locationId && ex.filterId) {
+                        appData.currentLocationId = ex.locationId;
+                        appData.currentFilterId = ex.filterId;
+                        var f = appData.filters.find(function (x) { return x.id === ex.filterId; });
+                        if (f) {
+                            var t = getFilterTiming(f);
+                            if (t.leftMs > 0) f.lastDate = Date.now() - (t.resourceMs + 5000);
+                        }
+                        persistOnly();
+                        updateUI();
+                        scheduleAllFilterNotifications();
+                        openReplaceModal();
+                    }
+                });
+                await scheduleAllFilterNotifications();
+            } catch (e) { console.warn(e); }
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') {
+                persistOnly();
+            } else {
+                updateUI();
+            }
+        });
+        window.addEventListener('pagehide', function () {
+            persistOnly();
+        });
+
+        setInterval(function () {
+            var f = getCurrentFilter();
+            if (f && isTestFilter(f)) updateUI();
+        }, 1000);
+
+        function toggleInfoBlock() {
+            var w = document.getElementById('infoGridWrapper');
+            var b = document.getElementById('toggleBtn');
+            var d = document.getElementById('daysDisplay');
+            if (w.classList.contains('collapsed')) { w.classList.remove('collapsed'); b.innerText = 'Свернуть ▲'; d.classList.remove('large'); }
+            else { w.classList.add('collapsed'); b.innerText = 'Развернуть ▼'; d.classList.add('large'); }
+        }
+        function toggleDevPanel() { document.getElementById('devPanel').classList.toggle('open'); }
+
+        async function runCustomTest() {
+            var val = getSelectedChipValue('testTimerChips') || '0';
+            var filter = getCurrentFilter();
+            if (!filter) return;
+            var ms = 500;
+            if (val === '10s') ms = 10000;
+            if (val === '10m') ms = 600000;
+            var ln = getLN();
+            if (!ln) return;
+            await ensureChannel(ln);
+            var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
+            await ln.schedule({
+                notifications: [{
+                    title: 'Проверка напоминания',
+                    body: 'Тест для «' + filter.name + '»' + (loc ? ' [' + loc.name + ']' : ''),
+                    id: Math.floor(Math.random() * 80000) + 1000000,
+                    schedule: { at: new Date(Date.now() + ms), allowWhileIdle: true },
+                    smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
+                    channelId: NOTIF_CHANNEL,
+                    extra: { locationId: filter.locationId, filterId: filter.id }
+                }]
+            });
+            showToast('Тестовое напоминание поставлено — сверните приложение');
+        }
+
+        function openLocationSelectModal() {
+            var c = document.getElementById('locationsListContainer');
+            var canDel = appData.locations.length > 1;
+            c.innerHTML = appData.locations.map(function (l) {
+                return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
+                    '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
+                    l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
+                    '<button class="loc-icon-btn edit" onclick="event.stopPropagation();openRenameLocationModal(\'' + l.id + '\')">✏️</button>' +
+                    (canDel ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
+                    '</div></div>';
+            }).join('');
+            document.getElementById('locSelectModal').style.display = 'flex';
+        }
+        function selectLocationDirect(id) { appData.currentLocationId = id; closeModals(); persistOnly(); updateUI(); }
+        function openRenameLocationModal(id) {
+            var loc = appData.locations.find(function (l) { return l.id === id; });
+            if (!loc) return;
+            pendingRenameLocationId = id;
+            document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
+            document.getElementById('renameLocInput').value = loc.name;
+            document.getElementById('renameLocationModal').style.display = 'flex';
+        }
+        function confirmRenameLocation() {
+            var name = (document.getElementById('renameLocInput').value || '').trim();
+            if (!name) { showToast('Введите название'); return; }
+            var loc = appData.locations.find(function (l) { return l.id === pendingRenameLocationId; });
+            if (!loc) return;
+            loc.name = name; pendingRenameLocationId = null; closeModals(); persistOnly(); updateUI(); showToast('Сохранено');
+        }
+        function selectFilter(id) { appData.currentFilterId = id; persistOnly(); updateUI(); }
+
+        function openReplaceModal() {
+            var f = getCurrentFilter();
+            var loc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; });
+            if (f && loc) document.getElementById('replaceModalContext').innerText = loc.name + ' • ' + f.name;
+            document.getElementById('repBrand').value = (f && f.brand) ? f.brand : '';
+            document.getElementById('repCost').value = '';
+            updatePostponeLabels(f);
+            document.getElementById('replaceModal').style.display = 'flex';
+        }
+        function openAddFilterModal() {
+            setChipValue('chipResource', 'd90');
+            document.getElementById('addFilterModal').style.display = 'flex';
+        }
+        function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
+
+        function openEditFilterModal() {
+            var f = getCurrentFilter();
+            if (!f) return;
+            document.getElementById('editFilterContext').innerText = f.name;
+            document.getElementById('editFilterName').value = f.name || '';
+            document.getElementById('editFilterUrl').value = f.buyUrl || '';
+            setChipValue('editChipResource', resourceChipFromFilter(f));
+            setChipValue('editChipHardness', f.hardness);
+            setChipValue('editChipPeople', f.people);
+            document.getElementById('editFilterModal').style.display = 'flex';
+        }
+
+        async function confirmEditFilter() {
+            var f = getCurrentFilter();
+            if (!f) return;
+            var name = (document.getElementById('editFilterName').value || '').trim();
+            if (!name) { showToast('Введите название'); return; }
+            f.name = name;
+            f.buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
+            f.hardness = parseFloat(getSelectedChipValue('editChipHardness') || f.hardness);
+            f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
+            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
+            if (isTestFilter(f)) f.lastDate = Date.now();
+            closeModals();
+            persistOnly();
+            updateUI();
+            var ok = await scheduleAllFilterNotifications();
+            showToast((isTestFilter(f) ? 'Тест: ' + nextPushHint(f) : 'Сохранено') + (ok ? '' : ' · не удалось запланировать напоминание'));
+        }
+
+        function onCartIconClick() {
+            var f = getCurrentFilter();
+            if (!f) return;
+            if (f.buyUrl && String(f.buyUrl).trim()) { showToast('Открываем магазин…'); openExternalUrl(f.buyUrl); return; }
+            document.getElementById('noLinkUrlInput').value = '';
+            document.getElementById('noLinkModal').style.display = 'flex';
+        }
+        function saveBuyUrlFromNoLinkModal() {
+            var f = getCurrentFilter();
+            if (!f) return;
+            var u = normalizeUrl(document.getElementById('noLinkUrlInput').value);
+            if (!u) { showToast('Вставьте ссылку'); return; }
+            f.buyUrl = u; closeModals(); persistOnly(); updateUI(); showToast('Ссылка сохранена');
+        }
+        function openHistoryModal() {
+            var list = document.getElementById('historyList');
+            var total = 0, n = appData.history.length;
+            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пока пусто</div>';
+            else list.innerHTML = appData.history.map(function (h) {
+                total += Number(h.cost || 0);
+                return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
+            }).join('');
+            document.getElementById('ecoBottles').innerText = n * 200;
+            document.getElementById('ecoMoney').innerText = (n * 9000).toLocaleString('ru-RU');
+            document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
+            pendingRenameLocationId = null;
+        }
+
+        async function confirmReplacement(skip) {
+            var f = getCurrentFilter();
+            if (!f) { showToast('Выберите фильтр'); return; }
+            var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
+            var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
+            f.lastDate = Date.now();
+            if (!skip && brand) f.brand = brand;
+            appData.history.unshift({
+                filterName: f.name,
+                date: new Date().toLocaleDateString('ru-RU'),
+                cost: cost,
+                note: skip ? 'Быстрая замена' : ''
+            });
+            closeModals();
+            persistOnly();
+            updateUI();
+            var ok = await scheduleAllFilterNotifications();
+            showToast((skip ? 'Замена учтена' : 'Замена сохранена') + ' · ' + nextPushHint(f) + (ok ? '' : ' · не удалось запланировать напоминание'));
+        }
+
+        async function addNewFilter() {
+            var name = document.getElementById('newFilterName').value || 'Фильтр';
+            var type = getSelectedChipValue('chipType') || 'Кувшин';
+            var hardness = parseFloat(getSelectedChipValue('chipHardness') || '1');
+            var people = parseInt(getSelectedChipValue('chipPeople') || '2', 10);
+            var buyUrl = normalizeUrl(document.getElementById('newFilterUrl').value);
+            var id = 'f_' + Date.now();
+            var f = {
+                id: id, locationId: appData.currentLocationId, name: name, type: type,
+                baseDays: 90, cycleMs: null, hardness: hardness, people: people,
+                lastDate: Date.now(), brand: '', buyUrl: buyUrl
+            };
+            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90');
+            appData.filters.push(f);
+            appData.currentFilterId = id;
+            closeModals();
+            persistOnly();
+            updateUI();
+            var ok = await scheduleAllFilterNotifications();
+            showToast((isTestFilter(f) ? 'Тест: ' + nextPushHint(f) : 'Фильтр добавлен') + (ok ? '' : ' · не удалось запланировать напоминание'));
+        }
+
+        function addNewLocation() {
+            var name = document.getElementById('newLocName').value;
+            if (!name) return;
+            var id = 'loc_' + Date.now();
+            appData.locations.push({ id: id, name: name });
+            appData.currentLocationId = id;
+            closeModals(); persistOnly(); updateUI(); showToast('Добавлено');
+        }
+        function deleteCurrentFilter() {
+            var f = getCurrentFilter();
+            if (!f) return;
+            showCustomConfirm('Удаление', 'Удалить «' + f.name + '»?', async function () {
+                appData.filters = appData.filters.filter(function (x) { return x.id !== appData.currentFilterId; });
+                persistOnly(); updateUI();
+                await scheduleAllFilterNotifications();
+                showToast('Удалено');
+            });
+        }
+        function deleteSpecificLocation(locId) {
+            if (appData.locations.length <= 1) { showToast('Нельзя удалить единственный объект'); return; }
+            var loc = appData.locations.find(function (l) { return l.id === locId; });
+            if (!loc) return;
+            showCustomConfirm('Удаление', 'Удалить «' + loc.name + '» и все его фильтры?', async function () {
+                appData.filters = appData.filters.filter(function (f) { return f.locationId !== locId; });
+                appData.locations = appData.locations.filter(function (l) { return l.id !== locId; });
+                if (appData.currentLocationId === locId) {
+                    appData.currentLocationId = appData.locations[0].id;
+                    appData.currentFilterId = null;
+                }
+                closeModals(); persistOnly(); updateUI();
+                await scheduleAllFilterNotifications();
+                showToast('Удалено');
+            });
+        }
+        function showToast(text) {
+            var t = document.getElementById('toast');
+            t.innerText = text; t.classList.add('show');
+            setTimeout(function () { t.classList.remove('show'); }, 3000);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
