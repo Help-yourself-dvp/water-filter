@@ -50,7 +50,7 @@
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
 
-        /* Кнопка + ? — максимально компактная */
+        /* Кнопка + ? — компактная */
         .btn-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
         .btn-row .btn { margin-top: 0; flex: 1; }
         .help-dot {
@@ -60,6 +60,9 @@
             box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
         }
         .help-dot:active { background: rgba(0, 242, 254, 0.28); box-shadow: 0 0 14px rgba(0, 242, 254, 0.3); }
+
+        .modal-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+        .modal-title-row h2 { margin-bottom: 0; }
 
         .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
@@ -198,7 +201,7 @@
                 <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Обновить напоминания</button>
             </div>
         </div>
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.17 (build 18)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.18 (build 19)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
@@ -251,7 +254,7 @@
                 <input type="text" id="editFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
-                <label>Срок службы:</label>
+                <label>Срок службы (указан на упаковке фильтра):</label>
                 <div class="chip-group" id="editChipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('editChipResource', this)">1 мин (тест)</div>
                     <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('editChipResource', this)">5 мин (тест)</div>
@@ -282,7 +285,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Ссылка на магазин:</label>
+                <label>Ссылка на магазин (необязательно, для быстрой покупки при следующей замене):</label>
                 <input type="url" id="editFilterUrl" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="confirmEditFilter()">Сохранить</button>
@@ -293,7 +296,7 @@
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
             <h2>Ссылки пока нет</h2>
-            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Добавьте ссылку на картридж в магазине — потом откроется в один тап.</p>
+            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Сохраните ссылку на нужный картридж в вашем магазине — в следующий раз сможете сразу перейти к покупке одним нажатием на корзину.</p>
             <div class="form-group">
                 <label>Ссылка:</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
@@ -350,7 +353,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Срок службы:</label>
+                <label>Срок службы (указан на упаковке фильтра):</label>
                 <div class="chip-group" id="chipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('chipResource', this)">1 мин (тест)</div>
                     <div class="chip-btn chip-test" data-value="t300" onclick="selectChip('chipResource', this)">5 мин (тест)</div>
@@ -381,7 +384,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Ссылка на магазин:</label>
+                <label>Ссылка на магазин (необязательно, для быстрой покупки при следующей замене):</label>
                 <input type="url" id="newFilterUrl" placeholder="https://ozon.ru/...">
             </div>
             <button class="btn btn-primary" onclick="addNewFilter()">Создать</button>
@@ -403,7 +406,10 @@
 
     <div class="modal" id="historyModal">
         <div class="modal-content">
-            <h2>Расходы и история</h2>
+            <div class="modal-title-row">
+                <h2>Расходы и история</h2>
+                <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('ecoStats')" aria-label="Подсказка">?</button>
+            </div>
             <div class="eco-badge" style="margin-top:10px;">
                 🌱 ~<span id="ecoBottles">0</span> бутылок · 💰 ~<span id="ecoMoney">0</span> ₽
             </div>
@@ -436,6 +442,10 @@
             postpone: {
                 title: 'Отложить',
                 body: 'Продлевает срок на 15 дней. Используйте, если картридж ещё не меняли, но нужно немного подождать.'
+            },
+            ecoStats: {
+                title: 'Как считаются бутылки и рубли',
+                body: 'Это примерная оценка, а не точный расчёт. Мы считаем, что один фильтр за время своей службы заменяет собой около 200 пластиковых бутылок воды и экономит примерно 9000 ₽ по сравнению с покупкой воды в магазине. Итоговое число просто умножается на количество зафиксированных вами замен.'
             }
         };
 
