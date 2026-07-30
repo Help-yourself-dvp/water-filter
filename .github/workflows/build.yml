@@ -38,8 +38,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 14/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.13"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 15/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.14"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
