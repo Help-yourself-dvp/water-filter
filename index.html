@@ -50,16 +50,16 @@
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
 
-        /* Кнопка + ? — компактная */
+        /* Кнопка + ? — максимально компактная */
         .btn-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
         .btn-row .btn { margin-top: 0; flex: 1; }
         .help-dot {
-            flex-shrink: 0; width: 28px; border-radius: 10px; border: 1px solid rgba(0, 242, 254, 0.5);
-            background: rgba(0, 242, 254, 0.12); color: #00f2fe; font-size: 13px; font-weight: 800;
+            flex-shrink: 0; width: 24px; border-radius: 8px; border: 1px solid rgba(0, 242, 254, 0.5);
+            background: rgba(0, 242, 254, 0.12); color: #00f2fe; font-size: 11px; font-weight: 800;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.18);
+            box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
         }
-        .help-dot:active { background: rgba(0, 242, 254, 0.28); box-shadow: 0 0 16px rgba(0, 242, 254, 0.32); }
+        .help-dot:active { background: rgba(0, 242, 254, 0.28); box-shadow: 0 0 14px rgba(0, 242, 254, 0.3); }
 
         .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
         .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
@@ -195,10 +195,10 @@
                     </div>
                 </div>
                 <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Разовый тест</button>
-                <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Пересоздать авто-пуши</button>
+                <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Обновить напоминания</button>
             </div>
         </div>
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.16 (build 17)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.17 (build 18)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
