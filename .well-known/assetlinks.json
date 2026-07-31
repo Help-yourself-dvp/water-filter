@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.help_yourself_dvp.twa",
-        "sha256_cert_fingerprints": ["3E:B6:35:34:BE:D1:7F:22:9F:BA:04:56:5A:4A:FC:43:5E:5C:90:AB:12:46:C4:32:26:C0:21:F7:C7:DB:18:9A"]
-      }
-    }]
