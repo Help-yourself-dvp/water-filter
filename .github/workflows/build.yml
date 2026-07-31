@@ -47,8 +47,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 28/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.27"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 29/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.28"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -465,10 +465,10 @@ jobs:
       - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.27-build28.apk
+             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AquaControlPro-v1.0.27-build28
-          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.27-build28.apk
+          name: AquaControlPro-v1.0.28-build29
+          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
