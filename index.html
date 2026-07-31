@@ -73,6 +73,22 @@
         #confirmModal { z-index: 200 !important; }
 
         /* Подсказка поверх всего */
+        /* Переключение домов свайпом */
+        .loc-dots { position: fixed; left: 50%; transform: translateX(-50%); bottom: 14px; z-index: 50;
+            display: none; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 20px;
+            background: rgba(10, 15, 28, 0.82); border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 6px 22px rgba(0,0,0,0.5); }
+        .loc-dots.visible { display: flex; }
+        .loc-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.28);
+            cursor: pointer; transition: all 0.25s ease; flex: 0 0 auto; }
+        .loc-dot.active { background: #00f2fe; width: 20px; border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,242,254,0.6); }
+        .card.swiping { transition: transform 0.18s ease, opacity 0.18s ease; }
+        .card.slide-left { transform: translateX(-22px); opacity: 0.55; }
+        .card.slide-right { transform: translateX(22px); opacity: 0.55; }
+        body.has-dots .card { margin-bottom: 64px; }
+
         /* Экран настройки уведомлений */
         .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
         .setup-num { flex:0 0 22px; width:22px; height:22px; border-radius:50%; background:rgba(0,242,254,0.15); color:#00f2fe; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
@@ -135,6 +151,8 @@
                 <div class="location-btn-picker" onclick="openLocationSelectModal()">
                     <span id="currentLocName">Моя квартира</span> ▼
                 </div>
+                <button type="button" class="help-dot" id="locSwipeHelp" style="display:none;"
+                    onclick="event.stopPropagation(); showHelp('locSwipe')" aria-label="Подсказка">?</button>
             </div>
             <div class="header-actions">
                 <div class="btn-header-icon cart-empty" id="btnCartIcon" onclick="onCartIconClick()" style="display:none;">
@@ -247,6 +265,8 @@
 
         <div class="app-version-tag">AquaControl Pro · версия 1.0.26 (build 27)</div>
     </div>
+
+    <div class="loc-dots" id="locDots"></div>
 
     <div class="toast" id="toast">Уведомление</div>
 
@@ -538,6 +558,10 @@
                 title: 'Как считаются бутылки и рубли',
                 body: 'Это примерная оценка, а не точный расчёт. Мы считаем, что один фильтр за время своей службы заменяет собой около 200 пластиковых бутылок воды и экономит примерно 9000 ₽ по сравнению с покупкой воды в магазине. Итоговое число просто умножается на количество зафиксированных вами замен.'
             },
+            locSwipe: {
+                title: 'Переключение между домами',
+                body: 'Проведите пальцем влево или вправо по экрану, чтобы перейти к следующему дому. Точки внизу показывают, сколько всего домов и какой открыт сейчас — по ним тоже можно нажимать. Прежний способ через название дома вверху продолжает работать.'
+            },
             backup: {
                 title: 'Резервная копия',
                 body: 'Экспорт сохраняет все ваши данные в JSON-файл через стандартное окно сохранения Android — выберите папку или облако (например, Google Диск). Имя файла содержит дату, поэтому копии не перезаписывают друг друга. Импорт полностью заменяет текущие данные приложения содержимым выбранного JSON-файла — используйте только файл, созданный этим же приложением.'
@@ -749,6 +773,116 @@
                 document.body.appendChild(a); a.click(); a.remove();
             } catch (e2) { window.location.href = target; }
         }
+
+        /* ===== Переключение домов свайпом ===== */
+
+        function getLocationIndex() {
+            return appData.locations.findIndex(function (l) { return l.id === appData.currentLocationId; });
+        }
+
+        function renderLocationDots() {
+            var box = document.getElementById('locDots');
+            if (!box) return;
+            var n = appData.locations.length;
+            // При одном доме точки не нужны
+            if (n < 2) {
+                box.classList.remove('visible');
+                box.innerHTML = '';
+                document.body.classList.remove('has-dots');
+                var hb0 = document.getElementById('locSwipeHelp');
+                if (hb0) hb0.style.display = 'none';
+                return;
+            }
+            var cur = getLocationIndex();
+            var html = '';
+            for (var i = 0; i < n; i++) {
+                var name = (appData.locations[i].name || '').replace(/"/g, '&quot;');
+                html += '<div class="loc-dot' + (i === cur ? ' active' : '') + '"' +
+                        ' title="' + name + '"' +
+                        ' onclick="switchToLocationIndex(' + i + ')"></div>';
+            }
+            box.innerHTML = html;
+            box.classList.add('visible');
+            document.body.classList.add('has-dots');
+            var hb = document.getElementById('locSwipeHelp');
+            if (hb) hb.style.display = 'flex';
+        }
+
+        function switchToLocationIndex(idx) {
+            var n = appData.locations.length;
+            if (n < 2) return;
+            if (idx < 0) idx = n - 1;
+            if (idx >= n) idx = 0;
+            var loc = appData.locations[idx];
+            if (!loc || loc.id === appData.currentLocationId) return;
+            appData.currentLocationId = loc.id;
+            // сбрасываем выбранный фильтр — updateUI подберёт первый в новом доме
+            appData.currentFilterId = null;
+            persistOnly();
+            updateUI();
+            showToast(loc.name);
+        }
+
+        function animateCardSwipe(dir) {
+            var card = document.querySelector('.card');
+            if (!card) return;
+            card.classList.add('swiping');
+            card.classList.add(dir > 0 ? 'slide-left' : 'slide-right');
+            setTimeout(function () {
+                card.classList.remove('slide-left', 'slide-right');
+                setTimeout(function () { card.classList.remove('swiping'); }, 200);
+            }, 170);
+        }
+
+        function goToLocationDelta(delta) {
+            if (appData.locations.length < 2) return;
+            animateCardSwipe(delta);
+            switchToLocationIndex(getLocationIndex() + delta);
+        }
+
+        (function initLocationSwipe() {
+            var startX = 0, startY = 0, startT = 0, tracking = false;
+
+            // Не перехватываем свайп на прокручиваемых по горизонтали элементах
+            function isBlocked(el) {
+                while (el && el !== document.body) {
+                    if (el.classList) {
+                        if (el.classList.contains('filter-tabs')) return true;
+                        if (el.classList.contains('modal')) return true;
+                        if (el.id === 'helpOverlay') return true;
+                    }
+                    var tag = el.tagName;
+                    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+                    el = el.parentNode;
+                }
+                return false;
+            }
+
+            document.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) { tracking = false; return; }
+                if (isBlocked(e.target)) { tracking = false; return; }
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                startT = Date.now();
+                tracking = true;
+            }, { passive: true });
+
+            document.addEventListener('touchend', function (e) {
+                if (!tracking) return;
+                tracking = false;
+                if (appData.locations.length < 2) return;
+                var t = e.changedTouches && e.changedTouches[0];
+                if (!t) return;
+                var dx = t.clientX - startX;
+                var dy = t.clientY - startY;
+                var dt = Date.now() - startT;
+                // Горизонтальный, достаточно длинный, быстрый и не вертикальная прокрутка
+                if (dt > 700) return;
+                if (Math.abs(dx) < 55) return;
+                if (Math.abs(dx) < Math.abs(dy) * 1.7) return;
+                goToLocationDelta(dx < 0 ? 1 : -1);
+            }, { passive: true });
+        })();
 
         /* ===== Настройка уведомлений (разрешения Android) ===== */
 
@@ -1104,6 +1238,7 @@
             var currentLoc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; }) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
+            renderLocationDots();
 
             var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
             var tabs = document.getElementById('filterTabs');
