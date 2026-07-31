@@ -89,6 +89,34 @@
         .card.slide-right { transform: translateX(22px); opacity: 0.55; }
         body.has-dots .card { margin-bottom: 64px; }
 
+        /* Панель значков действий с фильтром */
+        .action-bar { display: flex; gap: 8px; margin-top: 10px; }
+        .act-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; padding: 10px 4px 8px; border-radius: 14px; cursor: pointer;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #8f9cae; transition: all 0.18s ease; -webkit-tap-highlight-color: transparent; }
+        .act-btn svg { width: 19px; height: 19px; stroke-width: 1.9; fill: none; stroke: currentColor;
+            stroke-linecap: round; stroke-linejoin: round; }
+        .act-btn span { font-size: 9.5px; font-weight: 600; letter-spacing: 0.1px; }
+        .act-btn:active { transform: scale(0.94); }
+        .act-edit { color: #00f2fe; border-color: rgba(0,242,254,0.25); background: rgba(0,242,254,0.07); }
+        .act-add { color: #4cc9f0; border-color: rgba(76,201,240,0.22); background: rgba(76,201,240,0.06); }
+        .act-cfg { color: #b8a4ff; border-color: rgba(184,164,255,0.22); background: rgba(184,164,255,0.06); }
+        .act-del { color: #ff4757; border-color: rgba(255,71,87,0.22); background: rgba(255,71,87,0.06); }
+
+        /* Строки в окне настроек */
+        .set-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+            padding: 13px 12px; margin-bottom: 8px; border-radius: 14px; cursor: pointer;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); color: #fff; }
+        .set-row:active { background: rgba(255,255,255,0.09); }
+        .set-ico { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 11px; display: flex;
+            align-items: center; justify-content: center; font-size: 16px;
+            background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.2); }
+        .set-txt { flex: 1; min-width: 0; }
+        .set-txt b { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+        .set-txt small { display: block; font-size: 11px; color: #8f9cae; line-height: 1.35; }
+        .set-arrow { color: #6e7d93; font-size: 15px; flex: 0 0 auto; }
+
         /* Экран настройки уведомлений */
         .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
         .setup-num { flex:0 0 22px; width:22px; height:22px; border-radius:50%; background:rgba(0,242,254,0.15); color:#00f2fe; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
@@ -206,64 +234,28 @@
             <button class="btn btn-warning" id="btnPostponeMain" type="button">⏸ <span id="btnPostponeMainLabel">Отложить</span></button>
             <button type="button" class="help-dot" onclick="event.stopPropagation(); showHelp('postpone')" aria-label="Подсказка">?</button>
         </div>
-        <button class="btn btn-edit-outline" id="btnEditFilter" onclick="openEditFilterModal()">✏️ Изменить фильтр</button>
-        <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
-        <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
-
-        <button class="btn btn-secondary-small" style="width:100%; margin-top:15px;" onclick="showSetupModal()">
-            🔔 Настроить уведомления
-        </button>
-
-        <div class="backup-section" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
-        
-            <div class="info-card-header">
-                <span class="info-title">💾 Резервная копия</span>
-        
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button
-                        type="button"
-                        class="help-dot"
-                        style="width:22px;border-radius:50%;"
-                        onclick="showHelp('backup')"
-                        aria-label="Подсказка">?</button>
-        
-                    <button
-                        class="btn-toggle"
-                        id="backupToggleBtn"
-                        onclick="toggleBackupSection()">
-                        Развернуть ▼
-                    </button>
-                </div>
+        <div class="action-bar">
+            <div class="act-btn act-edit" id="btnEditFilter" onclick="openEditFilterModal()">
+                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                <span>Изменить</span>
             </div>
-        
-            <div id="backupContent" style="display:none; margin-top:8px;">
-        
-                <button
-                    class="btn btn-secondary-small"
-                    style="width:100%;"
-                    onclick="exportData()">
-                    📤 Сохранить копию в файл
-                </button>
-        
-                <button
-                    class="btn btn-secondary-small"
-                    style="width:100%;"
-                    onclick="triggerImportPicker()">
-                    📥 Восстановить из файла
-                </button>
-        
-                <input
-                    type="file"
-                    id="importFileInput"
-                    accept="application/json"
-                    style="display:none;"
-                    onchange="handleImportFile(event)">
-        
+            <div class="act-btn act-add" onclick="openAddFilterModal()">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                <span>Добавить</span>
             </div>
-
+            <div class="act-btn act-cfg" onclick="openSettingsModal()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Настройки</span>
+            </div>
+            <div class="act-btn act-del" onclick="deleteCurrentFilter()">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                <span>Удалить</span>
+            </div>
         </div>
 
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.26 (build 27)</div>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
+
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.27 (build 28)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -485,16 +477,75 @@
         </div>
     </div>
 
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Настройки</h2>
+            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px;">
+                Уведомления и резервные копии
+            </p>
+
+            <div class="set-row" onclick="closeModals(); showSetupModal();">
+                <div class="set-ico">🔔</div>
+                <div class="set-txt">
+                    <b>Настройка уведомлений</b>
+                    <small id="setRowNotifState">Проверка разрешений Android</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="closeModals(); exportData();">
+                <div class="set-ico">📤</div>
+                <div class="set-txt">
+                    <b>Сохранить копию в файл</b>
+                    <small>Резервная копия всех данных</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="closeModals(); triggerImportPicker();">
+                <div class="set-ico">📥</div>
+                <div class="set-txt">
+                    <b>Восстановить из файла</b>
+                    <small>Заменит текущие данные</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="showHelp('backup')">
+                <div class="set-ico">❔</div>
+                <div class="set-txt">
+                    <b>Как это работает</b>
+                    <small>Подсказка о резервных копиях</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="app-version-tag" id="settingsVersionTag" style="margin:14px 0 12px;"></div>
+
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:0;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
     <div class="modal" id="setupModal">
         <div class="modal-content">
             <h2>Чтобы напоминания приходили</h2>
             <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
                 Android по умолчанию усыпляет приложения и может не показать напоминание вовремя.
-                Нужно разрешить два пункта — это занимает полминуты.
+                Проверьте три пункта ниже — это занимает меньше минуты.
             </p>
 
             <div class="setup-step">
                 <div class="setup-num">1</div>
+                <div class="setup-text">
+                    <b>Показ уведомлений</b>
+                    Без этого разрешения приложение не сможет показать ни одного напоминания.
+                    <span id="setupNotifOk" class="setup-ok" style="display:none;">✓ Уже разрешено</span>
+                    <button class="btn btn-setup" onclick="openSetupScreen('notifications')">Открыть настройку</button>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="setup-num">2</div>
                 <div class="setup-text">
                     <b>Работа без ограничений батареи</b>
                     Иначе система «заморозит» приложение и напоминание опоздает или не придёт.
@@ -504,7 +555,7 @@
             </div>
 
             <div class="setup-step">
-                <div class="setup-num">2</div>
+                <div class="setup-num">3</div>
                 <div class="setup-text">
                     <b id="setupAutostartTitle">Автозапуск</b>
                     <span id="setupAutostartHint">Разрешает приложению запускаться после перезагрузки телефона.
@@ -928,6 +979,12 @@
         function openSetupScreen(which) {
             var b = getNativeBridge();
             if (!b) { showToast('Доступно только в приложении на телефоне'); return; }
+            var st = refreshSetupState();
+            if (which === 'battery' && st.battery) {
+                showToast('Уже разрешено — открываем список настроек');
+            } else if (which === 'notifications' && st.notifications) {
+                showToast('Уже разрешено — открываем настройки уведомлений');
+            }
             try {
                 b.openSettingsScreen(which);
             } catch (e) {
@@ -936,16 +993,42 @@
         }
 
         function refreshSetupState() {
-            var granted = false;
+            var b = getNativeBridge();
+            var battery = false, notif = false;
             try {
-                var b = getNativeBridge();
                 if (b && typeof b.isBatteryOptimizationIgnored === 'function') {
-                    granted = !!b.isBatteryOptimizationIgnored();
+                    battery = !!b.isBatteryOptimizationIgnored();
                 }
             } catch (e) {}
-            var el = document.getElementById('setupBatteryOk');
-            if (el) el.style.display = granted ? 'block' : 'none';
-            return granted;
+            try {
+                if (b && typeof b.areNotificationsEnabled === 'function') {
+                    notif = !!b.areNotificationsEnabled();
+                }
+            } catch (e) {}
+
+            var eb = document.getElementById('setupBatteryOk');
+            if (eb) eb.style.display = battery ? 'block' : 'none';
+            var en = document.getElementById('setupNotifOk');
+            if (en) en.style.display = notif ? 'block' : 'none';
+
+            // Подпись в разделе «Настройки»
+            var row = document.getElementById('setRowNotifState');
+            if (row) {
+                if (!b) row.innerText = 'Доступно в приложении на телефоне';
+                else if (notif && battery) row.innerText = 'Основные разрешения выданы';
+                else if (!notif) row.innerText = 'Уведомления запрещены — нажмите';
+                else row.innerText = 'Требуется настройка батареи';
+            }
+
+            return { battery: battery, notifications: notif, all: battery && notif };
+        }
+
+        function openSettingsModal() {
+            refreshSetupState();
+            var tag = document.getElementById('settingsVersionTag');
+            var src = document.getElementById('appVersionTag');
+            if (tag && src) tag.textContent = src.textContent;
+            document.getElementById('settingsModal').style.display = 'flex';
         }
 
         function showSetupModal() {
@@ -973,7 +1056,7 @@
                 hidden = localStorage.getItem('aquaSetupHidden') === '1';
             } catch (e) {}
             if (hidden) return;
-            if (seen && refreshSetupState()) return;
+            if (seen && refreshSetupState().all) return;
             try { localStorage.setItem('aquaSetupSeen', '1'); } catch (e) {}
             setTimeout(showSetupModal, 900);
         }
@@ -1391,25 +1474,6 @@
             if (w.classList.contains('collapsed')) { w.classList.remove('collapsed'); b.innerText = 'Свернуть ▲'; d.classList.remove('large'); }
             else { w.classList.add('collapsed'); b.innerText = 'Развернуть ▼'; d.classList.add('large'); }
         }
-        function toggleBackupSection() {
-
-    var content = document.getElementById('backupContent');
-    var btn = document.getElementById('backupToggleBtn');
-
-    if (content.style.display === 'none') {
-
-        content.style.display = 'block';
-        btn.innerText = 'Свернуть ▲';
-
-    } else {
-
-        content.style.display = 'none';
-        btn.innerText = 'Развернуть ▼';
-
-    }
-
-}
-
         function openLocationSelectModal() {
             var c = document.getElementById('locationsListContainer');
             var canDel = appData.locations.length > 1;
