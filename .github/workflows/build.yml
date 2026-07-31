@@ -237,13 +237,13 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-          - name: Rename APK
-            run: |
-              cp android/app/build/outputs/apk/debug/app-debug.apk \
-                 android/app/build/outputs/apk/debug/AquaControlPro-v1.0.24-build25.apk
-          
-          - name: Upload APK
-            uses: actions/upload-artifact@v4
-            with:
-              name: AquaControlPro-v1.0.24-build25
-              path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.24-build25.apk
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.24-build25.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AquaControlPro-v1.0.24-build25
+          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.24-build25.apk
