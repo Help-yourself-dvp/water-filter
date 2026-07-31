@@ -64,9 +64,6 @@
         .modal-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
         .modal-title-row h2 { margin-bottom: 0; }
 
-        .dev-panel-wrapper { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
-        .dev-panel-content { display: none; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 14px; margin-top: 8px; border: 1px solid rgba(255, 170, 0, 0.2); }
-        .dev-panel-content.open { display: block; }
         .app-version-tag { font-size: 10px; color: #6e7d93; text-align: center; margin-top: 12px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
@@ -235,22 +232,6 @@
 
         </div>
 
-        <div class="dev-panel-wrapper">
-            <button class="btn-toggle" style="font-size: 10px; color: #ffaa00;" onclick="toggleDevPanel()">🛠 Инструменты тестирования ▼</button>
-            <div class="dev-panel-content" id="devPanel">
-                <p class="hint-test" style="margin-bottom:10px;">Чтобы проверить напоминания: в «Изменить фильтр» выберите срок «5 мин (тест)», сохраните, затем сверните приложение и подождите — не открывайте приложение раньше времени.</p>
-                <div class="form-group">
-                    <label style="color:#ffaa00;">Разовый тест:</label>
-                    <div class="chip-group" id="testTimerChips">
-                        <div class="chip-btn selected" data-value="0" onclick="selectChip('testTimerChips', this)">0 сек</div>
-                        <div class="chip-btn" data-value="10s" onclick="selectChip('testTimerChips', this)">10 сек</div>
-                        <div class="chip-btn" data-value="10m" onclick="selectChip('testTimerChips', this)">10 мин</div>
-                    </div>
-                </div>
-                <button class="btn btn-danger-outline" style="margin-top:8px;" onclick="runCustomTest()">⚡ Разовый тест</button>
-                <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="forceRescheduleAll()">🔄 Обновить напоминания</button>
-            </div>
-        </div>
         <div class="app-version-tag">AquaControl Pro · версия 1.0.23 (build 24)</div>
     </div>
 
@@ -1072,7 +1053,6 @@
             if (w.classList.contains('collapsed')) { w.classList.remove('collapsed'); b.innerText = 'Свернуть ▲'; d.classList.remove('large'); }
             else { w.classList.add('collapsed'); b.innerText = 'Развернуть ▼'; d.classList.add('large'); }
         }
-        function toggleDevPanel() { document.getElementById('devPanel').classList.toggle('open'); }
         function toggleBackupSection() {
 
     var content = document.getElementById('backupContent');
@@ -1091,31 +1071,6 @@
     }
 
 }
-
-        async function runCustomTest() {
-            var val = getSelectedChipValue('testTimerChips') || '0';
-            var filter = getCurrentFilter();
-            if (!filter) return;
-            var ms = 500;
-            if (val === '10s') ms = 10000;
-            if (val === '10m') ms = 600000;
-            var ln = getLN();
-            if (!ln) return;
-            await ensureChannel(ln);
-            var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
-            await ln.schedule({
-                notifications: [{
-                    title: 'Проверка напоминания',
-                    body: 'Тест для «' + filter.name + '»' + (loc ? ' [' + loc.name + ']' : ''),
-                    id: Math.floor(Math.random() * 80000) + 1000000,
-                    schedule: { at: new Date(Date.now() + ms), allowWhileIdle: true },
-                    smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
-                    channelId: NOTIF_CHANNEL,
-                    extra: { locationId: filter.locationId, filterId: filter.id }
-                }]
-            });
-            showToast('Тестовое напоминание поставлено — сверните приложение');
-        }
 
         function openLocationSelectModal() {
             var c = document.getElementById('locationsListContainer');
