@@ -705,10 +705,6 @@
         /* ===== Экспорт / импорт данных (без нативных плагинов) ===== */
         function exportData() {
             try {
-                if (window.showSaveFilePicker) {
-                    saveBackupWithSystemDialog();
-                    return;
-                }
                 var json = JSON.stringify(appData, null, 2);
                 var ta = document.getElementById('exportTextArea');
                 ta.value = json;
@@ -744,51 +740,6 @@
             } else {
                 showToast('Не удалось скопировать — выделите текст вручную');
             }
-        }
-
-        async function saveBackupWithSystemDialog() {
-        
-            try {
-        
-                const handle = await window.showSaveFilePicker({
-        
-                    suggestedName:
-                        "AquaControlPro-" +
-                        new Date().toISOString().slice(0,10) +
-                        ".json",
-        
-                    types: [
-                        {
-                            description: "JSON",
-                            accept: {
-                                "application/json": [".json"]
-                            }
-                        }
-                    ]
-        
-                });
-        
-                const writable = await handle.createWritable();
-        
-                await writable.write(
-                    JSON.stringify(appData, null, 2)
-                );
-        
-                await writable.close();
-        
-                showToast("Резервная копия сохранена");
-        
-            }
-            catch(e){
-        
-                console.log(e);
-        
-                if(e.name !== "AbortError"){
-                    showToast("Не удалось сохранить файл");
-                }
-        
-            }
-        
         }
 
         function triggerImportPicker() {
