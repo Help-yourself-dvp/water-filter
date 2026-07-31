@@ -47,8 +47,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 26/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.25"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 27/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.26"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -108,6 +108,37 @@ jobs:
               }
 
               public class BackupBridge {
+                                /* Производитель устройства — для подсказки по автозапуску */
+                  @JavascriptInterface
+                  public String getManufacturer() {
+                      try {
+                          return Build.MANUFACTURER == null ? "" : Build.MANUFACTURER;
+                      } catch (Exception e) {
+                          return "";
+                      }
+                  }
+
+                  /* Выключены ли оптимизации батареи для приложения */
+                  @JavascriptInterface
+                  public boolean isBatteryOptimizationIgnored() {
+                      try {
+                          PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                          return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+                      } catch (Exception e) {
+                          return true;
+                      }
+                  }
+
+                  /* Открыть нужный экран системных настроек */
+                  @JavascriptInterface
+                  public void openSettingsScreen(final String which) {
+                      runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              openSettings(which);
+                          }
+                      });
+                  }
                   @JavascriptInterface
                   public void saveBackup(final String json, final String fileName) {
                       pendingBackupJson = json;
@@ -174,6 +205,67 @@ jobs:
                   });
               }
 
+                            /* ===== Экраны системных настроек ===== */
+
+              private void openSettings(String which) {
+                  if ("battery".equals(which)) {
+                      if (tryStart(new Intent(
+                              Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                              Uri.parse("package:" + getPackageName())))) return;
+                      openAppDetails();
+                      return;
+                  }
+                  if ("autostart".equals(which)) {
+                      if (tryAutostart()) return;
+                      openAppDetails();
+                      return;
+                  }
+                  openAppDetails();
+              }
+
+              private boolean tryAutostart() {
+                  String[][] targets = new String[][] {
+                      { "com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity" },
+                      { "com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity" },
+                      { "com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity" },
+                      { "com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity" },
+                      { "com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity" },
+                      { "com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity" },
+                      { "com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity" },
+                      { "com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity" },
+                      { "com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity" },
+                      { "com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity" },
+                      { "com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity" }
+                  };
+                  for (String[] t : targets) {
+                      Intent i = new Intent();
+                      i.setClassName(t[0], t[1]);
+                      if (tryStart(i)) return true;
+                  }
+                  return false;
+              }
+
+              private void openAppDetails() {
+                  tryStart(new Intent(
+                          Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                          Uri.parse("package:" + getPackageName())));
+              }
+
+              /*
+               * На Android 11+ resolveActivity часто возвращает null из-за
+               * ограничений видимости пакетов, поэтому просто пробуем запустить
+               * и ловим исключение.
+               */
+              private boolean tryStart(Intent intent) {
+                  try {
+                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      startActivity(intent);
+                      return true;
+                  } catch (Exception e) {
+                      return false;
+                  }
+              }
+              
               /* ===== Разрешения ===== */
 
               private void requestExactAlarmPermission() {
@@ -332,10 +424,10 @@ jobs:
       - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.25-build26.apk
+             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.26-build27.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AquaControlPro-v1.0.25-build26
-          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.25-build26.apk
+          name: AquaControlPro-v1.0.26-build27
+          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.26-build27.apk
