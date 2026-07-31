@@ -73,6 +73,15 @@
         #confirmModal { z-index: 200 !important; }
 
         /* Подсказка поверх всего */
+        /* Экран настройки уведомлений */
+        .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
+        .setup-num { flex:0 0 22px; width:22px; height:22px; border-radius:50%; background:rgba(0,242,254,0.15); color:#00f2fe; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+        .setup-text { flex:1; font-size:12px; color:#c5cdd8; line-height:1.4; }
+        .setup-text b { color:#fff; display:block; margin-bottom:2px; font-size:12.5px; }
+        .setup-note { font-size:11.5px; color:#8f9cae; line-height:1.45; background:rgba(0,0,0,0.25); border-radius:12px; padding:10px 12px; margin:4px 0 12px; }
+        .setup-ok { color:#2ed573; font-size:11px; font-weight:600; margin-top:4px; }
+        .btn-setup { padding:9px 12px; font-size:11.5px; background:rgba(0,242,254,0.1); color:#00f2fe; border:1px solid rgba(0,242,254,0.3); border-radius:10px; margin-top:7px; width:100%; }
+
         #helpOverlay {
             display: none; position: fixed; inset: 0; z-index: 500;
             background: rgba(3, 5, 12, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
@@ -183,6 +192,10 @@
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
 
+        <button class="btn btn-secondary-small" style="width:100%; margin-top:15px;" onclick="showSetupModal()">
+            🔔 Настроить уведомления
+        </button>
+
         <div class="backup-section" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
         
             <div class="info-card-header">
@@ -232,7 +245,7 @@
 
         </div>
 
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.25 (build 26)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.26 (build 27)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
@@ -449,6 +462,41 @@
                 Всего: <span id="totalSpent">0</span> ₽
             </div>
             <button class="btn btn-secondary-small" style="width:100%;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="modal" id="setupModal">
+        <div class="modal-content">
+            <h2>Чтобы напоминания приходили</h2>
+            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Android по умолчанию усыпляет приложения и может не показать напоминание вовремя.
+                Нужно разрешить два пункта — это занимает полминуты.
+            </p>
+
+            <div class="setup-step">
+                <div class="setup-num">1</div>
+                <div class="setup-text">
+                    <b>Работа без ограничений батареи</b>
+                    Иначе система «заморозит» приложение и напоминание опоздает или не придёт.
+                    <span id="setupBatteryOk" class="setup-ok" style="display:none;">✓ Уже разрешено</span>
+                    <button class="btn btn-setup" onclick="openSetupScreen('battery')">Открыть настройку</button>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="setup-num">2</div>
+                <div class="setup-text">
+                    <b id="setupAutostartTitle">Автозапуск</b>
+                    <span id="setupAutostartHint">Разрешает приложению запускаться после перезагрузки телефона.
+                    Без этого после выключения телефона напоминания сбрасываются.</span>
+                    <button class="btn btn-setup" onclick="openSetupScreen('autostart')">Открыть настройку</button>
+                </div>
+            </div>
+
+            <div class="setup-note" id="setupVendorNote"></div>
+
+            <button class="btn btn-primary" onclick="closeSetupModal()">Готово</button>
+            <button class="btn btn-secondary-small" style="width:100%;" onclick="closeSetupModal(true)">Больше не показывать</button>
         </div>
     </div>
 
@@ -700,6 +748,100 @@
                 a.href = target; a.target = '_blank'; a.rel = 'noopener noreferrer';
                 document.body.appendChild(a); a.click(); a.remove();
             } catch (e2) { window.location.href = target; }
+        }
+
+        /* ===== Настройка уведомлений (разрешения Android) ===== */
+
+        var VENDOR_HINTS = {
+            xiaomi:    { title: 'Автозапуск', note: 'Xiaomi / Redmi / POCO: откроется список «Автозапуск» — найдите AquaControl Pro и включите переключатель. Дополнительно: удерживайте значок приложения → «О приложении» → «Экономия батареи» → «Без ограничений».' },
+            redmi:     { title: 'Автозапуск', note: 'Xiaomi / Redmi / POCO: откроется список «Автозапуск» — найдите AquaControl Pro и включите переключатель. Дополнительно: удерживайте значок приложения → «О приложении» → «Экономия батареи» → «Без ограничений».' },
+            poco:      { title: 'Автозапуск', note: 'Xiaomi / Redmi / POCO: откроется список «Автозапуск» — найдите AquaControl Pro и включите переключатель. Дополнительно: удерживайте значок приложения → «О приложении» → «Экономия батареи» → «Без ограничений».' },
+            huawei:    { title: 'Запуск приложения', note: 'Huawei / Honor: откройте «Запуск приложений», найдите AquaControl Pro, выключите «Автоматически» и включите все три пункта вручную: автозапуск, косвенный запуск и работа в фоне.' },
+            honor:     { title: 'Запуск приложения', note: 'Huawei / Honor: откройте «Запуск приложений», найдите AquaControl Pro, выключите «Автоматически» и включите все три пункта вручную: автозапуск, косвенный запуск и работа в фоне.' },
+            oppo:      { title: 'Автозапуск', note: 'OPPO / realme: включите «Автозапуск» для AquaControl Pro, а в разделе экономии энергии выберите «Не ограничивать фоновую работу».' },
+            realme:    { title: 'Автозапуск', note: 'OPPO / realme: включите «Автозапуск» для AquaControl Pro, а в разделе экономии энергии выберите «Не ограничивать фоновую работу».' },
+            vivo:      { title: 'Фоновый запуск', note: 'vivo / iQOO: включите «Фоновый запуск с высоким потреблением» для AquaControl Pro и добавьте приложение в белый список энергопотребления.' },
+            iqoo:      { title: 'Фоновый запуск', note: 'vivo / iQOO: включите «Фоновый запуск с высоким потреблением» для AquaControl Pro и добавьте приложение в белый список энергопотребления.' },
+            samsung:   { title: 'Работа в фоне', note: 'Samsung: откройте «Обслуживание батареи», найдите AquaControl Pro и отключите «Перевод в режим сна». Также снимите галочку «Оптимизировать использование батареи».' },
+            meizu:     { title: 'Автозапуск', note: 'Meizu: разрешите автозапуск и фоновую работу для AquaControl Pro в настройках безопасности.' },
+            letv:      { title: 'Автозапуск', note: 'Разрешите автозапуск для AquaControl Pro в списке.' },
+            asus:      { title: 'Автозапуск', note: 'ASUS: включите AquaControl Pro в «Диспетчере автозапуска».' }
+        };
+
+        var DEFAULT_HINT = {
+            title: 'Автозапуск и работа в фоне',
+            note: 'Откроются настройки приложения. Найдите разделы про батарею, автозапуск или фоновую работу и снимите ограничения для AquaControl Pro. На «чистом» Android достаточно первого пункта.'
+        };
+
+        function getNativeBridge() {
+            return (window.AquaExport && typeof window.AquaExport.openSettingsScreen === 'function')
+                ? window.AquaExport : null;
+        }
+
+        function getVendorHint() {
+            var m = '';
+            try {
+                var b = getNativeBridge();
+                if (b && typeof b.getManufacturer === 'function') m = (b.getManufacturer() || '').toLowerCase();
+            } catch (e) {}
+            var keys = Object.keys(VENDOR_HINTS);
+            for (var i = 0; i < keys.length; i++) {
+                if (m.indexOf(keys[i]) !== -1) return VENDOR_HINTS[keys[i]];
+            }
+            return DEFAULT_HINT;
+        }
+
+        function openSetupScreen(which) {
+            var b = getNativeBridge();
+            if (!b) { showToast('Доступно только в приложении на телефоне'); return; }
+            try {
+                b.openSettingsScreen(which);
+            } catch (e) {
+                showToast('Не удалось открыть настройки — откройте их вручную');
+            }
+        }
+
+        function refreshSetupState() {
+            var granted = false;
+            try {
+                var b = getNativeBridge();
+                if (b && typeof b.isBatteryOptimizationIgnored === 'function') {
+                    granted = !!b.isBatteryOptimizationIgnored();
+                }
+            } catch (e) {}
+            var el = document.getElementById('setupBatteryOk');
+            if (el) el.style.display = granted ? 'block' : 'none';
+            return granted;
+        }
+
+        function showSetupModal() {
+            var hint = getVendorHint();
+            document.getElementById('setupAutostartTitle').innerText = hint.title;
+            document.getElementById('setupVendorNote').innerText = hint.note;
+            refreshSetupState();
+            document.getElementById('setupModal').style.display = 'flex';
+        }
+
+        function closeSetupModal(never) {
+            document.getElementById('setupModal').style.display = 'none';
+            if (never) {
+                try { localStorage.setItem('aquaSetupHidden', '1'); } catch (e) {}
+                showToast('Подсказку можно открыть в разделе «Уведомления»');
+            }
+        }
+
+        // Показываем один раз при первом запуске на телефоне
+        function maybeShowSetupOnFirstRun() {
+            if (!getNativeBridge()) return;
+            var seen = false, hidden = false;
+            try {
+                seen = localStorage.getItem('aquaSetupSeen') === '1';
+                hidden = localStorage.getItem('aquaSetupHidden') === '1';
+            } catch (e) {}
+            if (hidden) return;
+            if (seen && refreshSetupState()) return;
+            try { localStorage.setItem('aquaSetupSeen', '1'); } catch (e) {}
+            setTimeout(showSetupModal, 900);
         }
 
         /* ===== Экспорт / импорт данных (файл через системное окно Android) ===== */
@@ -1086,6 +1228,7 @@
                     }
                 });
                 await scheduleAllFilterNotifications();
+                maybeShowSetupOnFirstRun();
             } catch (e) { console.warn(e); }
         });
 
@@ -1094,6 +1237,7 @@
                 persistOnly();
             } else {
                 updateUI();
+                if (document.getElementById('setupModal').style.display === 'flex') refreshSetupState();
             }
         });
         window.addEventListener('pagehide', function () {
