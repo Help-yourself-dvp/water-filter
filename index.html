@@ -186,14 +186,53 @@
         <button class="btn btn-secondary-small" onclick="openAddFilterModal()">+ Добавить фильтр в объект</button>
         <button class="btn btn-danger-outline" onclick="deleteCurrentFilter()">🗑 Удалить этот фильтр</button>
 
-        <div class="backup-section" style="margin-top:15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
-            <div class="info-card-header" style="margin-bottom:8px;">
+        <div class="backup-section" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+        
+            <div class="info-card-header">
                 <span class="info-title">💾 Резервная копия</span>
-                <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('backup')" aria-label="Подсказка">?</button>
+        
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button
+                        type="button"
+                        class="help-dot"
+                        style="width:22px;border-radius:50%;"
+                        onclick="showHelp('backup')"
+                        aria-label="Подсказка">?</button>
+        
+                    <button
+                        class="btn-toggle"
+                        id="backupToggleBtn"
+                        onclick="toggleBackupSection()">
+                        Развернуть ▼
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-secondary-small" style="width:100%;" onclick="exportData()">📤 Экспортировать данные</button>
-            <button class="btn btn-secondary-small" style="width:100%;" onclick="triggerImportPicker()">📥 Импортировать данные</button>
-            <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
+        
+            <div id="backupContent" style="display:none; margin-top:8px;">
+        
+                <button
+                    class="btn btn-secondary-small"
+                    style="width:100%;"
+                    onclick="exportData()">
+                    📤 Экспортировать данные
+                </button>
+        
+                <button
+                    class="btn btn-secondary-small"
+                    style="width:100%;"
+                    onclick="triggerImportPicker()">
+                    📥 Импортировать данные
+                </button>
+        
+                <input
+                    type="file"
+                    id="importFileInput"
+                    accept="application/json"
+                    style="display:none;"
+                    onchange="handleImportFile(event)">
+        
+            </div>
+
         </div>
 
         <div class="dev-panel-wrapper">
@@ -1034,6 +1073,24 @@
             else { w.classList.add('collapsed'); b.innerText = 'Развернуть ▼'; d.classList.add('large'); }
         }
         function toggleDevPanel() { document.getElementById('devPanel').classList.toggle('open'); }
+        function toggleBackupSection() {
+
+    var content = document.getElementById('backupContent');
+    var btn = document.getElementById('backupToggleBtn');
+
+    if (content.style.display === 'none') {
+
+        content.style.display = 'block';
+        btn.innerText = 'Свернуть ▲';
+
+    } else {
+
+        content.style.display = 'none';
+        btn.innerText = 'Развернуть ▼';
+
+    }
+
+}
 
         async function runCustomTest() {
             var val = getSelectedChipValue('testTimerChips') || '0';
