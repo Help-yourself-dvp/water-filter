@@ -101,6 +101,7 @@
             stroke-linecap: round; stroke-linejoin: round; }
         .act-btn span { font-size: 9.5px; font-weight: 600; letter-spacing: 0.1px; }
         .act-btn:active { transform: scale(0.94); }
+        .act-btn.hidden { display: none; }
         .act-edit { color: #00f2fe; border-color: rgba(0,242,254,0.25); background: rgba(0,242,254,0.07); }
         .act-add { color: #4cc9f0; border-color: rgba(76,201,240,0.22); background: rgba(76,201,240,0.06); }
         .act-cfg { color: #b8a4ff; border-color: rgba(184,164,255,0.22); background: rgba(184,164,255,0.06); }
@@ -1372,7 +1373,7 @@
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жёсткая' : (filter.hardness == 1.25 ? 'Жёсткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
                 btnCart.style.display = 'flex';
-                btnEdit.style.display = 'block';
+                btnEdit.classList.remove('hidden');
                 if (filter.buyUrl && String(filter.buyUrl).trim()) {
                     btnCart.classList.add('cart-active'); btnCart.classList.remove('cart-empty'); cartDot.style.display = 'block';
                 } else {
@@ -1419,7 +1420,7 @@
                 document.getElementById('infoHardness').innerText = '--';
                 document.getElementById('infoBrand').innerText = '--';
                 btnCart.style.display = 'none';
-                btnEdit.style.display = 'none';
+                btnEdit.classList.add('hidden');
                 postponeRow.style.display = 'none';
             }
         }
