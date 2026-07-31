@@ -211,14 +211,14 @@
                     class="btn btn-secondary-small"
                     style="width:100%;"
                     onclick="exportData()">
-                    📤 Экспортировать данные
+                    📤 Сохранить копию в файл
                 </button>
         
                 <button
                     class="btn btn-secondary-small"
                     style="width:100%;"
                     onclick="triggerImportPicker()">
-                    📥 Импортировать данные
+                    📥 Восстановить из файла
                 </button>
         
                 <input
@@ -232,7 +232,7 @@
 
         </div>
 
-        <div class="app-version-tag">AquaControl Pro · версия 1.0.24 (build 25)</div>
+        <div class="app-version-tag">AquaControl Pro · версия 1.0.25 (build 26)</div>
     </div>
 
     <div class="toast" id="toast">Уведомление</div>
@@ -455,7 +455,7 @@
     <div class="modal" id="exportModal">
         <div class="modal-content">
             <h2>Экспорт данных</h2>
-            <p style="font-size: 12px; color: #a0aab8; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Текст ниже — все ваши данные. Нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
+            <p style="font-size: 12px; color: #a0aab8; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Сохранение файлом недоступно на этом устройстве. Текст ниже — все ваши данные: нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
             <div class="form-group">
                 <textarea id="exportTextArea" rows="8" readonly onclick="this.select()"></textarea>
             </div>
@@ -492,7 +492,7 @@
             },
             backup: {
                 title: 'Резервная копия',
-                body: 'Экспорт показывает все ваши данные в виде текста — скопируйте его и сохраните в заметках, почте себе или облаке на случай смены телефона. Импорт полностью заменяет текущие данные приложения содержимым выбранного JSON-файла — используйте только файл, созданный этим же приложением.'
+                body: 'Экспорт сохраняет все ваши данные в JSON-файл через стандартное окно сохранения Android — выберите папку или облако (например, Google Диск). Имя файла содержит дату, поэтому копии не перезаписывают друг друга. Импорт полностью заменяет текущие данные приложения содержимым выбранного JSON-файла — используйте только файл, созданный этим же приложением.'
             }
         };
 
@@ -702,17 +702,76 @@
             } catch (e2) { window.location.href = target; }
         }
 
-        /* ===== Экспорт / импорт данных (без нативных плагинов) ===== */
+        /* ===== Экспорт / импорт данных (файл через системное окно Android) ===== */
+
+        function buildBackupFileName() {
+            var d = new Date();
+            function p2(n) { return (n < 10 ? '0' : '') + n; }
+            return 'aquacontrol-backup-' +
+                d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
+                '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.json';
+        }
+
+        // Ответ нативной части Android после системного окна сохранения
+        window.onBackupSaveResult = function (ok, message) {
+            showToast(message || (ok ? 'Резервная копия сохранена' : 'Сохранение отменено'));
+        };
+
         function exportData() {
+            var json;
             try {
-                var json = JSON.stringify(appData, null, 2);
+                json = JSON.stringify(appData, null, 2);
+            } catch (e) {
+                console.warn(e);
+                showToast('Не удалось подготовить данные для экспорта');
+                return;
+            }
+
+            var fileName = buildBackupFileName();
+
+            // 1. Android: системное окно "Сохранить файл"
+            try {
+                if (window.AquaExport && typeof window.AquaExport.saveBackup === 'function') {
+                    showToast('Выберите папку для сохранения');
+                    window.AquaExport.saveBackup(json, fileName);
+                    return;
+                }
+            } catch (e) { console.warn(e); }
+
+            // 2. Браузер: обычное скачивание файла
+            //    В Android WebView ссылка с download не работает — сразу текстовый запасной вариант
+            var isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform
+                ? window.Capacitor.isNativePlatform()
+                : (window.Capacitor && window.Capacitor.Plugins));
+            if (isNativeApp) {
+                showToast('Сохранение файлом недоступно — скопируйте текст');
+                showExportTextFallback(json);
+                return;
+            }
+            try {
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+                showToast('Файл резервной копии сохранён');
+                return;
+            } catch (e) { console.warn(e); }
+
+            // 3. Запасной вариант: показать текст для копирования вручную
+            showExportTextFallback(json);
+        }
+
+        function showExportTextFallback(json) {
+            try {
                 var ta = document.getElementById('exportTextArea');
                 ta.value = json;
                 document.getElementById('exportModal').style.display = 'flex';
-                setTimeout(function () {
-                    ta.focus();
-                    ta.select();
-                }, 150);
+                setTimeout(function () { ta.focus(); ta.select(); }, 150);
             } catch (e) {
                 console.warn(e);
                 showToast('Не удалось подготовить данные для экспорта');
@@ -770,7 +829,7 @@
                         persistOnly();
                         updateUI();
                         var ok = await scheduleAllFilterNotifications();
-                        showToast('Данные импортированы' + (ok ? '' : ' · нажмите «Обновить напоминания» в панели тестирования'));
+                        showToast('Данные импортированы' + (ok ? '' : ' · не удалось обновить напоминания'));
                     }
                 );
             } catch (e) {
