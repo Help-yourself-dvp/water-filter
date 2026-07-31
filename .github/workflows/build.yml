@@ -47,8 +47,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 27/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.26"/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 28/g' android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "1.0.27"/g' android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -75,6 +75,8 @@ jobs:
           import android.provider.Settings;
           import android.webkit.JavascriptInterface;
           import android.webkit.WebView;
+
+          import androidx.core.app.NotificationManagerCompat;
 
           import com.getcapacitor.BridgeActivity;
 
@@ -115,6 +117,16 @@ jobs:
                           return Build.MANUFACTURER == null ? "" : Build.MANUFACTURER;
                       } catch (Exception e) {
                           return "";
+                      }
+                  }
+
+                  /* Разрешены ли уведомления */
+                  @JavascriptInterface
+                  public boolean areNotificationsEnabled() {
+                      try {
+                          return NotificationManagerCompat.from(MainActivity.this).areNotificationsEnabled();
+                      } catch (Exception e) {
+                          return true;
                       }
                   }
 
@@ -209,12 +221,41 @@ jobs:
 
               private void openSettings(String which) {
                   if ("battery".equals(which)) {
+                      /*
+                       * ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS — это запрос
+                       * разрешения. Если оно уже выдано, Android молча игнорирует
+                       * запрос и ничего не открывает. Поэтому в этом случае сразу
+                       * показываем экран со списком, где настройку можно изменить.
+                       */
+                      boolean granted = false;
+                      try {
+                          PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                          granted = pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+                      } catch (Exception e) {
+                      }
+
+                      if (!granted) {
+                          if (tryStart(new Intent(
+                                  Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                  Uri.parse("package:" + getPackageName())))) return;
+                      }
+
                       if (tryStart(new Intent(
-                              Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                              Uri.parse("package:" + getPackageName())))) return;
+                              Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))) return;
                       openAppDetails();
                       return;
                   }
+
+                  if ("notifications".equals(which)) {
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                          Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                          i.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                          if (tryStart(i)) return;
+                      }
+                      openAppDetails();
+                      return;
+                  }
+
                   if ("autostart".equals(which)) {
                       if (tryAutostart()) return;
                       openAppDetails();
@@ -424,10 +465,10 @@ jobs:
       - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.26-build27.apk
+             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.27-build28.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AquaControlPro-v1.0.26-build27
-          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.26-build27.apk
+          name: AquaControlPro-v1.0.27-build28
+          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.27-build28.apk
