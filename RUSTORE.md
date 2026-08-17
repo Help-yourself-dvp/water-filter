@@ -69,6 +69,8 @@
 
 Порядок сборки:
 
+0. Один раз включить релизный workflow: файл лежит в `ci/release.yml` и пока не активен.
+   Инструкция на две минуты — https://github.com/Help-yourself-dvp/water-filter/blob/main/ci/README.md
 1. Открыть https://github.com/Help-yourself-dvp/water-filter/actions
 2. Слева выбрать **Build Release APK (RuStore)**.
 3. Кнопка **Run workflow** → ветка `main` → **Run workflow**.

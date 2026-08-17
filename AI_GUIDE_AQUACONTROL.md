@@ -122,7 +122,9 @@
 1. Обновить `index.html` (одна задача), `version.json`, `CHANGELOG.md`.
 2. Коммит в рабочую ветку → Pull Request → merge в `main`.
 3. `build.yml` (push в `main`) собирает **отладочный APK** — только для собственной проверки на телефоне.
-4. `release.yml` (ручной запуск, «Run workflow») собирает **релизный подписанный APK** для магазина:
+4. `release.yml` (ручной запуск, «Run workflow») собирает **релизный подписанный APK** для магазина
+   (файл пока лежит в `ci/release.yml`, его нужно один раз перенести в `.github/workflows/`,
+   см. `ci/README.md`):
    - `versionName`/`versionCode` берутся из `version.json`;
    - проверяется совпадение версии в `index.html`;
    - проверяется `android:debuggable` = отсутствует/false;

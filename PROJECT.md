@@ -195,6 +195,9 @@ node_modules/
 Релизный GitHub Workflow. Запускается только вручную:
 Actions → «Build Release APK (RuStore)» → Run workflow.
 
+На момент написания файл лежит в `ci/release.yml` и ещё не активен: его нужно один раз
+перенести в `.github/workflows/release.yml` (инструкция — `ci/README.md`).
+
 Повторяет все шаги `build.yml` и дополнительно:
 
 - берёт `versionName` и `versionCode` из `version.json`;

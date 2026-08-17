@@ -48,7 +48,10 @@ HTML + CSS + Vanilla JavaScript в одном файле `index.html`
 | Что | Workflow | Когда запускается | Результат |
 |---|---|---|---|
 | Отладочный APK (для себя) | `Build Native Android APK` (`build.yml`) | автоматически при push в `main` + вручную | debug-APK, GitHub Release |
-| Релизный APK (для магазина) | `Build Release APK (RuStore)` (`release.yml`) | только вручную | release-APK, подписан постоянным ключом, `debuggable` отсутствует |
+| Релизный APK (для магазина) | `Build Release APK (RuStore)` (`ci/release.yml`) | только вручную | release-APK, подписан постоянным ключом, `debuggable` отсутствует |
+
+⚠️ Файл релизной сборки пока лежит в `ci/release.yml` и **ещё не активен**: автоматизация
+не имеет права создавать файлы в `.github/workflows/`. Как включить за минуту — `ci/README.md`.
 
 Actions: https://github.com/Help-yourself-dvp/water-filter/actions
 
