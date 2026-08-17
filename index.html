@@ -27,6 +27,25 @@
         .btn-header-icon.cart-active { border-color: rgba(255, 153, 0, 0.45); background: rgba(255, 153, 0, 0.12); }
         .btn-header-icon.cart-empty { opacity: 0.7; }
         .btn-header-icon .cart-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; background: #ff9900; border-radius: 50%; box-shadow: 0 0 6px rgba(255,153,0,0.8); }
+        /* Пустой экран: пока нет ни одного фильтра, лишние блоки не показываем */
+        body.no-filters .card > .filter-tabs,
+        body.no-filters .card > .timer-box,
+        body.no-filters .card > .info-card-header,
+        body.no-filters .card > .info-grid-wrapper,
+        body.no-filters .card > .btn-row,
+        body.no-filters .card > .action-bar { display: none !important; }
+        .empty-state { text-align: center; padding: 18px 6px 6px; }
+        .empty-state .es-drop { font-size: 40px; line-height: 1; margin-bottom: 10px; }
+        .empty-state h3 { font-size: 15px; color: #fff; margin-bottom: 8px; }
+        .empty-state p { font-size: 12.5px; color: #8f9cae; line-height: 1.5; margin-bottom: 16px; }
+        .wiz-step { text-align: left; }
+        .wiz-progress { font-size: 10px; color: #6e7d93; letter-spacing: 1px;
+            text-transform: uppercase; text-align: center; margin-bottom: 10px; }
+        .wiz-lead { font-size: 12.5px; color: #a0aab8; line-height: 1.5; margin-bottom: 14px; text-align: center; }
+        .wiz-hint { font-size: 10.5px; color: #6e7d93; margin-top: 6px; line-height: 1.4; }
+        .wiz-nav { display: flex; gap: 8px; margin-top: 16px; }
+        .wiz-nav .btn { margin-top: 0; }
+        .wiz-nav .btn-secondary-small { flex: 0 0 38%; }
         .warn-banner { display: flex; align-items: center; gap: 9px; cursor: pointer;
             background: rgba(255, 170, 0, 0.12); border: 1px solid rgba(255, 170, 0, 0.42);
             border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; }
@@ -281,9 +300,17 @@
             </div>
         </div>
 
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <div class="es-drop">💧</div>
+            <h3>Здесь появится ваш фильтр</h3>
+            <p>Расскажите, где он стоит и какой у него срок службы —
+               и приложение само посчитает, когда менять картридж.</p>
+            <button class="btn btn-primary" onclick="openWizard()">Настроить за минуту</button>
+        </div>
+
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.29 (build 30)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.30 (build 31)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -642,6 +669,109 @@
         </div>
     </div>
 
+    <div class="modal" id="wizardModal">
+        <div class="modal-content">
+
+            <div class="wiz-step" id="wizStep1">
+                <div class="wiz-progress">Шаг 1 из 3</div>
+                <h2>Добро пожаловать</h2>
+                <p class="wiz-lead">AquaControl напомнит, когда пора менять картридж фильтра.
+                   Настройка займёт минуту, интернет не нужен.</p>
+
+                <div class="form-group">
+                    <label>Где стоит фильтр?</label>
+                    <div class="chip-group" id="wizChipPlace">
+                        <div class="chip-btn selected" data-value="Моя квартира" onclick="wizardPickPlace(this)">Квартира</div>
+                        <div class="chip-btn" data-value="Дача" onclick="wizardPickPlace(this)">Дача</div>
+                        <div class="chip-btn" data-value="Дом родителей" onclick="wizardPickPlace(this)">У родителей</div>
+                        <div class="chip-btn" data-value="Офис" onclick="wizardPickPlace(this)">Офис</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Название (можно изменить):</label>
+                    <input type="text" id="wizPlaceName" placeholder="Моя квартира">
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-primary" onclick="wizardStep(2)">Далее</button>
+                </div>
+                <button class="btn btn-secondary-small" style="width:100%;" onclick="wizardDemo()">Заполнить примером</button>
+            </div>
+
+            <div class="wiz-step" id="wizStep2" style="display:none;">
+                <div class="wiz-progress">Шаг 2 из 3</div>
+                <h2>Какой у вас фильтр</h2>
+
+                <div class="form-group">
+                    <label>Тип:</label>
+                    <div class="chip-group" id="wizChipType">
+                        <div class="chip-btn selected" data-value="Кувшин" onclick="wizardPickType(this)">Кувшин</div>
+                        <div class="chip-btn" data-value="Проточный" onclick="wizardPickType(this)">Проточный</div>
+                        <div class="chip-btn" data-value="Осмос" onclick="wizardPickType(this)">Осмос</div>
+                        <div class="chip-btn" data-value="Насадка" onclick="wizardPickType(this)">Насадка</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Как назовём:</label>
+                    <input type="text" id="wizFilterName" placeholder="Кувшин на кухне">
+                </div>
+                <div class="form-group">
+                    <label>Срок службы картриджа:</label>
+                    <div class="chip-group" id="wizChipResource">
+                        <div class="chip-btn" data-value="d30" onclick="selectChip('wizChipResource', this)">30 дн</div>
+                        <div class="chip-btn" data-value="d60" onclick="selectChip('wizChipResource', this)">60 дн</div>
+                        <div class="chip-btn selected" data-value="d90" onclick="selectChip('wizChipResource', this)">90 дн</div>
+                        <div class="chip-btn" data-value="d180" onclick="selectChip('wizChipResource', this)">180 дн</div>
+                        <div class="chip-btn" data-value="d365" onclick="selectChip('wizChipResource', this)">1 год</div>
+                    </div>
+                    <p class="wiz-hint">Срок указан на упаковке картриджа. Если не знаете — оставьте 90 дней,
+                       потом поправите.</p>
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-secondary-small" onclick="wizardStep(1)">Назад</button>
+                    <button class="btn btn-primary" onclick="wizardStep(3)">Далее</button>
+                </div>
+            </div>
+
+            <div class="wiz-step" id="wizStep3" style="display:none;">
+                <div class="wiz-progress">Шаг 3 из 3</div>
+                <h2>Последняя замена</h2>
+
+                <div class="form-group">
+                    <label>Когда меняли картридж в последний раз?</label>
+                    <input type="date" id="wizDate">
+                    <p class="wiz-hint">Не помните точно — поставьте примерную дату или сегодняшнюю,
+                       если фильтр только что куплен.</p>
+                </div>
+                <div class="form-group">
+                    <label>Сколько человек пьют эту воду:</label>
+                    <div class="chip-group" id="wizChipPeople">
+                        <div class="chip-btn" data-value="1" onclick="selectChip('wizChipPeople', this)">1 чел</div>
+                        <div class="chip-btn selected" data-value="2" onclick="selectChip('wizChipPeople', this)">2 чел</div>
+                        <div class="chip-btn" data-value="3" onclick="selectChip('wizChipPeople', this)">3–4 чел</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Вода в кране:</label>
+                    <div class="chip-group" id="wizChipHardness">
+                        <div class="chip-btn selected" data-value="1" onclick="selectChip('wizChipHardness', this)">Обычная</div>
+                        <div class="chip-btn" data-value="1.25" onclick="selectChip('wizChipHardness', this)">Жёсткая</div>
+                        <div class="chip-btn" data-value="1.5" onclick="selectChip('wizChipHardness', this)">Очень жёсткая</div>
+                    </div>
+                    <p class="wiz-hint">Жёсткая вода — быстрый налёт в чайнике, белые разводы на смесителе.
+                       При жёсткой воде картридж служит меньше.</p>
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-secondary-small" onclick="wizardStep(2)">Назад</button>
+                    <button class="btn btn-primary" onclick="wizardFinish()">Готово</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <div class="modal" id="notifyModal">
         <div class="modal-content">
             <h2>Когда напоминать</h2>
@@ -750,20 +880,32 @@
             }
         };
 
-        var defaultData = {
-            currentLocationId: 'loc1',
-            currentFilterId: 'f1',
-            locations: [
-                { id: 'loc1', name: 'Моя квартира' },
-                { id: 'loc2', name: 'Дом родителей' }
-            ],
-            filters: [
-                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, cycleMs: null, people: 2, hardness: 1, lastDate: Date.now(), brand: 'Аквафор', buyUrl: '' }
-            ],
+        /*
+         * Новый пользователь больше не получает выдуманные «Моя квартира» и «Аквафор»:
+         * при первом запуске открывается мастер настройки, а данные создаются его руками.
+         * Демонстрационный набор можно создать кнопкой «Заполнить примером».
+         */
+        var emptyData = {
+            currentLocationId: null,
+            currentFilterId: null,
+            locations: [],
+            filters: [],
             history: []
         };
 
-        var appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
+        var savedRaw = null;
+        try { savedRaw = localStorage.getItem('aquaControlProDB'); } catch (e) {}
+        var isFirstRun = !savedRaw;
+        var appData;
+        try {
+            appData = savedRaw ? JSON.parse(savedRaw) : JSON.parse(JSON.stringify(emptyData));
+        } catch (e) {
+            appData = JSON.parse(JSON.stringify(emptyData));
+            isFirstRun = true;
+        }
+        if (!Array.isArray(appData.locations)) appData.locations = [];
+        if (!Array.isArray(appData.filters)) appData.filters = [];
+        if (!Array.isArray(appData.history)) appData.history = [];
         (appData.filters || []).forEach(function (f) {
             if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
             if (f.baseDays === 0 && !f.cycleMs) f.baseDays = 90;
@@ -773,12 +915,14 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
+            'Первый запуск: мастер настройки вместо чужих демонстрационных данных.',
             'Своя иконка приложения вместо стоковой.',
             'Можно указать реальную дату последней замены — отсчёт больше не начинается «с сегодня».',
             'Напоминание приходит в удобное время суток, а не среди ночи.',
             'Появилось предупреждение заранее — успеть купить картридж.',
             'Раздел «О приложении» с политикой конфиденциальности.',
-            'Тестовые сроки в минутах убраны из обычного режима.'
+            'Тестовые сроки в минутах убраны из обычного режима.',
+            'Видно сразу, если Android запретил напоминания.'
         ];
 
         if (!appData.settings || typeof appData.settings !== 'object') appData.settings = {};
@@ -1275,6 +1419,98 @@
                 (pre > 0 ? ', предупреждение за ' + pre + ' дн.' : ', без предупреждения заранее');
         }
 
+        /* ===== Мастер первого запуска ===== */
+
+        function openWizard() {
+            closeModals();
+            wizardStep(1);
+            document.getElementById('wizPlaceName').value = getSelectedChipValue('wizChipPlace') || 'Моя квартира';
+            document.getElementById('wizFilterName').value = filterNameForType(getSelectedChipValue('wizChipType') || 'Кувшин');
+            setDateField('wizDate', Date.now());
+            document.getElementById('wizardModal').style.display = 'flex';
+        }
+
+        function wizardStep(n) {
+            [1, 2, 3].forEach(function (i) {
+                var el = document.getElementById('wizStep' + i);
+                if (el) el.style.display = (i === n) ? 'block' : 'none';
+            });
+            var box = document.querySelector('#wizardModal .modal-content');
+            if (box) box.scrollTop = 0;
+        }
+
+        function filterNameForType(type) {
+            if (type === 'Проточный') return 'Проточный фильтр';
+            if (type === 'Осмос') return 'Обратный осмос';
+            if (type === 'Насадка') return 'Насадка на кран';
+            return 'Кувшин на кухне';
+        }
+
+        /* Выбор готового варианта подставляет название, но не затирает то, что человек вписал сам */
+        function wizardPickPlace(el) {
+            var input = document.getElementById('wizPlaceName');
+            var prev = getSelectedChipValue('wizChipPlace');
+            selectChip('wizChipPlace', el);
+            if (!input.value || input.value === prev) input.value = el.getAttribute('data-value');
+        }
+
+        function wizardPickType(el) {
+            var input = document.getElementById('wizFilterName');
+            var prev = filterNameForType(getSelectedChipValue('wizChipType'));
+            selectChip('wizChipType', el);
+            if (!input.value || input.value === prev) input.value = filterNameForType(el.getAttribute('data-value'));
+        }
+
+        async function wizardFinish() {
+            var placeName = (document.getElementById('wizPlaceName').value || '').trim()
+                || getSelectedChipValue('wizChipPlace') || 'Мой дом';
+            var type = getSelectedChipValue('wizChipType') || 'Кувшин';
+            var filterName = (document.getElementById('wizFilterName').value || '').trim() || filterNameForType(type);
+
+            var locId = 'loc_' + Date.now();
+            var filterId = 'f_' + (Date.now() + 1);
+
+            appData.locations.push({ id: locId, name: placeName });
+            var f = {
+                id: filterId, locationId: locId, name: filterName, type: type,
+                baseDays: 90, cycleMs: null,
+                hardness: parseFloat(getSelectedChipValue('wizChipHardness') || '1'),
+                people: parseInt(getSelectedChipValue('wizChipPeople') || '2', 10),
+                lastDate: inputToTs(document.getElementById('wizDate').value, Date.now()),
+                brand: '', buyUrl: ''
+            };
+            applyResourceChip(f, getSelectedChipValue('wizChipResource') || 'd90');
+            appData.filters.push(f);
+            appData.currentLocationId = locId;
+            appData.currentFilterId = filterId;
+
+            closeModals();
+            persistOnly();
+            updateUI();
+            var ok = await scheduleAllFilterNotifications();
+            showToast('Готово · ' + nextPushHint(f) + (ok ? '' : ' · напоминание не запланировано'));
+            setTimeout(maybeShowSetupOnFirstRun, 600);
+        }
+
+        async function wizardDemo() {
+            var locId = 'loc_' + Date.now();
+            appData.locations.push({ id: locId, name: 'Моя квартира (пример)' });
+            var f = {
+                id: 'f_' + (Date.now() + 1), locationId: locId, name: 'Кувшин на кухне',
+                type: 'Кувшин', baseDays: 60, cycleMs: null, people: 2, hardness: 1,
+                lastDate: Date.now() - 50 * MS_DAY, brand: 'Аквафор', buyUrl: ''
+            };
+            appData.filters.push(f);
+            appData.currentLocationId = locId;
+            appData.currentFilterId = f.id;
+            closeModals();
+            persistOnly();
+            updateUI();
+            await scheduleAllFilterNotifications();
+            showToast('Пример добавлен — его можно изменить или удалить');
+            setTimeout(maybeShowSetupOnFirstRun, 600);
+        }
+
         function openNotifyModal() {
             setChipValue('chipNotifyHour', notifyHour());
             setChipValue('chipPreDays', Number(appData.settings.preDays) || 0);
@@ -1662,6 +1898,11 @@
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
             renderLocationDots();
 
+            var noFilters = appData.filters.length === 0;
+            if (document.body) document.body.classList.toggle('no-filters', noFilters);
+            var empty = document.getElementById('emptyState');
+            if (empty) empty.style.display = noFilters ? 'block' : 'none';
+
             var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
             var tabs = document.getElementById('filterTabs');
             var filter = null;
@@ -1759,6 +2000,7 @@
         });
 
         document.addEventListener('DOMContentLoaded', async function () {
+            if (isFirstRun) setTimeout(openWizard, 350);
             var ln = getLN();
             if (!ln) { updateUI(); return; }
             try {
@@ -1787,7 +2029,7 @@
                     }
                 });
                 await scheduleAllFilterNotifications();
-                maybeShowSetupOnFirstRun();
+                if (!isFirstRun) maybeShowSetupOnFirstRun();
                 refreshNotifWarning();
             } catch (e) { console.warn(e); }
         });

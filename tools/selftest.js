@@ -119,7 +119,8 @@ try { Object.defineProperty(global, 'navigator', { value: { clipboard: null }, c
 let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
-        ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast};')();
+        ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
+        ' wizardFinish, filterNameForType};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -157,10 +158,24 @@ api.appData.settings.notifyHour = 9;
 eq('предупреждение заранее по умолчанию, дней', api.appData.settings.preDays, 7);
 eq('режим проверки выключен', api.appData.settings.devMode, false);
 
-/* ------------------------------------------------ 5. реальное планирование уведомлений */
+/* ------------------------------------------------ 5. первый запуск и мастер настройки */
+
+console.log('\n[5] Первый запуск');
+eq('пустое хранилище считается первым запуском', api.isFirstRun, true);
+eq('демонстрационные дома не создаются', api.appData.locations.length, 0);
+eq('демонстрационные фильтры не создаются', api.appData.filters.length, 0);
+eq('название по типу фильтра', api.filterNameForType('Осмос'), 'Обратный осмос');
+
+/* ------------------------------------------------ 6. реальное планирование уведомлений */
 
 (async function () {
-    console.log('\n[5] Планирование уведомлений');
+    console.log('\n[6] Мастер настройки');
+    await api.wizardFinish();
+    eq('мастер создал один объект', api.appData.locations.length, 1);
+    eq('мастер создал один фильтр', api.appData.filters.length, 1);
+    check('текущий фильтр выбран', !!api.appData.currentFilterId, api.appData.currentFilterId);
+
+    console.log('\n[7] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,
