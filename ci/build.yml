@@ -1,19 +1,9 @@
-# Релизная сборка для магазина (RuStore).
-# Запускается ТОЛЬКО вручную: Actions -> Build Release APK (RuStore) -> Run workflow.
-# Отличия от build.yml:
-#   * сборка release (android:debuggable отсутствует), а не debug;
-#   * ключ подписи прописывается прямо в Gradle — AGP не может подменить его молча;
-#   * если ключа нет — сборка ПАДАЕТ (иначе APK получит случайную подпись и не встанет поверх);
-#   * печатается отпечаток сертификата SHA-256 — он обязан совпадать от версии к версии.
-name: Build Release APK (RuStore)
+name: Build Native Android APK
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      publish_release:
-        description: 'Опубликовать APK в GitHub Releases'
-        type: boolean
-        default: true
 
 jobs:
   build:
@@ -472,119 +462,41 @@ jobs:
           print('OK icons + manifest')
           ENDSCRIPT
 
-      - name: Restore signing key (обязательно, иначе сборка падает)
-        env:
-          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 || secrets.DEBUG_KEYSTORE_BASE64 }}
+      - name: Restore stable debug keystore (signing)
         run: |
-          set -e
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::Нет секрета с ключом подписи (RELEASE_KEYSTORE_BASE64 или DEBUG_KEYSTORE_BASE64). Без него APK получит случайную подпись и не установится поверх предыдущей версии."
-            exit 1
+          mkdir -p ~/.android
+          if [ -n "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
+            echo "Стабильный debug.keystore восстановлен из секрета — подпись будет постоянной."
+          else
+            echo "ВНИМАНИЕ: секрет DEBUG_KEYSTORE_BASE64 не найден."
           fi
-          echo "$KEYSTORE_B64" | base64 -d > android/app/aqua-release.keystore
-          echo "SHA-256 файла ключа (обязан быть одинаковым во всех сборках):"
-          sha256sum android/app/aqua-release.keystore
 
-      - name: Pin signing config in Gradle (AGP не должен подменить ключ)
+      - name: Build APK
         run: |
-          python3 << 'ENDSCRIPT'
-          import re, sys
-          from pathlib import Path
-
-          p = Path('android/app/build.gradle')
-          t = p.read_text(encoding='utf-8')
-
-          signing = (
-              "\n    signingConfigs {\n"
-              "        release {\n"
-              "            storeFile file('aqua-release.keystore')\n"
-              "            storePassword System.getenv(\"AQUA_STORE_PASSWORD\")\n"
-              "            keyAlias System.getenv(\"AQUA_KEY_ALIAS\")\n"
-              "            keyPassword System.getenv(\"AQUA_KEY_PASSWORD\")\n"
-              "        }\n"
-              "    }\n"
-          )
-
-          t2, n1 = re.subn(r'android\s*\{', lambda m: m.group(0) + signing, t, count=1)
-          if n1 != 1:
-              print('::error::Не найден блок android { в build.gradle')
-              sys.exit(1)
-
-          t3, n2 = re.subn(r'(buildTypes\s*\{\s*release\s*\{)',
-                           r'\1\n            signingConfig signingConfigs.release',
-                           t2, count=1)
-          if n2 != 1:
-              print('::error::Не найден блок buildTypes { release { в build.gradle')
-              sys.exit(1)
-
-          p.write_text(t3, encoding='utf-8')
-          print('Подпись release прописана в build.gradle')
-          ENDSCRIPT
-
-      - name: Build release APK
-        env:
-          AQUA_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD || 'android' }}
-          AQUA_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || 'androiddebugkey' }}
-          AQUA_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || 'android' }}
-        run: |
-          set -e
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleDebug --no-daemon
 
       - name: Rename APK
         run: |
           set -e
-          SRC=android/app/build/outputs/apk/release/app-release.apk
-          if [ ! -f "$SRC" ]; then
-            echo "::error::APK не найден по пути $SRC"
-            ls -R android/app/build/outputs/apk || true
-            exit 1
-          fi
-          OUT="AquaControlPro-v${APP_VERSION}-build${APP_VCODE}-release.apk"
-          cp "$SRC" "$OUT"
-          echo "APK_NAME=$OUT" >> $GITHUB_ENV
-          ls -l "$OUT"
-
-      - name: Проверка подписи и debuggable
-        run: |
-          set -e
-          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          if [ -x "$BT/aapt" ]; then AAPT="$BT/aapt"; else AAPT="$BT/aapt2"; fi
-          echo "=== Сертификат подписи ==="
-          "$BT/apksigner" verify --print-certs --verbose "$APK_NAME" | tee /tmp/sign.txt
-          FP=$(grep -i "SHA-256 digest" /tmp/sign.txt | head -1 | sed 's/.*: //')
-          echo "CERT_SHA256=$FP" >> $GITHUB_ENV
-          echo "=== Отпечаток сертификата: $FP ==="
-          echo "Он обязан совпадать во всех будущих версиях, иначе обновление поверх станет невозможным."
-          echo "=== Проверка debuggable ==="
-          if "$AAPT" dump badging "$APK_NAME" | grep -q "application-debuggable"; then
-            echo "::error::В APK включён android:debuggable — такую сборку нельзя публиковать в магазине."
-            exit 1
-          fi
-          echo "debuggable отсутствует — сборка релизная."
-          "$AAPT" dump badging "$APK_NAME" | head -2
-          echo "APK_SHA256=$(sha256sum "$APK_NAME" | cut -d' ' -f1)" >> $GITHUB_ENV
+          OUT="android/app/build/outputs/apk/debug/AquaControlPro-v${APP_VERSION}-build${APP_VCODE}-debug.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$OUT"
+          echo "APK_PATH=$OUT" >> $GITHUB_ENV
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AquaControlPro-v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}-release
-          path: ${{ env.APK_NAME }}
+          name: AquaControlPro-v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}-debug
+          path: ${{ env.APK_PATH }}
 
+          
       - name: Publish GitHub Release
-        if: ${{ inputs.publish_release }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}
-          name: AquaControl Pro ${{ env.APP_VERSION }} (build ${{ env.APP_VCODE }}) — release
-          files: ${{ env.APK_NAME }}
-          body: |
-            Релизная подписанная сборка: установка на телефон и загрузка в магазин.
-
-            * Версия: ${{ env.APP_VERSION }} (versionCode ${{ env.APP_VCODE }})
-            * SHA-256 APK: `${{ env.APK_SHA256 }}`
-            * Отпечаток сертификата (SHA-256): `${{ env.CERT_SHA256 }}`
-            * android:debuggable — отсутствует (проверено сборкой)
-
-            Обновление устанавливается поверх предыдущей версии, данные сохраняются.
+          name: AquaControl Pro ${{ env.APP_VERSION }} (build ${{ env.APP_VCODE }})
+          generate_release_notes: true
+          files: ${{ env.APK_PATH }}

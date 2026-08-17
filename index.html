@@ -159,6 +159,17 @@
         .chip-btn.chip-test { border-color: rgba(255, 170, 0, 0.5); color: #ffaa00; background: rgba(255, 170, 0, 0.08); }
         .chip-btn.chip-test.selected { background: rgba(255, 170, 0, 0.22); border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.3); }
         .hint-test { font-size: 10px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
+        /* Тестовые сроки скрыты, пока не включён режим разработчика (7 нажатий на версию) */
+        .chip-btn.chip-test, .hint-test { display: none; }
+        body.dev-mode .chip-btn.chip-test { display: block; }
+        body.dev-mode .hint-test { display: block; }
+        .form-group input[type="date"] { color-scheme: dark; }
+        .about-note { font-size: 12px; color: #a0aab8; line-height: 1.5; background: rgba(0,0,0,0.28);
+            border-radius: 14px; padding: 12px 14px; margin: 10px 0 4px; text-align: left; }
+        .about-note b { color: #fff; }
+        .about-list { font-size: 12px; color: #a0aab8; line-height: 1.55; text-align: left;
+            margin: 8px 0 4px; padding-left: 18px; }
+        .about-list li { margin-bottom: 3px; }
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
         .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
@@ -258,7 +269,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.28 (build 29)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.29 (build 30)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -323,6 +334,10 @@
                 <input type="text" id="editFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
+                <label>Дата последней замены:</label>
+                <input type="date" id="editFilterDate">
+            </div>
+            <div class="form-group">
                 <label>Срок службы (указан на упаковке фильтра):</label>
                 <div class="chip-group" id="editChipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('editChipResource', this)">1 мин (тест)</div>
@@ -381,6 +396,10 @@
             <div class="modal-subtitle" id="replaceModalContext">Объект • Фильтр</div>
 
             <div class="form-group">
+                <label>Дата замены:</label>
+                <input type="date" id="repDate">
+            </div>
+            <div class="form-group">
                 <label>Модель (по желанию):</label>
                 <input type="text" id="repBrand" placeholder="Например, Аквафор А5">
             </div>
@@ -411,6 +430,10 @@
             <div class="form-group">
                 <label>Название:</label>
                 <input type="text" id="newFilterName" placeholder="Кувшин на кухне">
+            </div>
+            <div class="form-group">
+                <label>Когда меняли картридж в последний раз:</label>
+                <input type="date" id="newFilterDate">
             </div>
             <div class="form-group">
                 <label>Тип:</label>
@@ -506,6 +529,15 @@
                 <div class="set-arrow">›</div>
             </div>
 
+            <div class="set-row" onclick="closeModals(); openNotifyModal();">
+                <div class="set-ico">⏰</div>
+                <div class="set-txt">
+                    <b>Когда напоминать</b>
+                    <small id="setRowNotifyWhen">Время напоминания и предупреждение заранее</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
             <div class="set-row" onclick="closeModals(); exportData();">
                 <div class="set-ico">📤</div>
                 <div class="set-txt">
@@ -529,6 +561,15 @@
                 <div class="set-txt">
                     <b>Как это работает</b>
                     <small>Подсказка о резервных копиях</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="closeModals(); openAboutModal();">
+                <div class="set-ico">ℹ️</div>
+                <div class="set-txt">
+                    <b>О приложении</b>
+                    <small>Версия, конфиденциальность, что нового</small>
                 </div>
                 <div class="set-arrow">›</div>
             </div>
@@ -583,6 +624,64 @@
 
             <button class="btn btn-primary" onclick="closeSetupModal()">Готово</button>
             <button class="btn btn-secondary-small" style="width:100%;" onclick="closeSetupModal(true)">Больше не показывать</button>
+        </div>
+    </div>
+
+    <div class="modal" id="notifyModal">
+        <div class="modal-content">
+            <h2>Когда напоминать</h2>
+            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Напоминание придёт в выбранное время, а не среди ночи.
+            </p>
+
+            <div class="form-group">
+                <label>Время напоминания:</label>
+                <div class="chip-group" id="chipNotifyHour">
+                    <div class="chip-btn" data-value="8" onclick="selectChip('chipNotifyHour', this)">8:00</div>
+                    <div class="chip-btn selected" data-value="10" onclick="selectChip('chipNotifyHour', this)">10:00</div>
+                    <div class="chip-btn" data-value="12" onclick="selectChip('chipNotifyHour', this)">12:00</div>
+                    <div class="chip-btn" data-value="18" onclick="selectChip('chipNotifyHour', this)">18:00</div>
+                    <div class="chip-btn" data-value="20" onclick="selectChip('chipNotifyHour', this)">20:00</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Предупредить заранее, чтобы успеть купить картридж:</label>
+                <div class="chip-group" id="chipPreDays">
+                    <div class="chip-btn" data-value="0" onclick="selectChip('chipPreDays', this)">Не нужно</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('chipPreDays', this)">За 3 дня</div>
+                    <div class="chip-btn selected" data-value="7" onclick="selectChip('chipPreDays', this)">За 7 дней</div>
+                    <div class="chip-btn" data-value="14" onclick="selectChip('chipPreDays', this)">За 14 дней</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveNotifySettings()">Сохранить</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
+        </div>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <h2>AquaControl Pro</h2>
+            <div class="app-version-tag" id="aboutVersionTag" style="margin:6px 0 10px;" onclick="onVersionTap()"></div>
+
+            <div class="about-note">
+                <b>Все данные остаются на вашем телефоне.</b><br>
+                Приложение работает без интернета, ничего не собирает и никуда не передаёт.
+                Регистрация не нужна.
+            </div>
+
+            <div class="about-note">
+                Чтобы данные не потерялись при смене телефона, сделайте резервную копию:
+                «Настройки» → «Сохранить копию в файл».
+            </div>
+
+            <button class="btn btn-edit-outline" onclick="openPrivacyPolicy()">Политика конфиденциальности</button>
+
+            <div style="font-size:11px;color:#8f9cae;text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;text-align:left;">Что нового</div>
+            <ul class="about-list" id="aboutWhatsNew"></ul>
+
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:12px;" onclick="closeModals()">Закрыть</button>
         </div>
     </div>
 
@@ -653,6 +752,52 @@
             if (f.baseDays === 0 && !f.cycleMs) f.baseDays = 90;
             if (f.lastDate) f.lastDate = Number(f.lastDate);
         });
+
+        /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
+        var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
+        var WHATS_NEW = [
+            'Своя иконка приложения вместо стоковой.',
+            'Можно указать реальную дату последней замены — отсчёт больше не начинается «с сегодня».',
+            'Напоминание приходит в удобное время суток, а не среди ночи.',
+            'Появилось предупреждение заранее — успеть купить картридж.',
+            'Раздел «О приложении» с политикой конфиденциальности.',
+            'Тестовые сроки в минутах убраны из обычного режима.'
+        ];
+
+        if (!appData.settings || typeof appData.settings !== 'object') appData.settings = {};
+        if (typeof appData.settings.notifyHour !== 'number') appData.settings.notifyHour = 10;
+        if (typeof appData.settings.preDays !== 'number') appData.settings.preDays = 7;
+        if (typeof appData.settings.devMode !== 'boolean') appData.settings.devMode = false;
+
+        /* Пользовательский текст перед вставкой в разметку обязательно экранируем */
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function pad2(n) { return (n < 10 ? '0' : '') + n; }
+        function dateToInput(ts) {
+            var d = new Date(Number(ts) || Date.now());
+            return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        }
+        function inputToTs(value, fallback) {
+            var parts = String(value || '').split('-');
+            if (parts.length !== 3) return fallback;
+            var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0, 0);
+            var ms = d.getTime();
+            if (isNaN(ms)) return fallback;
+            return ms > Date.now() ? Date.now() : ms;
+        }
+        function setDateField(id, ts) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.value = dateToInput(ts);
+            el.max = dateToInput(Date.now());
+        }
+        function applyDevMode() {
+            if (document.body) document.body.classList.toggle('dev-mode', !!appData.settings.devMode);
+        }
 
         var pendingConfirmAction = null;
         var pendingRenameLocationId = null;
@@ -1045,7 +1190,64 @@
             var tag = document.getElementById('settingsVersionTag');
             var src = document.getElementById('appVersionTag');
             if (tag && src) tag.textContent = src.textContent;
+            var when = document.getElementById('setRowNotifyWhen');
+            if (when) when.textContent = notifyWhenText();
             document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function notifyWhenText() {
+            var h = notifyHour();
+            var pre = Number(appData.settings.preDays) || 0;
+            return 'В ' + h + ':00' + (pre > 0 ? ', предупреждение за ' + pre + ' дн.' : ', без предупреждения заранее');
+        }
+
+        function openNotifyModal() {
+            setChipValue('chipNotifyHour', notifyHour());
+            setChipValue('chipPreDays', Number(appData.settings.preDays) || 0);
+            document.getElementById('notifyModal').style.display = 'flex';
+        }
+
+        async function saveNotifySettings() {
+            appData.settings.notifyHour = parseInt(getSelectedChipValue('chipNotifyHour') || '10', 10);
+            appData.settings.preDays = parseInt(getSelectedChipValue('chipPreDays') || '7', 10);
+            closeModals();
+            persistOnly();
+            var ok = await scheduleAllFilterNotifications();
+            showToast('Сохранено · ' + notifyWhenText() + (ok ? '' : ' · напоминания обновить не удалось'));
+        }
+
+        function openAboutModal() {
+            var src = document.getElementById('appVersionTag');
+            var tag = document.getElementById('aboutVersionTag');
+            if (tag && src) tag.textContent = src.textContent;
+            var list = document.getElementById('aboutWhatsNew');
+            if (list) list.innerHTML = WHATS_NEW.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+            document.getElementById('aboutModal').style.display = 'flex';
+        }
+
+        function openPrivacyPolicy() {
+            openExternalUrl(PRIVACY_URL);
+        }
+
+        /* Скрытый режим разработчика: 7 нажатий на строку с версией */
+        var versionTapCount = 0, versionTapTimer = null;
+        function onVersionTap() {
+            versionTapCount++;
+            clearTimeout(versionTapTimer);
+            versionTapTimer = setTimeout(function () { versionTapCount = 0; }, 2500);
+            if (versionTapCount < 7) {
+                if (versionTapCount >= 4) {
+                    showToast('Ещё ' + (7 - versionTapCount) + ' — и включится режим проверки');
+                }
+                return;
+            }
+            versionTapCount = 0;
+            appData.settings.devMode = !appData.settings.devMode;
+            persistOnly();
+            applyDevMode();
+            showToast(appData.settings.devMode
+                ? 'Режим проверки включён: в сроках появились варианты в минутах'
+                : 'Режим проверки выключен');
         }
 
         function showSetupModal() {
@@ -1247,6 +1449,17 @@
             await sleep(120);
         }
 
+        function notifyHour() {
+            var h = Number(appData.settings.notifyHour);
+            return (h >= 0 && h <= 23) ? h : 10;
+        }
+        /* Переносит момент на выбранный час того же дня — чтобы не будить ночью */
+        function atHour(ts, hour) {
+            var d = new Date(Number(ts) || Date.now());
+            d.setHours(hour, 0, 0, 0);
+            return d.getTime();
+        }
+
         function scheduleAllFilterNotifications() {
             scheduleChain = scheduleChain.then(runScheduleJob, runScheduleJob);
             return scheduleChain;
@@ -1263,37 +1476,62 @@
                 var batch = [];
                 var minLead = 5000;
 
+                var hour = notifyHour();
+                var preDays = Number(appData.settings.preDays) || 0;
+
                 appData.filters.forEach(function (filter) {
                     var t = getFilterTiming(filter);
                     var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
                     var locText = loc ? ' [' + loc.name + ']' : '';
                     var extra = { locationId: filter.locationId, filterId: filter.id };
+                    var planned = [];
 
-                    var expAt = t.expiryMs;
-                    if (expAt <= now + minLead && expAt > now) expAt = now + minLead;
-                    if (expAt > now + 2000) {
-                        batch.push({
+                    if (t.isTest) {
+                        /* Тестовый режим: секунда в секунду, без переноса на удобный час */
+                        planned.push({
+                            kind: 'exp', at: t.expiryMs, color: '#00F2FE',
                             title: 'Пора заменить фильтр',
-                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.',
-                            id: notifId(filter.id, 'exp'),
-                            schedule: { at: new Date(expAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
-                            channelId: NOTIF_CHANNEL, extra: extra
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.'
+                        });
+                        planned.push({
+                            kind: 'p7', at: t.followUpMs, color: '#FF4757',
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.'
+                        });
+                    } else {
+                        if (preDays > 0) {
+                            planned.push({
+                                kind: 'pre', at: atHour(t.expiryMs - preDays * MS_DAY, hour), color: '#FFAA00',
+                                title: 'Скоро замена фильтра',
+                                body: '«' + filter.name + '»' + locText + ' — осталось ' + preDays +
+                                      ' дн. Самое время купить картридж.'
+                            });
+                        }
+                        planned.push({
+                            kind: 'exp', at: atHour(t.expiryMs, hour), color: '#00F2FE',
+                            title: 'Пора заменить фильтр',
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.'
+                        });
+                        planned.push({
+                            kind: 'p7', at: atHour(t.followUpMs, hour), color: '#FF4757',
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.'
                         });
                     }
 
-                    var fAt = t.followUpMs;
-                    if (fAt <= now + minLead && fAt > now) fAt = now + minLead + 1000;
-                    if (fAt > now + 2000) {
+                    planned.forEach(function (item) {
+                        var at = item.at;
+                        if (at <= now + minLead && at > now) at = now + minLead;
+                        if (at <= now + 2000) return;
                         batch.push({
-                            title: 'Фильтр всё ещё не заменён',
-                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.',
-                            id: notifId(filter.id, 'p7'),
-                            schedule: { at: new Date(fAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
+                            title: item.title,
+                            body: item.body,
+                            id: notifId(filter.id, item.kind),
+                            schedule: { at: new Date(at), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon', iconColor: item.color, autoCancel: true,
                             channelId: NOTIF_CHANNEL, extra: extra
                         });
-                    }
+                    });
                 });
 
                 if (batch.length) {
@@ -1355,7 +1593,7 @@
                     var cls = '', icon = '';
                     if (t.leftMs <= 0) { cls = 'tab-danger'; icon = '🔴 '; }
                     else if ((!t.isTest && t.daysLeft <= 10) || (t.isTest && t.leftMs <= t.resourceMs * 0.25)) { cls = 'tab-warning'; icon = '🟡 '; }
-                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + f.id + '\')">' + icon + f.name + '</div>';
+                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + esc(f.id) + '\')">' + icon + esc(f.name) + '</div>';
                 }).join('');
             }
 
@@ -1451,11 +1689,8 @@
                     if (ex.locationId && ex.filterId) {
                         appData.currentLocationId = ex.locationId;
                         appData.currentFilterId = ex.filterId;
-                        var f = appData.filters.find(function (x) { return x.id === ex.filterId; });
-                        if (f) {
-                            var t = getFilterTiming(f);
-                            if (t.leftMs > 0) f.lastDate = Date.now() - (t.resourceMs + 5000);
-                        }
+                        /* Раньше здесь фильтр принудительно помечался просроченным —
+                           из-за этого открытие старого уведомления портило отсчёт. Убрано. */
                         persistOnly();
                         updateUI();
                         scheduleAllFilterNotifications();
@@ -1497,7 +1732,7 @@
             c.innerHTML = appData.locations.map(function (l) {
                 return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
                     '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
-                    l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
+                    esc(l.name) + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
                     '<button class="loc-icon-btn edit" onclick="event.stopPropagation();openRenameLocationModal(\'' + l.id + '\')">✏️</button>' +
                     (canDel ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
                     '</div></div>';
@@ -1530,11 +1765,15 @@
             if (f && loc) document.getElementById('replaceModalContext').innerText = loc.name + ' • ' + f.name;
             document.getElementById('repBrand').value = (f && f.brand) ? f.brand : '';
             document.getElementById('repCost').value = '';
+            setDateField('repDate', Date.now());
             updatePostponeLabels(f);
             document.getElementById('replaceModal').style.display = 'flex';
         }
         function openAddFilterModal() {
             setChipValue('chipResource', 'd90');
+            document.getElementById('newFilterName').value = '';
+            document.getElementById('newFilterUrl').value = '';
+            setDateField('newFilterDate', Date.now());
             document.getElementById('addFilterModal').style.display = 'flex';
         }
         function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
@@ -1545,6 +1784,7 @@
             document.getElementById('editFilterContext').innerText = f.name;
             document.getElementById('editFilterName').value = f.name || '';
             document.getElementById('editFilterUrl').value = f.buyUrl || '';
+            setDateField('editFilterDate', f.lastDate);
             setChipValue('editChipResource', resourceChipFromFilter(f));
             setChipValue('editChipHardness', f.hardness);
             setChipValue('editChipPeople', f.people);
@@ -1562,6 +1802,7 @@
             f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
             applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
             if (isTestFilter(f)) f.lastDate = Date.now();
+            else f.lastDate = inputToTs(document.getElementById('editFilterDate').value, f.lastDate);
             closeModals();
             persistOnly();
             updateUI();
@@ -1589,7 +1830,12 @@
             if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пока пусто</div>';
             else list.innerHTML = appData.history.map(function (h) {
                 total += Number(h.cost || 0);
-                return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
+                var loc = h.locationId ? appData.locations.find(function (l) { return l.id === h.locationId; }) : null;
+                var where = loc ? (' · ' + esc(loc.name)) : '';
+                var when = h.date ? esc(h.date) : (h.ts ? new Date(Number(h.ts)).toLocaleDateString('ru-RU') : '');
+                return '<div class="history-item"><div><b>' + esc(h.filterName) + '</b>' + where +
+                    '<br><small style="color:#6e7d93">' + when + (h.note ? ' • ' + esc(h.note) : '') +
+                    '</small></div><div style="color:#00f2fe;">' + (h.cost ? esc(h.cost) + ' ₽' : '0 ₽') + '</div></div>';
             }).join('');
             document.getElementById('ecoBottles').innerText = n * 200;
             document.getElementById('ecoMoney').innerText = (n * 9000).toLocaleString('ru-RU');
@@ -1606,11 +1852,14 @@
             if (!f) { showToast('Выберите фильтр'); return; }
             var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
             var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
-            f.lastDate = Date.now();
+            f.lastDate = skip ? Date.now() : inputToTs(document.getElementById('repDate').value, Date.now());
             if (!skip && brand) f.brand = brand;
             appData.history.unshift({
                 filterName: f.name,
-                date: new Date().toLocaleDateString('ru-RU'),
+                filterId: f.id,
+                locationId: f.locationId,
+                ts: f.lastDate,
+                date: new Date(f.lastDate).toLocaleDateString('ru-RU'),
                 cost: cost,
                 note: skip ? 'Быстрая замена' : ''
             });
@@ -1631,7 +1880,8 @@
             var f = {
                 id: id, locationId: appData.currentLocationId, name: name, type: type,
                 baseDays: 90, cycleMs: null, hardness: hardness, people: people,
-                lastDate: Date.now(), brand: '', buyUrl: buyUrl
+                lastDate: inputToTs(document.getElementById('newFilterDate').value, Date.now()),
+                brand: '', buyUrl: buyUrl
             };
             applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90');
             appData.filters.push(f);
@@ -1683,6 +1933,7 @@
             setTimeout(function () { t.classList.remove('show'); }, 3000);
         }
 
+        applyDevMode();
         updateUI();
     </script>
 </body>
