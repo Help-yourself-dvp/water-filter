@@ -1,5 +1,5 @@
 {
-  "versionName": "1.0.30",
-  "versionCode": 31,
+  "versionName": "1.0.31",
+  "versionCode": 32,
   "comment": "Единый источник версии. versionCode обязан расти на 1 при каждом выпуске. Строка версии в index.html (id=appVersionTag) должна совпадать — release.yml это проверяет."
 }

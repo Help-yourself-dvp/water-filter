@@ -120,7 +120,7 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -175,7 +175,26 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     eq('мастер создал один фильтр', api.appData.filters.length, 1);
     check('текущий фильтр выбран', !!api.appData.currentFilterId, api.appData.currentFilterId);
 
-    console.log('\n[7] Планирование уведомлений');
+    console.log('\n[7] Сводка «Все фильтры»');
+    const DAY = 86400000;
+    api.appData.locations = [{ id: 'l1', name: 'Квартира' }, { id: 'l2', name: 'Дача' }];
+    api.appData.filters = [
+        { id: 'a', locationId: 'l1', name: 'Норма', type: 'Кувшин', baseDays: 90, cycleMs: null,
+          people: 1, hardness: 1, lastDate: Date.now() },
+        { id: 'b', locationId: 'l2', name: 'Просрочен', type: 'Осмос', baseDays: 30, cycleMs: null,
+          people: 1, hardness: 1, lastDate: Date.now() - 40 * DAY },
+        { id: 'c', locationId: 'l1', name: 'Скоро', type: 'Проточный', baseDays: 30, cycleMs: null,
+          people: 1, hardness: 1, lastDate: Date.now() - 25 * DAY }
+    ];
+    const rows = api.allFiltersRows();
+    eq('порядок: сначала самое срочное', rows.map(r => r.filter.name).join(' → '),
+       'Просрочен → Скоро → Норма');
+    eq('метка просроченного', api.shortLeft(rows[0].timing).cls, 'bad');
+    eq('метка «скоро»', api.shortLeft(rows[1].timing).cls, 'warn');
+    eq('метка нормы', api.shortLeft(rows[2].timing).cls, 'ok');
+    eq('остаток у нормального фильтра, дней', api.shortLeft(rows[2].timing).big, '90');
+
+    console.log('\n[8] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,

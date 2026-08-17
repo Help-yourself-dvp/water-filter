@@ -27,12 +27,39 @@
         .btn-header-icon.cart-active { border-color: rgba(255, 153, 0, 0.45); background: rgba(255, 153, 0, 0.12); }
         .btn-header-icon.cart-empty { opacity: 0.7; }
         .btn-header-icon .cart-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; background: #ff9900; border-radius: 50%; box-shadow: 0 0 6px rgba(255,153,0,0.8); }
+        /* Ссылка «Все фильтры» и сводный список */
+        .all-link { text-align: right; font-size: 11.5px; color: #00f2fe; font-weight: 600;
+            cursor: pointer; margin: -4px 2px 10px; }
+        .all-link:active { opacity: 0.7; }
+        .sum-line { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+            font-size: 11px; margin-bottom: 12px; }
+        .sum-chip { border-radius: 9px; padding: 4px 9px; border: 1px solid transparent; }
+        .sum-chip.bad { color: #ff4757; background: rgba(255,71,87,0.12); border-color: rgba(255,71,87,0.3); }
+        .sum-chip.warn { color: #ffaa00; background: rgba(255,170,0,0.12); border-color: rgba(255,170,0,0.3); }
+        .sum-chip.ok { color: #00f2fe; background: rgba(0,242,254,0.1); border-color: rgba(0,242,254,0.25); }
+        .af-item { display: flex; align-items: center; gap: 10px; padding: 10px 11px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; cursor: pointer; }
+        .af-item:active { background: rgba(255,255,255,0.09); }
+        .af-item.current { border-color: rgba(0,242,254,0.55); background: rgba(0,242,254,0.08); }
+        .af-badge { flex: 0 0 62px; text-align: center; border-radius: 11px; padding: 7px 4px;
+            font-size: 15px; font-weight: 800; line-height: 1.05; }
+        .af-badge small { display: block; font-size: 9px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+        .af-badge.bad { color: #ff4757; background: rgba(255,71,87,0.14); }
+        .af-badge.warn { color: #ffaa00; background: rgba(255,170,0,0.14); }
+        .af-badge.ok { color: #00f2fe; background: rgba(0,242,254,0.12); }
+        .af-txt { flex: 1; min-width: 0; }
+        .af-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; }
+        .af-sub { font-size: 11px; color: #8f9cae; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         /* Пустой экран: пока нет ни одного фильтра, лишние блоки не показываем */
         body.no-filters .card > .filter-tabs,
         body.no-filters .card > .timer-box,
         body.no-filters .card > .info-card-header,
         body.no-filters .card > .info-grid-wrapper,
         body.no-filters .card > .btn-row,
+        body.no-filters .card > .all-link,
         body.no-filters .card > .action-bar { display: none !important; }
         .empty-state { text-align: center; padding: 18px 6px 6px; }
         .empty-state .es-drop { font-size: 40px; line-height: 1; margin-bottom: 10px; }
@@ -258,6 +285,7 @@
         </div>
 
         <div class="filter-tabs" id="filterTabs"></div>
+        <div class="all-link" id="allFiltersLink" style="display:none;" onclick="openAllFiltersModal()">Все фильтры →</div>
         <div class="timer-box">
             <div class="days-left" id="daysDisplay">--</div>
             <div class="days-label" id="statusLabel">дней осталось</div>
@@ -310,7 +338,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.30 (build 31)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.31 (build 32)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -669,6 +697,18 @@
         </div>
     </div>
 
+    <div class="modal" id="allFiltersModal">
+        <div class="modal-content">
+            <h2>Все фильтры</h2>
+            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 12px; line-height:1.45;">
+                Все объекты сразу, сверху — то, что требует внимания.
+            </p>
+            <div class="sum-line" id="allFiltersSummary"></div>
+            <div id="allFiltersList"></div>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:10px;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
     <div class="modal" id="wizardModal">
         <div class="modal-content">
 
@@ -915,6 +955,7 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
+            'Экран «Все фильтры»: весь дом и дача одним списком, сверху — что горит.',
             'Первый запуск: мастер настройки вместо чужих демонстрационных данных.',
             'Своя иконка приложения вместо стоковой.',
             'Можно указать реальную дату последней замены — отсчёт больше не начинается «с сегодня».',
@@ -1419,6 +1460,67 @@
                 (pre > 0 ? ', предупреждение за ' + pre + ' дн.' : ', без предупреждения заранее');
         }
 
+        /* ===== Сводка «Все фильтры» ===== */
+
+        /* Как показать остаток: обычный фильтр — в днях, тестовый — в минутах/секундах */
+        function shortLeft(t) {
+            if (t.leftMs <= 0) return { big: '0', small: 'просрочен', cls: 'bad' };
+            if (t.isTest) {
+                if (t.secondsLeft < 120) return { big: String(t.secondsLeft), small: 'сек', cls: 'warn' };
+                return { big: String(t.minutesLeft), small: 'мин', cls: 'warn' };
+            }
+            var cls = t.daysLeft <= 10 ? 'warn' : 'ok';
+            return { big: String(t.daysLeft), small: 'дн', cls: cls };
+        }
+
+        function allFiltersRows() {
+            return appData.filters.map(function (f) {
+                var loc = appData.locations.find(function (l) { return l.id === f.locationId; });
+                return { filter: f, loc: loc, timing: getFilterTiming(f) };
+            }).sort(function (a, b) { return a.timing.leftMs - b.timing.leftMs; });
+        }
+
+        function openAllFiltersModal() {
+            var rows = allFiltersRows();
+            var bad = 0, warn = 0, ok = 0;
+            rows.forEach(function (r) {
+                var s = shortLeft(r.timing);
+                if (s.cls === 'bad') bad++; else if (s.cls === 'warn') warn++; else ok++;
+            });
+
+            var sum = [];
+            if (bad) sum.push('<span class="sum-chip bad">Просрочено: ' + bad + '</span>');
+            if (warn) sum.push('<span class="sum-chip warn">Скоро: ' + warn + '</span>');
+            if (ok) sum.push('<span class="sum-chip ok">В норме: ' + ok + '</span>');
+            document.getElementById('allFiltersSummary').innerHTML = sum.join('');
+
+            var list = document.getElementById('allFiltersList');
+            if (!rows.length) {
+                list.innerHTML = '<div style="color:#6e7d93;text-align:center;padding:10px;">Фильтров пока нет</div>';
+            } else {
+                list.innerHTML = rows.map(function (r) {
+                    var s = shortLeft(r.timing);
+                    var current = (r.filter.id === appData.currentFilterId) ? ' current' : '';
+                    var where = r.loc ? esc(r.loc.name) : 'без объекта';
+                    return '<div class="af-item' + current + '" onclick="jumpToFilter(\'' + esc(r.filter.locationId) +
+                        '\', \'' + esc(r.filter.id) + '\')">' +
+                        '<div class="af-badge ' + s.cls + '">' + s.big + '<small>' + s.small + '</small></div>' +
+                        '<div class="af-txt"><div class="af-name">' + esc(r.filter.name) + '</div>' +
+                        '<div class="af-sub">' + where + ' · ' + esc(r.filter.type || '') + '</div></div>' +
+                        '<div style="color:#6e7d93;font-size:15px;">›</div></div>';
+                }).join('');
+            }
+            document.getElementById('allFiltersModal').style.display = 'flex';
+        }
+
+        function jumpToFilter(locationId, filterId) {
+            appData.currentLocationId = locationId;
+            appData.currentFilterId = filterId;
+            closeModals();
+            persistOnly();
+            updateUI();
+        }
+
         /* ===== Мастер первого запуска ===== */
 
         function openWizard() {
@@ -1902,6 +2004,14 @@
             if (document.body) document.body.classList.toggle('no-filters', noFilters);
             var empty = document.getElementById('emptyState');
             if (empty) empty.style.display = noFilters ? 'block' : 'none';
+            var allLink = document.getElementById('allFiltersLink');
+            if (allLink) {
+                allLink.style.display = appData.filters.length > 1 ? 'block' : 'none';
+                var overdue = appData.filters.filter(function (f) { return getFilterTiming(f).leftMs <= 0; }).length;
+                allLink.textContent = overdue
+                    ? ('Все фильтры · просрочено: ' + overdue + ' →')
+                    : ('Все фильтры (' + appData.filters.length + ') →');
+            }
 
             var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
             var tabs = document.getElementById('filterTabs');
