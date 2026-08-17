@@ -2,7 +2,13 @@ name: Build Native Android APK
 
 on:
   push:
-    branches: [ main ]
+    # main — обычные релизные сборки, arena/** — рабочая ветка разработки:
+    # APK появляется сам после каждого изменения, нажимать ничего не нужно.
+    branches: [ main, 'arena/**' ]
+    paths-ignore:
+      - '**.md'
+      - 'store/**'
+      - 'tools/gh_*.py'
   workflow_dispatch:
 
 jobs:
