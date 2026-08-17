@@ -120,7 +120,7 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters, pricePerLiter, ecoAssumptionsText, appDataRef: appData};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -212,6 +212,17 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     eq('меньше суток считается как сутки', api.litersForUse(1, 0), 2);
     eq('старая запись без литров оценивается', api.historyLiters({ filterName: 'x' }) > 0, 'true');
     eq('новая запись берёт сохранённые литры', api.historyLiters({ liters: 500 }), 500);
+    eq('цена литра по умолчанию: 60 ₽ / 5 л', api.pricePerLiter(), 12);
+    api.appData.settings.bottleLiters = 19;
+    api.appData.settings.bottlePrice = 190;
+    api.appData.settings.litersPerDay = 3;
+    eq('19-литровая бутыль за 190 ₽ = 10 ₽/л', api.pricePerLiter(), 10);
+    eq('3 л в день × 2 чел × 10 дней', api.litersForUse(2, 10), 60);
+    check('допущения выводятся текстом', api.ecoAssumptionsText().indexOf('19 л за 190 ₽') > 0,
+          api.ecoAssumptionsText());
+    api.appData.settings.bottleLiters = 5;
+    api.appData.settings.bottlePrice = 60;
+    api.appData.settings.litersPerDay = 2;
 
     console.log('\n[10] Планирование уведомлений');
     api.appData.filters = [{

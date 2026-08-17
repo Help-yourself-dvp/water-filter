@@ -47,14 +47,14 @@
         .af-item.current { border-color: rgba(0,242,254,0.55); background: rgba(0,242,254,0.08); }
         .af-badge { flex: 0 0 62px; text-align: center; border-radius: 11px; padding: 7px 4px;
             font-size: 15px; font-weight: 800; line-height: 1.05; }
-        .af-badge small { display: block; font-size: 9px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+        .af-badge small { display: block; font-size: 10px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
         .af-badge.bad { color: #ff4757; background: rgba(255,71,87,0.14); }
         .af-badge.warn { color: #ffaa00; background: rgba(255,170,0,0.14); }
         .af-badge.ok { color: #00f2fe; background: rgba(0,242,254,0.12); }
         .af-txt { flex: 1; min-width: 0; }
         .af-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap;
             overflow: hidden; text-overflow: ellipsis; }
-        .af-sub { font-size: 11px; color: #8f9cae; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .af-sub { font-size: 11px; color: #a6b3c6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Пустой экран: пока нет ни одного фильтра, лишние блоки не показываем */
         body.no-filters .card > .filter-tabs,
@@ -67,12 +67,12 @@
         .empty-state { text-align: center; padding: 18px 6px 6px; }
         .empty-state .es-drop { font-size: 40px; line-height: 1; margin-bottom: 10px; }
         .empty-state h3 { font-size: 15px; color: #fff; margin-bottom: 8px; }
-        .empty-state p { font-size: 12.5px; color: #8f9cae; line-height: 1.5; margin-bottom: 16px; }
+        .empty-state p { font-size: 12.5px; color: #a6b3c6; line-height: 1.5; margin-bottom: 16px; }
         .wiz-step { text-align: left; }
-        .wiz-progress { font-size: 10px; color: #6e7d93; letter-spacing: 1px;
+        .wiz-progress { font-size: 11px; color: #8b99ad; letter-spacing: 1px;
             text-transform: uppercase; text-align: center; margin-bottom: 10px; }
-        .wiz-lead { font-size: 12.5px; color: #a0aab8; line-height: 1.5; margin-bottom: 14px; text-align: center; }
-        .wiz-hint { font-size: 10.5px; color: #6e7d93; margin-top: 6px; line-height: 1.4; }
+        .wiz-lead { font-size: 12.5px; color: #b3bdcb; line-height: 1.5; margin-bottom: 14px; text-align: center; }
+        .wiz-hint { font-size: 11px; color: #8b99ad; margin-top: 6px; line-height: 1.4; }
         .wiz-nav { display: flex; gap: 8px; margin-top: 16px; }
         .wiz-nav .btn { margin-top: 0; }
         .wiz-nav .btn-secondary-small { flex: 0 0 38%; }
@@ -85,27 +85,27 @@
         .warn-cta { flex-shrink: 0; font-size: 11px; font-weight: 700; color: #ffaa00;
             border: 1px solid rgba(255, 170, 0, 0.5); border-radius: 9px; padding: 5px 9px; }
         .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
-        .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #8f9cae; transition: all 0.3s; }
+        .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #a6b3c6; transition: all 0.3s; }
         .tab.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         .tab.tab-danger { background: rgba(255, 71, 87, 0.25) !important; border-color: #ff4757 !important; color: #ff4757 !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
         .tab.tab-warning { background: rgba(255, 170, 0, 0.2) !important; border-color: #ffaa00 !important; color: #ffaa00 !important; box-shadow: 0 0 12px rgba(255, 170, 0, 0.3); }
         .timer-box { text-align: center; margin: 10px 0 15px; }
         .days-left { font-size: 68px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.4); line-height: 1; transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s; }
         .days-left.large { font-size: 96px; text-shadow: 0 0 45px rgba(0, 242, 254, 0.65); }
-        .days-label { font-size: 11px; color: #6e7d93; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .days-label { font-size: 11px; color: #8b99ad; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
         .info-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
-        .info-title { font-size: 11px; color: #8f9cae; text-transform: uppercase; letter-spacing: 1px; }
+        .info-title { font-size: 11px; color: #a6b3c6; text-transform: uppercase; letter-spacing: 1px; }
         .btn-toggle { background: none; border: none; color: #00f2fe; font-size: 12px; cursor: pointer; font-weight: 600; outline: none; }
         .info-grid-wrapper { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; opacity: 1; }
         .info-grid-wrapper.collapsed { grid-template-rows: 0fr; opacity: 0; }
         .info-grid-inner { overflow: hidden; min-height: 0; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #b3bdcb; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
 
         .btn { width: 100%; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary { padding: 16px; font-size: 14px; background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); margin-top: 8px; }
         .btn-warning { padding: 12px; font-size: 13px; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); margin-top: 8px; }
-        .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #8f9cae; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
+        .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #a6b3c6; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
 
@@ -123,9 +123,10 @@
         .modal-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
         .modal-title-row h2 { margin-bottom: 0; }
 
-        .eco-note { font-size: 11px; color: #8f9cae; text-align: center; margin-top: 6px; line-height: 1.4; }
+        .eco-note { font-size: 11.5px; color: #a6b3c6; text-align: center; margin-top: 6px; line-height: 1.4; }
         .eco-note b { color: #4ade80; }
-        .app-version-tag { font-size: 10px; color: #6e7d93; text-align: center; margin-top: 12px; }
+        .eco-edit { color: #00f2fe; font-weight: 600; cursor: pointer; }
+        .app-version-tag { font-size: 11px; color: #8b99ad; text-align: center; margin-top: 12px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
@@ -155,7 +156,7 @@
         .act-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 4px; padding: 10px 4px 8px; border-radius: 14px; cursor: pointer;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: #8f9cae; transition: all 0.18s ease; -webkit-tap-highlight-color: transparent; }
+            color: #a6b3c6; transition: all 0.18s ease; -webkit-tap-highlight-color: transparent; }
         .act-btn svg { width: 19px; height: 19px; stroke-width: 1.9; fill: none; stroke: currentColor;
             stroke-linecap: round; stroke-linejoin: round; }
         .act-btn span { font-size: 9.5px; font-weight: 600; letter-spacing: 0.1px; }
@@ -176,15 +177,15 @@
             background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.2); }
         .set-txt { flex: 1; min-width: 0; }
         .set-txt b { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-        .set-txt small { display: block; font-size: 11px; color: #8f9cae; line-height: 1.35; }
-        .set-arrow { color: #6e7d93; font-size: 15px; flex: 0 0 auto; }
+        .set-txt small { display: block; font-size: 11px; color: #a6b3c6; line-height: 1.35; }
+        .set-arrow { color: #8b99ad; font-size: 15px; flex: 0 0 auto; }
 
         /* Экран настройки уведомлений */
         .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
         .setup-num { flex:0 0 22px; width:22px; height:22px; border-radius:50%; background:rgba(0,242,254,0.15); color:#00f2fe; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
         .setup-text { flex:1; font-size:12px; color:#c5cdd8; line-height:1.4; }
         .setup-text b { color:#fff; display:block; margin-bottom:2px; font-size:12.5px; }
-        .setup-note { font-size:11.5px; color:#8f9cae; line-height:1.45; background:rgba(0,0,0,0.25); border-radius:12px; padding:10px 12px; margin:4px 0 12px; }
+        .setup-note { font-size:11.5px; color:#a6b3c6; line-height:1.45; background:rgba(0,0,0,0.25); border-radius:12px; padding:10px 12px; margin:4px 0 12px; }
         .setup-ok { color:#2ed573; font-size:11px; font-weight:600; margin-top:4px; }
         .setup-bad { color:#ff4757; font-size:11px; font-weight:600; margin-top:4px; }
         .btn-setup { padding:9px 12px; font-size:11.5px; background:rgba(0,242,254,0.1); color:#00f2fe; border:1px solid rgba(0,242,254,0.3); border-radius:10px; margin-top:7px; width:100%; }
@@ -209,24 +210,24 @@
         }
 
         .form-group { margin-bottom: 12px; text-align: left; }
-        .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
+        .form-group label { font-size: 11px; color: #a6b3c6; display: block; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
         .form-group textarea { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 11px; outline: none; font-family: monospace; resize: vertical; }
         .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-        .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
+        .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #a6b3c6; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
         .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
         .chip-btn.chip-test { border-color: rgba(255, 170, 0, 0.5); color: #ffaa00; background: rgba(255, 170, 0, 0.08); }
         .chip-btn.chip-test.selected { background: rgba(255, 170, 0, 0.22); border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.3); }
-        .hint-test { font-size: 10px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
+        .hint-test { font-size: 11px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
         /* Тестовые сроки скрыты, пока не включён режим разработчика (7 нажатий на версию) */
         .chip-btn.chip-test, .hint-test { display: none; }
         body.dev-mode .chip-btn.chip-test { display: block; }
         body.dev-mode .hint-test { display: block; }
         .form-group input[type="date"] { color-scheme: dark; }
-        .about-note { font-size: 12px; color: #a0aab8; line-height: 1.5; background: rgba(0,0,0,0.28);
+        .about-note { font-size: 12px; color: #b3bdcb; line-height: 1.5; background: rgba(0,0,0,0.28);
             border-radius: 14px; padding: 12px 14px; margin: 10px 0 4px; text-align: left; }
         .about-note b { color: #fff; }
-        .about-list { font-size: 12px; color: #a0aab8; line-height: 1.55; text-align: left;
+        .about-list { font-size: 12px; color: #b3bdcb; line-height: 1.55; text-align: left;
             margin: 8px 0 4px; padding-left: 18px; }
         .about-list li { margin-bottom: 3px; }
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
@@ -237,7 +238,7 @@
         .loc-option-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .loc-option-item.active { border-color: #00f2fe; background: rgba(0,242,254,0.12); color: #00f2fe; }
         .loc-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .loc-icon-btn { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #8f9cae; }
+        .loc-icon-btn { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #a6b3c6; }
         .loc-icon-btn.edit { color: #00f2fe; border-color: rgba(0,242,254,0.25); background: rgba(0,242,254,0.08); }
         .loc-icon-btn.delete { color: #ff4757; border-color: rgba(255,71,87,0.25); background: rgba(255,71,87,0.1); }
     </style>
@@ -343,7 +344,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.33 (build 34)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.34 (build 35)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -362,7 +363,7 @@
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <h2 id="confirmTitle">Подтверждение</h2>
-            <p id="confirmMessage" style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;"></p>
+            <p id="confirmMessage" style="font-size: 13px; color: #b3bdcb; text-align: center; margin: 12px 0 18px; line-height: 1.4;"></p>
             <button class="btn btn-danger-outline" id="confirmOkBtn" style="width:100%; padding: 14px; font-size:13px; margin-top:0;">Да, удалить</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
@@ -375,7 +376,7 @@
                 <button type="button" class="help-dot" style="width:22px; border-radius:50%;"
                     onclick="showHelp('locSwipe')" aria-label="Подсказка">?</button>
             </div>
-            <p id="locSwipeTip" style="font-size:11.5px; color:#8f9cae; text-align:center; margin:2px 0 10px; display:none;">
+            <p id="locSwipeTip" style="font-size:11.5px; color:#a6b3c6; text-align:center; margin:2px 0 10px; display:none;">
                 Между домами можно листать свайпом влево и вправо
             </p>
             <div id="locationsListContainer" style="margin-top:4px;"></div>
@@ -458,7 +459,7 @@
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
             <h2>Ссылки пока нет</h2>
-            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Сохраните ссылку на нужный картридж в вашем магазине — в следующий раз сможете сразу перейти к покупке одним нажатием на корзину.</p>
+            <p style="font-size: 13px; color: #b3bdcb; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Сохраните ссылку на нужный картридж в вашем магазине — в следующий раз сможете сразу перейти к покупке одним нажатием на корзину.</p>
             <div class="form-group">
                 <label>Ссылка:</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
@@ -585,9 +586,11 @@
                 <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('ecoStats')" aria-label="Подсказка">?</button>
             </div>
             <div class="eco-badge" style="margin-top:10px;">
-                💧 ~<span id="ecoLiters">0</span> л очищено · 🌱 ~<span id="ecoBottles">0</span> бутылей по 5 л
+                💧 ~<span id="ecoLiters">0</span> л очищено · 🌱 ~<span id="ecoBottles">0</span> бутылей
+                по <span id="ecoBottleSize">5</span> л
             </div>
             <div class="eco-note" id="ecoMoneyNote">Экономия появится после первой замены</div>
+            <div class="eco-note" id="ecoAssumptions" style="margin-bottom:10px;"></div>
             <div class="history-list" id="historyList"></div>
             <div style="font-size: 13px; font-weight: 600; text-align: right; margin-bottom: 15px; color: #00f2fe;">
                 Всего: <span id="totalSpent">0</span> ₽
@@ -599,7 +602,7 @@
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <h2>Настройки</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px;">
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px;">
                 Уведомления и резервные копии
             </p>
 
@@ -648,6 +651,15 @@
                 <div class="set-arrow">›</div>
             </div>
 
+            <div class="set-row" onclick="closeModals(); openEcoModal();">
+                <div class="set-ico">🧮</div>
+                <div class="set-txt">
+                    <b>Как считать экономию</b>
+                    <small id="setRowEco">Объём и цена бутыли, литры в день</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
             <div class="set-row" onclick="closeModals(); openAboutModal();">
                 <div class="set-ico">ℹ️</div>
                 <div class="set-txt">
@@ -666,7 +678,7 @@
     <div class="modal" id="setupModal">
         <div class="modal-content">
             <h2 id="setupTitle">Чтобы напоминания приходили</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
                 Приложение напоминает о замене картриджа. Чтобы напоминание дошло, Android должен
                 разрешить три вещи — иначе система просто «усыпит» приложение и уведомление не придёт.
                 Это занимает меньше минуты, и всё делается кнопками ниже.
@@ -711,10 +723,49 @@
         </div>
     </div>
 
+    <div class="modal" id="ecoModal">
+        <div class="modal-content">
+            <h2>Как считать экономию</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Приложение сравнивает воду из фильтра с покупной. Цены и объёмы у всех разные,
+                поэтому подставьте свои — расчёт сразу станет вашим, а не средним по больнице.
+            </p>
+
+            <div class="form-group">
+                <label>Какую воду покупали бы вместо фильтра:</label>
+                <div class="chip-group" id="chipBottleLiters">
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipBottleLiters', this)">1,5 л</div>
+                    <div class="chip-btn selected" data-value="5" onclick="selectChip('chipBottleLiters', this)">5 л</div>
+                    <div class="chip-btn" data-value="19" onclick="selectChip('chipBottleLiters', this)">19 л</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Сколько стоит такая бутыль, ₽:</label>
+                <input type="number" id="ecoBottlePrice" min="1" max="10000" placeholder="60">
+            </div>
+
+            <div class="form-group">
+                <label>Сколько питьевой воды в день на человека:</label>
+                <div class="chip-group" id="chipLitersPerDay">
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipLitersPerDay', this)">1,5 л</div>
+                    <div class="chip-btn selected" data-value="2" onclick="selectChip('chipLitersPerDay', this)">2 л</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('chipLitersPerDay', this)">3 л</div>
+                </div>
+                <p class="wiz-hint">Считается только питьё и готовка, а не вся вода в доме.</p>
+            </div>
+
+            <div class="eco-note" id="ecoPreview" style="margin-bottom:12px;"></div>
+
+            <button class="btn btn-primary" onclick="saveEcoSettings()">Сохранить</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
+        </div>
+    </div>
+
     <div class="modal" id="allFiltersModal">
         <div class="modal-content">
             <h2>Все фильтры</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 12px; line-height:1.45;">
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 12px; line-height:1.45;">
                 Все объекты сразу, сверху — то, что требует внимания.
             </p>
             <div class="sum-line" id="allFiltersSummary"></div>
@@ -833,7 +884,7 @@
     <div class="modal" id="notifyModal">
         <div class="modal-content">
             <h2>Когда напоминать</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
                 Напоминание придёт в удобное время суток, а не среди ночи.
             </p>
 
@@ -844,7 +895,7 @@
                     <div class="chip-btn" data-value="14" onclick="selectChip('chipNotifyHour', this)">Днём<br>14:00–17:00</div>
                     <div class="chip-btn" data-value="19" onclick="selectChip('chipNotifyHour', this)">Вечером<br>19:00–21:00</div>
                 </div>
-                <p style="font-size:10px;color:#6e7d93;margin-top:6px;line-height:1.4;">
+                <p style="font-size:10px;color:#8b99ad;margin-top:6px;line-height:1.4;">
                     Напоминание ставится на начало выбранного промежутка. Если телефон в это время спит,
                     Android может показать его немного позже — поэтому и указан промежуток, а не точная минута.
                 </p>
@@ -883,7 +934,7 @@
 
             <button class="btn btn-edit-outline" onclick="openPrivacyPolicy()">Политика конфиденциальности</button>
 
-            <div style="font-size:11px;color:#8f9cae;text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;text-align:left;">Что нового</div>
+            <div style="font-size:11px;color:#a6b3c6;text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;text-align:left;">Что нового</div>
             <ul class="about-list" id="aboutWhatsNew"></ul>
 
             <button class="btn btn-secondary-small" style="width:100%; margin-top:12px;" onclick="closeModals()">Закрыть</button>
@@ -893,7 +944,7 @@
     <div class="modal" id="exportModal">
         <div class="modal-content">
             <h2>Экспорт данных</h2>
-            <p style="font-size: 12px; color: #a0aab8; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Сохранение файлом недоступно на этом устройстве. Текст ниже — все ваши данные: нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
+            <p style="font-size: 12px; color: #b3bdcb; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Сохранение файлом недоступно на этом устройстве. Текст ниже — все ваши данные: нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
             <div class="form-group">
                 <textarea id="exportTextArea" rows="8" readonly onclick="this.select()"></textarea>
             </div>
@@ -926,7 +977,11 @@
             },
             ecoStats: {
                 title: 'Откуда берутся литры и рубли',
-                body: 'Это оценка по вашим же данным, а не рекламная цифра. Литры считаются так: количество человек × 2 литра питьевой воды в день × сколько дней реально прослужил картридж. Бутыли — это литры, поделённые на 5. Экономия — стоимость такого же объёма воды в бутылях (берём 12 ₽ за литр, это примерно 60 ₽ за пятилитровку) минус то, что вы потратили на картриджи. Если цену картриджа не вписывать, экономия будет завышена.'
+                body: 'Это оценка по вашим же данным, а не рекламная цифра.\n\n' +
+                      'Литры = сколько человек × сколько литров в день × сколько дней реально прослужил картридж.\n\n' +
+                      'Бутыли = литры, поделённые на выбранный объём бутыли.\n\n' +
+                      'Экономия = стоимость такого же объёма покупной воды минус то, что вы потратили на картриджи.\n\n' +
+                      'Цену и объём бутыли, а также литры в день можно изменить: «Настройки» → «Как считать экономию». Если не вписывать цену картриджа, экономия окажется завышенной.'
             },
             locSwipe: {
                 title: 'Переключение между домами',
@@ -973,6 +1028,7 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
+            'Цену и объём бутыли для расчёта экономии теперь задаёте вы сами.',
             'Честный расчёт литров и экономии — по вашим данным, без рекламных цифр.',
             'Свой срок службы в днях — для картриджей с нестандартным ресурсом.',
             'Экран «Все фильтры»: весь дом и дача одним списком, сверху — что горит.',
@@ -995,6 +1051,10 @@
         }
         if (typeof appData.settings.preDays !== 'number') appData.settings.preDays = 7;
         if (typeof appData.settings.devMode !== 'boolean') appData.settings.devMode = false;
+        /* Допущения расчёта экономии — их задаёт пользователь, цены и объёмы бывают разные */
+        if (typeof appData.settings.bottleLiters !== 'number') appData.settings.bottleLiters = 5;
+        if (typeof appData.settings.bottlePrice !== 'number') appData.settings.bottlePrice = 60;
+        if (typeof appData.settings.litersPerDay !== 'number') appData.settings.litersPerDay = 2;
 
         /* Пользовательский текст перед вставкой в разметку обязательно экранируем */
         function esc(s) {
@@ -1070,7 +1130,24 @@
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
+        /*
+         * Фон — часть фирменного стиля (неон в духе заставки приставки), поэтому анимация
+         * остаётся. Но рисовать её, когда её никто не видит, незачем: при свёрнутом
+         * приложении и при открытом окне поверх карточки кадры пропускаем.
+         * Заодно это снимает самое тяжёлое сочетание — движущийся холст под размытием.
+         */
+        var wavesHidden = false;
+        function wavesVisible() {
+            if (document.hidden) return false;
+            if (step % 15 === 0) {
+                wavesHidden = !!document.querySelector('.modal[style*="flex"]');
+            }
+            return !wavesHidden;
+        }
+
         function drawWaves() {
+            step++;
+            if (!wavesVisible()) { requestAnimationFrame(drawWaves); return; }
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
             particles.forEach(function (p) {
@@ -1084,7 +1161,7 @@
                 for (var x = 0; x <= width; x += 10) ctx.lineTo(x, Math.sin(x * 0.002 + step * 0.012 + i * 2.2) * amp + height * 0.58);
                 ctx.lineTo(width, height); ctx.closePath(); ctx.fill();
             }
-            step++; requestAnimationFrame(drawWaves);
+            requestAnimationFrame(drawWaves);
         }
         drawWaves();
 
@@ -1504,6 +1581,9 @@
             if (tag && src) tag.textContent = src.textContent;
             var when = document.getElementById('setRowNotifyWhen');
             if (when) when.textContent = notifyWhenText();
+            var eco = document.getElementById('setRowEco');
+            if (eco) eco.textContent = 'Бутыль ' + bottleLiters() + ' л за ' + bottlePrice() +
+                ' ₽ · ' + litersPerDay() + ' л в день';
             document.getElementById('settingsModal').style.display = 'flex';
         }
 
@@ -1550,7 +1630,7 @@
 
             var list = document.getElementById('allFiltersList');
             if (!rows.length) {
-                list.innerHTML = '<div style="color:#6e7d93;text-align:center;padding:10px;">Фильтров пока нет</div>';
+                list.innerHTML = '<div style="color:#8b99ad;text-align:center;padding:10px;">Фильтров пока нет</div>';
             } else {
                 list.innerHTML = rows.map(function (r) {
                     var s = shortLeft(r.timing);
@@ -1561,7 +1641,7 @@
                         '<div class="af-badge ' + s.cls + '">' + s.big + '<small>' + s.small + '</small></div>' +
                         '<div class="af-txt"><div class="af-name">' + esc(r.filter.name) + '</div>' +
                         '<div class="af-sub">' + where + ' · ' + esc(r.filter.type || '') + '</div></div>' +
-                        '<div style="color:#6e7d93;font-size:15px;">›</div></div>';
+                        '<div style="color:#8b99ad;font-size:15px;">›</div></div>';
                 }).join('');
             }
             document.getElementById('allFiltersModal').style.display = 'flex';
@@ -1682,6 +1762,28 @@
             persistOnly();
             var ok = await scheduleAllFilterNotifications();
             showToast('Сохранено · ' + notifyWhenText() + (ok ? '' : ' · напоминания обновить не удалось'));
+        }
+
+        function openEcoModal() {
+            setChipValue('chipBottleLiters', bottleLiters());
+            setChipValue('chipLitersPerDay', litersPerDay());
+            document.getElementById('ecoBottlePrice').value = bottlePrice();
+            var prev = document.getElementById('ecoPreview');
+            if (prev) prev.textContent = ecoAssumptionsText();
+            document.getElementById('ecoModal').style.display = 'flex';
+        }
+
+        function saveEcoSettings() {
+            var liters = parseFloat(getSelectedChipValue('chipBottleLiters') || '5');
+            var price = Math.round(Number(document.getElementById('ecoBottlePrice').value));
+            var perDay = parseFloat(getSelectedChipValue('chipLitersPerDay') || '2');
+            if (!(price > 0)) { showToast('Укажите цену бутыли'); return; }
+            appData.settings.bottleLiters = liters > 0 ? liters : 5;
+            appData.settings.bottlePrice = Math.min(price, 10000);
+            appData.settings.litersPerDay = perDay > 0 ? perDay : 2;
+            closeModals();
+            persistOnly();
+            showToast('Сохранено · ' + ecoAssumptionsText().replace('Из расчёта: ', ''));
         }
 
         function openAboutModal() {
@@ -2074,7 +2176,7 @@
             var filter = null;
 
             if (!list.length) {
-                tabs.innerHTML = '<div style="font-size:12px;color:#6e7d93;">Нет устройств</div>';
+                tabs.innerHTML = '<div style="font-size:12px;color:#8b99ad;">Нет устройств</div>';
                 appData.currentFilterId = null;
             } else {
                 if (!list.some(function (f) { return f.id === appData.currentFilterId; })) appData.currentFilterId = list[0].id;
@@ -2324,10 +2426,22 @@
             if (!u) { showToast('Вставьте ссылку'); return; }
             f.buyUrl = u; closeModals(); persistOnly(); updateUI(); showToast('Ссылка сохранена');
         }
-        /* ===== Оценка объёма и экономии (только по данным пользователя) ===== */
-        var LITERS_PER_PERSON_DAY = 2;   // питьевая вода, консервативно
-        var BOTTLE_LITERS = 5;           // стандартная бутыль
-        var BOTTLED_PRICE_PER_LITER = 12; // ~60 ₽ за пятилитровку
+        /* ===== Оценка объёма и экономии =====
+         * Считаем только по данным пользователя. Все три допущения он задаёт сам:
+         * «Настройки» → «Как считать экономию». Значения по умолчанию:
+         * бутыль 5 л за 60 ₽ (12 ₽/л) и 2 литра питьевой воды в день на человека.
+         */
+        function bottleLiters() { var v = Number(appData.settings.bottleLiters); return v > 0 ? v : 5; }
+        function bottlePrice() { var v = Number(appData.settings.bottlePrice); return v > 0 ? v : 60; }
+        function litersPerDay() { var v = Number(appData.settings.litersPerDay); return v > 0 ? v : 2; }
+        function pricePerLiter() { return bottlePrice() / bottleLiters(); }
+
+        function ecoAssumptionsText() {
+            var perL = pricePerLiter();
+            return 'Из расчёта: бутыль ' + bottleLiters() + ' л за ' + bottlePrice() + ' ₽ (' +
+                (Math.round(perL * 10) / 10) + ' ₽ за литр) и ' + litersPerDay() +
+                ' л в день на человека';
+        }
 
         /* Сколько литров прошло через картридж за реально отработанные дни */
         function litersForUse(people, usedDays) {
@@ -2335,7 +2449,7 @@
             var d = Math.round(Number(usedDays) || 0);
             if (d < 1) d = 1;
             if (d > 730) d = 730;          // защита от опечатки в дате
-            return Math.round(p * LITERS_PER_PERSON_DAY * d);
+            return Math.round(p * litersPerDay() * d);
         }
 
         /* Для старых записей (до версии 1.0.33) литры не сохранялись — оцениваем скромно */
@@ -2351,20 +2465,22 @@
         function openHistoryModal() {
             var list = document.getElementById('historyList');
             var total = 0, n = appData.history.length;
-            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пока пусто</div>';
+            if (!n) list.innerHTML = '<div style="color:#8b99ad;text-align:center;">Пока пусто</div>';
             else list.innerHTML = appData.history.map(function (h) {
                 total += Number(h.cost || 0);
                 var loc = h.locationId ? appData.locations.find(function (l) { return l.id === h.locationId; }) : null;
                 var where = loc ? (' · ' + esc(loc.name)) : '';
                 var when = h.date ? esc(h.date) : (h.ts ? new Date(Number(h.ts)).toLocaleDateString('ru-RU') : '');
                 return '<div class="history-item"><div><b>' + esc(h.filterName) + '</b>' + where +
-                    '<br><small style="color:#6e7d93">' + when + (h.note ? ' • ' + esc(h.note) : '') +
+                    '<br><small style="color:#8b99ad">' + when + (h.note ? ' • ' + esc(h.note) : '') +
                     '</small></div><div style="color:#00f2fe;">' + (h.cost ? esc(h.cost) + ' ₽' : '0 ₽') + '</div></div>';
             }).join('');
             var liters = appData.history.reduce(function (s, h) { return s + historyLiters(h); }, 0);
-            var saved = Math.round(liters * BOTTLED_PRICE_PER_LITER - total);
+            var saved = Math.round(liters * pricePerLiter() - total);
             document.getElementById('ecoLiters').innerText = liters.toLocaleString('ru-RU');
-            document.getElementById('ecoBottles').innerText = Math.round(liters / BOTTLE_LITERS).toLocaleString('ru-RU');
+            document.getElementById('ecoBottleSize').innerText = bottleLiters();
+            document.getElementById('ecoBottles').innerText =
+                Math.round(liters / bottleLiters()).toLocaleString('ru-RU');
 
             var note = document.getElementById('ecoMoneyNote');
             if (!n) {
@@ -2376,6 +2492,9 @@
             } else {
                 note.innerHTML = 'Пока картриджи обошлись дороже покупной воды — это нормально в начале';
             }
+            var assum = document.getElementById('ecoAssumptions');
+            if (assum) assum.innerHTML = esc(ecoAssumptionsText()) +
+                ' · <span class="eco-edit" onclick="closeModals(); openEcoModal();">изменить</span>';
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
             document.getElementById('historyModal').style.display = 'flex';
         }
