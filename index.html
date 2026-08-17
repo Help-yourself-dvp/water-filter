@@ -28,6 +28,9 @@
         .btn-header-icon.cart-empty { opacity: 0.7; }
         .btn-header-icon .cart-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; background: #ff9900; border-radius: 50%; box-shadow: 0 0 6px rgba(255,153,0,0.8); }
         /* Ссылка «Все фильтры» и сводный список */
+        .custom-days { display: none; margin-top: 8px; }
+        .custom-days.on { display: block; }
+        .custom-days input { width: 100%; }
         .all-link { text-align: right; font-size: 11.5px; color: #00f2fe; font-weight: 600;
             cursor: pointer; margin: -4px 2px 10px; }
         .all-link:active { opacity: 0.7; }
@@ -338,7 +341,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.31 (build 32)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.32 (build 33)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -418,6 +421,10 @@
                     <div class="chip-btn selected" data-value="d90" onclick="selectChip('editChipResource', this)">90 дн</div>
                     <div class="chip-btn" data-value="d180" onclick="selectChip('editChipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('editChipResource', this)">1 год</div>
+                    <div class="chip-btn" data-value="custom" onclick="selectResourceChip('editChipResource', this, 'editCustomDaysBox')">Свой</div>
+                </div>
+                <div class="custom-days" id="editCustomDaysBox">
+                    <input type="number" id="editCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
                 </div>
                 <p class="hint-test">Оранжевые пункты — только для проверки напоминаний.</p>
             </div>
@@ -525,6 +532,10 @@
                     <div class="chip-btn selected" data-value="d90" onclick="selectChip('chipResource', this)">90 дн</div>
                     <div class="chip-btn" data-value="d180" onclick="selectChip('chipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('chipResource', this)">1 год</div>
+                    <div class="chip-btn" data-value="custom" onclick="selectResourceChip('chipResource', this, 'newCustomDaysBox')">Свой</div>
+                </div>
+                <div class="custom-days" id="newCustomDaysBox">
+                    <input type="number" id="newCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
                 </div>
                 <p class="hint-test">Оранжевые — проверка напоминаний, потом верните обычный срок.</p>
             </div>
@@ -763,6 +774,10 @@
                         <div class="chip-btn selected" data-value="d90" onclick="selectChip('wizChipResource', this)">90 дн</div>
                         <div class="chip-btn" data-value="d180" onclick="selectChip('wizChipResource', this)">180 дн</div>
                         <div class="chip-btn" data-value="d365" onclick="selectChip('wizChipResource', this)">1 год</div>
+                        <div class="chip-btn" data-value="custom" onclick="selectResourceChip('wizChipResource', this, 'wizCustomDaysBox')">Свой</div>
+                    </div>
+                    <div class="custom-days" id="wizCustomDaysBox">
+                        <input type="number" id="wizCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
                     </div>
                     <p class="wiz-hint">Срок указан на упаковке картриджа. Если не знаете — оставьте 90 дней,
                        потом поправите.</p>
@@ -955,6 +970,7 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
+            'Свой срок службы в днях — для картриджей с нестандартным ресурсом.',
             'Экран «Все фильтры»: весь дом и дача одним списком, сверху — что горит.',
             'Первый запуск: мастер настройки вместо чужих демонстрационных данных.',
             'Своя иконка приложения вместо стоковой.',
@@ -1090,7 +1106,20 @@
             }
         }
 
-        function parseResourceChip(value) {
+        var STANDARD_DAYS = [1, 30, 60, 90, 180, 365];
+
+        /* Свой срок: от 1 дня до 10 лет, всё остальное — ошибка ввода */
+        function clampDays(n) {
+            n = Math.round(Number(n));
+            if (!n || isNaN(n) || n < 1) return 0;
+            return Math.min(n, 3650);
+        }
+
+        function parseResourceChip(value, customDays) {
+            if (value === 'custom') {
+                var d = clampDays(customDays);
+                return { cycleMs: null, baseDays: d || 90 };
+            }
             if (value === 't60') return { cycleMs: 60000, baseDays: 0 };
             if (value === 't300') return { cycleMs: 300000, baseDays: 0 };
             if (value === 't3600') return { cycleMs: 3600000, baseDays: 0 };
@@ -1111,14 +1140,35 @@
             if (d === 1) return 'd1';
             if (d === 30) return 'd30';
             if (d === 60) return 'd60';
+            if (d === 90) return 'd90';
             if (d === 180) return 'd180';
             if (d === 365) return 'd365';
-            return 'd90';
+            return 'custom';
         }
-        function applyResourceChip(filter, chipValue) {
-            var r = parseResourceChip(chipValue);
+        function applyResourceChip(filter, chipValue, customDays) {
+            var r = parseResourceChip(chipValue, customDays);
             filter.cycleMs = r.cycleMs;
             filter.baseDays = r.baseDays;
+        }
+
+        /* Показываем поле «сколько дней» только когда выбран вариант «Свой» */
+        function selectResourceChip(groupId, el, boxId) {
+            selectChip(groupId, el);
+            syncCustomDaysBox(groupId, boxId);
+        }
+        function syncCustomDaysBox(groupId, boxId) {
+            var box = document.getElementById(boxId);
+            if (!box) return;
+            box.classList.toggle('on', getSelectedChipValue(groupId) === 'custom');
+        }
+        /* Подставляет в поле срок фильтра, если он нестандартный */
+        function prepareResourceChips(groupId, boxId, inputId, filter) {
+            var chip = filter ? resourceChipFromFilter(filter) : 'd90';
+            setChipValue(groupId, chip);
+            var input = document.getElementById(inputId);
+            if (input) input.value = (chip === 'custom' && filter) ? Number(filter.baseDays) : '';
+            syncCustomDaysBox(groupId, boxId);
+            return chip;
         }
 
         function getCurrentFilter() {
@@ -1528,6 +1578,7 @@
             wizardStep(1);
             document.getElementById('wizPlaceName').value = getSelectedChipValue('wizChipPlace') || 'Моя квартира';
             document.getElementById('wizFilterName').value = filterNameForType(getSelectedChipValue('wizChipType') || 'Кувшин');
+            prepareResourceChips('wizChipResource', 'wizCustomDaysBox', 'wizCustomDays', null);
             setDateField('wizDate', Date.now());
             document.getElementById('wizardModal').style.display = 'flex';
         }
@@ -1581,7 +1632,8 @@
                 lastDate: inputToTs(document.getElementById('wizDate').value, Date.now()),
                 brand: '', buyUrl: ''
             };
-            applyResourceChip(f, getSelectedChipValue('wizChipResource') || 'd90');
+            applyResourceChip(f, getSelectedChipValue('wizChipResource') || 'd90',
+                document.getElementById('wizCustomDays').value);
             appData.filters.push(f);
             appData.currentLocationId = locId;
             appData.currentFilterId = filterId;
@@ -2043,7 +2095,8 @@
             if (filter) {
                 var t = getFilterTiming(filter);
                 updatePostponeLabels(filter);
-                document.getElementById('infoType').innerText = filter.type;
+                document.getElementById('infoType').innerText = filter.type +
+                    (t.isTest ? ' · тест' : ' · ' + (Number(filter.baseDays) || 90) + ' дн');
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жёсткая' : (filter.hardness == 1.25 ? 'Жёсткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
@@ -2212,7 +2265,7 @@
             document.getElementById('replaceModal').style.display = 'flex';
         }
         function openAddFilterModal() {
-            setChipValue('chipResource', 'd90');
+            prepareResourceChips('chipResource', 'newCustomDaysBox', 'newCustomDays', null);
             document.getElementById('newFilterName').value = '';
             document.getElementById('newFilterUrl').value = '';
             setDateField('newFilterDate', Date.now());
@@ -2227,7 +2280,7 @@
             document.getElementById('editFilterName').value = f.name || '';
             document.getElementById('editFilterUrl').value = f.buyUrl || '';
             setDateField('editFilterDate', f.lastDate);
-            setChipValue('editChipResource', resourceChipFromFilter(f));
+            prepareResourceChips('editChipResource', 'editCustomDaysBox', 'editCustomDays', f);
             setChipValue('editChipHardness', f.hardness);
             setChipValue('editChipPeople', f.people);
             document.getElementById('editFilterModal').style.display = 'flex';
@@ -2242,7 +2295,8 @@
             f.buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
             f.hardness = parseFloat(getSelectedChipValue('editChipHardness') || f.hardness);
             f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
-            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
+            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90',
+                document.getElementById('editCustomDays').value);
             if (isTestFilter(f)) f.lastDate = Date.now();
             else f.lastDate = inputToTs(document.getElementById('editFilterDate').value, f.lastDate);
             closeModals();
@@ -2325,7 +2379,8 @@
                 lastDate: inputToTs(document.getElementById('newFilterDate').value, Date.now()),
                 brand: '', buyUrl: buyUrl
             };
-            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90');
+            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90',
+                document.getElementById('newCustomDays').value);
             appData.filters.push(f);
             appData.currentFilterId = id;
             closeModals();

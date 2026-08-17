@@ -120,7 +120,7 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -194,7 +194,19 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     eq('метка нормы', api.shortLeft(rows[2].timing).cls, 'ok');
     eq('остаток у нормального фильтра, дней', api.shortLeft(rows[2].timing).big, '90');
 
-    console.log('\n[8] Планирование уведомлений');
+    console.log('\n[8] Свой срок службы');
+    eq('120 дней принимаются', api.parseResourceChip('custom', '120').baseDays, 120);
+    eq('пустое поле → 90 дней по умолчанию', api.parseResourceChip('custom', '').baseDays, 90);
+    eq('ноль и минус отбрасываются', api.parseResourceChip('custom', '-5').baseDays, 90);
+    eq('срок больше 10 лет обрезается', api.clampDays('99999'), 3650);
+    eq('нестандартный срок узнаётся как «Свой»',
+       api.resourceChipFromFilter({ baseDays: 120, cycleMs: null }), 'custom');
+    eq('стандартный срок узнаётся как готовый вариант',
+       api.resourceChipFromFilter({ baseDays: 90, cycleMs: null }), 'd90');
+    eq('тестовый режим узнаётся',
+       api.resourceChipFromFilter({ baseDays: 0, cycleMs: 300000 }), 't300');
+
+    console.log('\n[9] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,
