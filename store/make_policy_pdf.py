@@ -22,7 +22,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'store' / 'policy_for_web.txt'
-OUT = ROOT / 'store' / 'Политика_конфиденциальности_AquaControl.pdf'
+OUT = ROOT / 'store' / 'AquaControl-privacy-policy.pdf'   # только латиница в имени файла
 
 pdfmetrics.registerFont(TTFont('DejaVu', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
 pdfmetrics.registerFont(TTFont('DejaVu-Bold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))

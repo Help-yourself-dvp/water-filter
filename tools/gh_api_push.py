@@ -9,6 +9,7 @@
     python3 tools/gh_api_push.py "текст коммита"
 """
 import base64, json, subprocess, sys, urllib.request
+from pathlib import Path
 
 OWNER, REPO = 'Help-yourself-dvp', 'water-filter'
 BRANCH = 'arena/01a00e70-water-filter'
@@ -36,22 +37,19 @@ def main():
     message = sys.argv[1] if len(sys.argv) > 1 else git('log', '-1', '--pretty=%B').strip()
     parent = api('GET', f'/repos/{OWNER}/{REPO}/git/ref/heads/{BRANCH}')['object']['sha']
 
-    try:
-        changed = {l for l in git('diff', '--name-only', parent + '..HEAD').splitlines() if l}
-    except Exception:
-        changed = None
-
+    # Дерево собирается из файлов на диске, а не из «git ls-tree»:
+    # git экранирует не-ASCII имена (кириллицу), и такие пути уезжали на GitHub
+    # мусором вроде "store/\\320\\237...". Здесь имена берутся как есть.
+    skip = {'.git', 'node_modules', '__pycache__'}
     entries = []
-    for line in git('ls-tree', '-r', 'HEAD').splitlines():
-        meta, path = line.split('\t', 1)
-        mode, otype, sha = meta.split()
-        if changed is None or path in changed:
-            raw = subprocess.run(['git', 'cat-file', 'blob', sha], cwd=REPO_DIR,
-                                 capture_output=True, check=True).stdout
-            sha = api('POST', f'/repos/{OWNER}/{REPO}/git/blobs',
-                      {'content': base64.b64encode(raw).decode(), 'encoding': 'base64'})['sha']
-            print('загружен файл:', path)
-        entries.append({'path': path, 'mode': mode, 'type': otype, 'sha': sha})
+    for f in sorted(Path(REPO_DIR).rglob('*')):
+        if f.is_dir() or any(part in skip for part in f.relative_to(REPO_DIR).parts):
+            continue
+        rel = f.relative_to(REPO_DIR).as_posix()
+        blob = api('POST', f'/repos/{OWNER}/{REPO}/git/blobs', {
+            'content': base64.b64encode(f.read_bytes()).decode(), 'encoding': 'base64'})
+        entries.append({'path': rel, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']})
+    print('файлов в дереве:', len(entries))
 
     tree = api('POST', f'/repos/{OWNER}/{REPO}/git/trees', {'tree': entries})
     commit = api('POST', f'/repos/{OWNER}/{REPO}/git/commits',
