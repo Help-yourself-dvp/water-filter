@@ -180,6 +180,21 @@
         .set-txt b { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
         .set-txt small { display: block; font-size: 11px; color: #a6b3c6; line-height: 1.35; }
         .set-arrow { color: #8b99ad; font-size: 15px; flex: 0 0 auto; }
+        .set-group { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+            color: #8b99ad; margin: 16px 4px 7px; text-align: left; }
+        .set-group:first-of-type { margin-top: 6px; }
+        body.light .set-group { color: #55687e; }
+        .acc-head { display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            color: #a6b3c6; margin: 16px 0 4px; }
+        .acc-head .acc-arrow { font-size: 10px; transition: transform 0.2s; }
+        .priv-sec { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #00f2fe;
+            margin: 14px 0 4px; text-align: left; }
+        body.light .priv-sec { color: #0284c7; }
+        .priv-txt { font-size: 12.5px; color: #b3bdcb; line-height: 1.55; text-align: left; }
+        body.light .priv-txt { color: #3c4f66; }
+        .acc-head.open .acc-arrow { transform: rotate(180deg); }
+        body.light .acc-head { color: #445770; }
 
         /* Экран настройки уведомлений */
         .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
@@ -249,9 +264,10 @@
            только палитра дневная. Включается вручную в «Настройки» → «Оформление».
            Все правила ниже — только переопределения, тёмный вид не тронут.
            ========================================================================== */
-        body.light { background: #e9f2fb; color: #0f2338; }
-        body.light .card { background: rgba(255,255,255,0.8); border-color: rgba(2,132,199,0.2);
-            box-shadow: 0 22px 50px rgba(12,40,80,0.16); }
+        body.light { background: linear-gradient(180deg, #d7e3ef 0%, #c3d4e6 100%);
+            background-attachment: fixed; color: #0c1d31; }
+        body.light .card { background: rgba(232,240,248,0.88); border-color: rgba(15,60,105,0.16);
+            box-shadow: 0 20px 44px rgba(12,40,80,0.14); }
 
         body.light .location-btn-picker { background: rgba(2,132,199,0.09);
             border-color: rgba(2,132,199,0.22); color: #0284c7; }
@@ -265,18 +281,18 @@
         body.light .all-link { color: #0284c7; }
 
         body.light .days-label, body.light .app-version-tag, body.light .wiz-progress,
-        body.light .wiz-hint, body.light .set-arrow { color: #6b7a8f; }
+        body.light .wiz-hint, body.light .set-arrow { color: #55687e; }
         body.light .info-title, body.light .af-sub, body.light .set-txt small,
         body.light .eco-note, body.light .empty-state p, body.light .wiz-lead,
-        body.light .form-group label { color: #5b6b80; }
-        body.light .info-grid { background: rgba(2,132,199,0.07); color: #4b5c70; }
+        body.light .form-group label { color: #445770; }
+        body.light .info-grid { background: rgba(15,60,105,0.07); color: #3c4f66; }
         body.light .info-item span, body.light .af-name, body.light .empty-state h3,
-        body.light .modal h2, body.light .set-row { color: #0f2338; }
+        body.light .modal h2, body.light .set-row { color: #0b1a2c; }
         body.light .btn-toggle, body.light .eco-edit, body.light .modal-subtitle { color: #0284c7; }
         body.light .eco-note b { color: #15803d; }
 
-        body.light .btn-secondary-small { background: rgba(2,132,199,0.07); color: #4b5c70;
-            border-color: rgba(2,132,199,0.18); }
+        body.light .btn-secondary-small { background: rgba(255,255,255,0.6); color: #3c4f66;
+            border-color: rgba(15,60,105,0.16); }
         body.light .btn-edit-outline { background: rgba(2,132,199,0.08); color: #0284c7;
             border-color: rgba(2,132,199,0.35); }
         body.light .help-dot { background: rgba(2,132,199,0.1); color: #0284c7;
@@ -286,14 +302,14 @@
         body.light .btn-danger-outline { background: rgba(220,38,38,0.08); color: #dc2626;
             border-color: rgba(220,38,38,0.25); }
 
-        body.light .modal { background: rgba(210,228,245,0.8); }
-        body.light .modal-content { background: #ffffff; border-color: rgba(2,132,199,0.18);
-            box-shadow: 0 24px 60px rgba(12,40,80,0.22); }
+        body.light .modal { background: rgba(120,146,175,0.55); }
+        body.light .modal-content { background: #e7eef6; border-color: rgba(15,60,105,0.16);
+            box-shadow: 0 24px 60px rgba(12,40,80,0.2); }
         body.light .form-group input, body.light .form-group textarea {
-            background: rgba(2,132,199,0.06); border-color: rgba(2,132,199,0.25); color: #0f2338; }
+            background: rgba(255,255,255,0.72); border-color: rgba(15,60,105,0.22); color: #0b1a2c; }
         body.light .form-group input[type="date"] { color-scheme: light; }
-        body.light .chip-btn { background: rgba(2,132,199,0.07); border-color: rgba(2,132,199,0.18);
-            color: #5b6b80; }
+        body.light .chip-btn { background: rgba(255,255,255,0.62); border-color: rgba(15,60,105,0.16);
+            color: #445770; }
         body.light .chip-btn.selected { background: rgba(2,132,199,0.15); border-color: #0284c7;
             color: #0284c7; box-shadow: 0 0 8px rgba(2,132,199,0.18); }
         body.light .chip-btn.chip-test { border-color: rgba(180,83,9,0.4); color: #b45309;
@@ -304,15 +320,15 @@
 
         body.light .set-row, body.light .setup-step, body.light .af-item,
         body.light .loc-option-item, body.light .history-item {
-            background: rgba(2,132,199,0.05); border-color: rgba(2,132,199,0.14); }
+            background: rgba(255,255,255,0.6); border-color: rgba(15,60,105,0.13); }
         body.light .af-item.current { background: rgba(2,132,199,0.12); border-color: rgba(2,132,199,0.5); }
         body.light .loc-option-item.active { background: rgba(2,132,199,0.12); border-color: #0284c7; color: #0284c7; }
         body.light .set-ico { background: rgba(2,132,199,0.1); border-color: rgba(2,132,199,0.2); }
         body.light .setup-num { background: rgba(2,132,199,0.15); color: #0284c7; }
-        body.light .loc-icon-btn { background: rgba(2,132,199,0.07); border-color: rgba(2,132,199,0.16);
-            color: #5b6b80; }
-        body.light .act-btn { background: rgba(2,132,199,0.05); border-color: rgba(2,132,199,0.14);
-            color: #5b6b80; }
+        body.light .loc-icon-btn { background: rgba(255,255,255,0.62); border-color: rgba(15,60,105,0.15);
+            color: #445770; }
+        body.light .act-btn { background: rgba(255,255,255,0.6); border-color: rgba(15,60,105,0.13);
+            color: #445770; }
         body.light .act-edit { color: #0284c7; border-color: rgba(2,132,199,0.3); background: rgba(2,132,199,0.08); }
         body.light .act-add { color: #0369a1; border-color: rgba(3,105,161,0.28); background: rgba(3,105,161,0.07); }
         body.light .act-del { color: #dc2626; border-color: rgba(220,38,38,0.25); background: rgba(220,38,38,0.06); }
@@ -327,16 +343,16 @@
         body.light .loc-dots .loc-dot { background: rgba(2,132,199,0.25); }
         body.light .loc-dot.active { background: #0284c7; }
         body.light .toast { background: rgba(15,35,56,0.94); color: #fff; border-color: rgba(2,132,199,0.4); }
-        body.light #helpOverlay { background: rgba(210,228,245,0.85); }
-        body.light .help-card { background: #ffffff; border-color: rgba(2,132,199,0.2); }
-        body.light .help-card h3 { color: #0f2338; }
-        body.light .help-card p { color: #4b5c70; }
-        body.light .eco-badge { background: rgba(2,132,199,0.08); border-color: rgba(2,132,199,0.2);
-            color: #0f2338; }
-        body.light .about-note { background: rgba(2,132,199,0.06); color: #4b5c70; }
-        body.light .about-note b, body.light .about-list { color: #0f2338; }
-        body.light .about-list { color: #4b5c70; }
-        body.light .setup-note { color: #5b6b80; }
+        body.light #helpOverlay { background: rgba(120,146,175,0.6); }
+        body.light .help-card { background: #e7eef6; border-color: rgba(15,60,105,0.18); }
+        body.light .help-card h3 { color: #0b1a2c; }
+        body.light .help-card p { color: #3c4f66; }
+        body.light .eco-badge { background: rgba(255,255,255,0.62); border-color: rgba(15,60,105,0.16);
+            color: #0b1a2c; }
+        body.light .about-note { background: rgba(255,255,255,0.6); color: #3c4f66; }
+        body.light .about-note b, body.light .about-list { color: #0b1a2c; }
+        body.light .about-list { color: #3c4f66; }
+        body.light .setup-note { color: #445770; }
         body.light .days-left { text-shadow: 0 0 22px rgba(2,132,199,0.22); }
         body.light .tab.tab-warning { background: rgba(180,83,9,0.14) !important;
             border-color: #b45309 !important; color: #b45309 !important; box-shadow: none !important; }
@@ -447,7 +463,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.35 (build 36)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.36 (build 37)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -705,9 +721,27 @@
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <h2>Настройки</h2>
-            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px;">
-                Уведомления и резервные копии
-            </p>
+            <div class="set-group">Напоминания и оформление</div>
+
+            <div class="set-row" onclick="closeModals(); openNotifyModal();">
+                <div class="set-ico">⏰</div>
+                <div class="set-txt">
+                    <b>Когда напоминать</b>
+                    <small id="setRowNotifyWhen">Время напоминания и предупреждение заранее</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="closeModals(); openThemeModal();">
+                <div class="set-ico">🎨</div>
+                <div class="set-txt">
+                    <b>Оформление</b>
+                    <small id="setRowTheme">Неон или светлое</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-group">Разрешения Android</div>
 
             <div class="set-row" onclick="closeModals(); showSetupModal();">
                 <div class="set-ico">🔔</div>
@@ -718,14 +752,7 @@
                 <div class="set-arrow">›</div>
             </div>
 
-            <div class="set-row" onclick="closeModals(); openNotifyModal();">
-                <div class="set-ico">⏰</div>
-                <div class="set-txt">
-                    <b>Когда напоминать</b>
-                    <small id="setRowNotifyWhen">Время напоминания и предупреждение заранее</small>
-                </div>
-                <div class="set-arrow">›</div>
-            </div>
+            <div class="set-group">Резервная копия</div>
 
             <div class="set-row" onclick="closeModals(); exportData();">
                 <div class="set-ico">📤</div>
@@ -754,14 +781,7 @@
                 <div class="set-arrow">›</div>
             </div>
 
-            <div class="set-row" onclick="closeModals(); openThemeModal();">
-                <div class="set-ico">🎨</div>
-                <div class="set-txt">
-                    <b>Оформление</b>
-                    <small id="setRowTheme">Неон или светлое</small>
-                </div>
-                <div class="set-arrow">›</div>
-            </div>
+            <div class="set-group">Приложение</div>
 
             <div class="set-row" onclick="closeModals(); openAboutModal();">
                 <div class="set-ico">ℹ️</div>
@@ -823,6 +843,52 @@
 
             <button class="btn btn-primary" onclick="closeSetupModal()">Готово</button>
             <button class="btn btn-secondary-small" style="width:100%;" onclick="closeSetupModal(true)">Больше не показывать</button>
+        </div>
+    </div>
+
+    <div class="modal" id="privacyModal">
+        <div class="modal-content">
+            <h2>Политика конфиденциальности</h2>
+            <div class="app-version-tag" style="margin:4px 0 12px;">AquaControl Pro · действует с 17.08.2026</div>
+
+            <div class="about-note">
+                <b>Главное.</b> Приложение не собирает, не передаёт и нигде не хранит ваши данные.
+                Всё, что вы вводите, остаётся в памяти этого телефона.
+            </div>
+
+            <div class="priv-sec">Какие данные вы вводите</div>
+            <p class="priv-txt">Названия объектов и фильтров, срок службы картриджа, жёсткость воды,
+                количество человек, даты замен, модель и цену картриджа, ссылку на магазин.
+                Всё это хранится только на устройстве и никуда не отправляется.</p>
+
+            <div class="priv-sec">Чего приложение не делает</div>
+            <p class="priv-txt">Не запрашивает имя, телефон, почту и адрес. Не определяет
+                местоположение. Не обращается к контактам, звонкам, сообщениям, камере,
+                микрофону и фотографиям. Не содержит рекламы и счётчиков посещаемости.
+                Не требует регистрации.</p>
+
+            <div class="priv-sec">Разрешения Android</div>
+            <p class="priv-txt">Показ уведомлений — чтобы напомнить о замене картриджа.
+                Точные будильники — чтобы напоминание пришло в нужный день.
+                Запуск после перезагрузки — чтобы напоминания не пропали после выключения телефона.
+                Отключение экономии батареи — по желанию, чтобы система не задерживала напоминание.
+                Других разрешений нет, и ни одно из них не связано с передачей данных.</p>
+
+            <div class="priv-sec">Интернет</div>
+            <p class="priv-txt">Приложение работает офлайн. Единственный выход в сеть — если вы сами
+                сохранили ссылку на магазин и нажали кнопку перехода: ссылка откроется в вашем браузере,
+                и дальше действуют правила того сайта.</p>
+
+            <div class="priv-sec">Резервные копии</div>
+            <p class="priv-txt">По вашей команде данные сохраняются в файл. Куда его положить —
+                решаете вы; приложение никуда его не отправляет.</p>
+
+            <div class="priv-sec">Удаление данных</div>
+            <p class="priv-txt">«Настройки Android» → «Приложения» → AquaControl Pro → «Хранилище»
+                → «Очистить данные». Или просто удалите приложение — данные удалятся вместе с ним.
+                Восстановить их можно только из вашей резервной копии.</p>
+
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:14px;" onclick="closeModals()">Закрыть</button>
         </div>
     </div>
 
@@ -1055,10 +1121,12 @@
                 «Настройки» → «Сохранить копию в файл».
             </div>
 
-            <button class="btn btn-edit-outline" onclick="openPrivacyPolicy()">Политика конфиденциальности</button>
+            <button class="btn btn-edit-outline" onclick="openPrivacyModal()">Политика конфиденциальности</button>
 
-            <div style="font-size:11px;color:#a6b3c6;text-transform:uppercase;letter-spacing:1px;margin:16px 0 4px;text-align:left;">Что нового</div>
-            <ul class="about-list" id="aboutWhatsNew"></ul>
+            <div class="acc-head" id="whatsNewHead" onclick="toggleWhatsNew()">
+                <span>Что нового</span><span class="acc-arrow">▼</span>
+            </div>
+            <ul class="about-list" id="aboutWhatsNew" style="display:none;"></ul>
 
             <button class="btn btn-secondary-small" style="width:100%; margin-top:12px;" onclick="closeModals()">Закрыть</button>
         </div>
@@ -1149,9 +1217,10 @@
         });
 
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
-        var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
-            'Светлое оформление на выбор — те же волны, дневная палитра.',
+            'Жест «назад» закрывает окно, а не приложение.',
+            'Светлое оформление стало мягче для глаз.',
+            'Политика конфиденциальности открывается внутри приложения.',
             'Цифры экономии — справочные, по средним ценам; менять ничего не нужно.',
             'Честный расчёт литров и экономии — по вашим данным, без рекламных цифр.',
             'Свой срок службы в днях — для картриджей с нестандартным ресурсом.',
@@ -1223,9 +1292,13 @@
             document.getElementById('helpTitle').innerText = item.title;
             document.getElementById('helpBody').innerText = item.body;
             document.getElementById('helpOverlay').classList.add('open');
+            pushModalState();
         }
-        function hideHelp() {
-            document.getElementById('helpOverlay').classList.remove('open');
+        function hideHelp(fromBack) {
+            var el = document.getElementById('helpOverlay');
+            if (!el || !el.classList.contains('open')) return;
+            el.classList.remove('open');
+            if (!fromBack) releaseModalState();
         }
         function onHelpOverlayClick(e) {
             if (e.target && e.target.id === 'helpOverlay') hideHelp();
@@ -1239,7 +1312,7 @@
             document.getElementById('confirmTitle').innerText = title;
             document.getElementById('confirmMessage').innerText = message;
             pendingConfirmAction = onConfirm;
-            document.getElementById('confirmModal').style.display = 'flex';
+            openModal('confirmModal');
         }
         document.getElementById('confirmOkBtn').onclick = function () {
             if (pendingConfirmAction) pendingConfirmAction();
@@ -1268,7 +1341,7 @@
 
         function openThemeModal() {
             setChipValue('chipTheme', themeName());
-            document.getElementById('themeModal').style.display = 'flex';
+            openModal('themeModal');
         }
 
         function pickTheme(el) {
@@ -1741,7 +1814,7 @@
             if (when) when.textContent = notifyWhenText();
             var th = document.getElementById('setRowTheme');
             if (th) th.textContent = themeName() === 'light' ? 'Светлое' : 'Неон (по умолчанию)';
-            document.getElementById('settingsModal').style.display = 'flex';
+            openModal('settingsModal');
         }
 
         function notifyWhenText() {
@@ -1801,7 +1874,7 @@
                         '<div style="color:#8b99ad;font-size:15px;">›</div></div>';
                 }).join('');
             }
-            document.getElementById('allFiltersModal').style.display = 'flex';
+            openModal('allFiltersModal');
         }
 
         function jumpToFilter(locationId, filterId) {
@@ -1821,7 +1894,7 @@
             document.getElementById('wizFilterName').value = filterNameForType(getSelectedChipValue('wizChipType') || 'Кувшин');
             prepareResourceChips('wizChipResource', 'wizCustomDaysBox', 'wizCustomDays', null);
             setDateField('wizDate', Date.now());
-            document.getElementById('wizardModal').style.display = 'flex';
+            openModal('wizardModal');
         }
 
         function wizardStep(n) {
@@ -1909,7 +1982,7 @@
         function openNotifyModal() {
             setChipValue('chipNotifyHour', notifyHour());
             setChipValue('chipPreDays', Number(appData.settings.preDays) || 0);
-            document.getElementById('notifyModal').style.display = 'flex';
+            openModal('notifyModal');
         }
 
         async function saveNotifySettings() {
@@ -1927,7 +2000,7 @@
             document.getElementById('ecoBottlePrice').value = bottlePrice();
             var prev = document.getElementById('ecoPreview');
             if (prev) prev.textContent = ecoAssumptionsText();
-            document.getElementById('ecoModal').style.display = 'flex';
+            openModal('ecoModal');
         }
 
         function resetEcoSettings() {
@@ -1957,12 +2030,25 @@
             var tag = document.getElementById('aboutVersionTag');
             if (tag && src) tag.textContent = src.textContent;
             var list = document.getElementById('aboutWhatsNew');
-            if (list) list.innerHTML = WHATS_NEW.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
-            document.getElementById('aboutModal').style.display = 'flex';
+            if (list) {
+                list.innerHTML = WHATS_NEW.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+                list.style.display = 'none';   /* по умолчанию свёрнуто */
+            }
+            var head = document.getElementById('whatsNewHead');
+            if (head) head.classList.remove('open');
+            openModal('aboutModal');
         }
 
-        function openPrivacyPolicy() {
-            openExternalUrl(PRIVACY_URL);
+        function openPrivacyModal() {
+            openModal('privacyModal');
+        }
+
+        function toggleWhatsNew() {
+            var head = document.getElementById('whatsNewHead');
+            var list = document.getElementById('aboutWhatsNew');
+            var open = list.style.display !== 'none';
+            list.style.display = open ? 'none' : 'block';
+            head.classList.toggle('open', !open);
         }
 
         /* Скрытый режим разработчика: 7 нажатий на строку с версией */
@@ -1991,7 +2077,7 @@
             document.getElementById('setupAutostartTitle').innerText = hint.title;
             document.getElementById('setupVendorNote').innerText = hint.note;
             refreshSetupState();
-            document.getElementById('setupModal').style.display = 'flex';
+            openModal('setupModal');
         }
 
         function closeSetupModal(never) {
@@ -2087,7 +2173,7 @@
             try {
                 var ta = document.getElementById('exportTextArea');
                 ta.value = json;
-                document.getElementById('exportModal').style.display = 'flex';
+                openModal('exportModal');
                 setTimeout(function () { ta.focus(); ta.select(); }, 150);
             } catch (e) {
                 console.warn(e);
@@ -2506,7 +2592,7 @@
             }).join('');
             var tip = document.getElementById('locSwipeTip');
             if (tip) tip.style.display = appData.locations.length > 1 ? 'block' : 'none';
-            document.getElementById('locSelectModal').style.display = 'flex';
+            openModal('locSelectModal');
         }
         function selectLocationDirect(id) { appData.currentLocationId = id; closeModals(); persistOnly(); updateUI(); }
         function openRenameLocationModal(id) {
@@ -2515,7 +2601,7 @@
             pendingRenameLocationId = id;
             document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
             document.getElementById('renameLocInput').value = loc.name;
-            document.getElementById('renameLocationModal').style.display = 'flex';
+            openModal('renameLocationModal');
         }
         function confirmRenameLocation() {
             var name = (document.getElementById('renameLocInput').value || '').trim();
@@ -2534,16 +2620,16 @@
             document.getElementById('repCost').value = '';
             setDateField('repDate', Date.now());
             updatePostponeLabels(f);
-            document.getElementById('replaceModal').style.display = 'flex';
+            openModal('replaceModal');
         }
         function openAddFilterModal() {
             prepareResourceChips('chipResource', 'newCustomDaysBox', 'newCustomDays', null);
             document.getElementById('newFilterName').value = '';
             document.getElementById('newFilterUrl').value = '';
             setDateField('newFilterDate', Date.now());
-            document.getElementById('addFilterModal').style.display = 'flex';
+            openModal('addFilterModal');
         }
-        function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
+        function openAddLocationModal() { openModal('addLocationModal'); }
 
         function openEditFilterModal() {
             var f = getCurrentFilter();
@@ -2555,7 +2641,7 @@
             prepareResourceChips('editChipResource', 'editCustomDaysBox', 'editCustomDays', f);
             setChipValue('editChipHardness', f.hardness);
             setChipValue('editChipPeople', f.people);
-            document.getElementById('editFilterModal').style.display = 'flex';
+            openModal('editFilterModal');
         }
 
         async function confirmEditFilter() {
@@ -2583,7 +2669,7 @@
             if (!f) return;
             if (f.buyUrl && String(f.buyUrl).trim()) { showToast('Открываем магазин…'); openExternalUrl(f.buyUrl); return; }
             document.getElementById('noLinkUrlInput').value = '';
-            document.getElementById('noLinkModal').style.display = 'flex';
+            openModal('noLinkModal');
         }
         function saveBuyUrlFromNoLinkModal() {
             var f = getCurrentFilter();
@@ -2665,12 +2751,68 @@
             if (assum) assum.innerHTML = 'Справочная оценка. ' + esc(ecoAssumptionsText()) +
                 ' · <span class="eco-edit" onclick="closeModals(); openEcoModal();">изменить</span>';
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
-            document.getElementById('historyModal').style.display = 'flex';
+            openModal('historyModal');
         }
-        function closeModals() {
+        /* ===== Жест «назад» закрывает окно, а не приложение =====
+         * При открытии окна добавляем запись в историю браузера. Системная кнопка
+         * (или свайп) «назад» в Android сначала отматывает историю WebView — значит,
+         * закрывает наше окно. Когда открытых окон нет, история пуста и «назад»
+         * закрывает приложение, как и ожидает пользователь.
+         * Всё обёрнуто в try — если WebView запретит history, приложение продолжит работать.
+         */
+        var modalHistoryOn = false;   // добавлена ли наша запись в историю
+        var skipNextPop = false;      // мы сами отматываем историю — не реагировать
+
+        function anyOverlayOpen() {
+            if (document.querySelector('.modal[style*="flex"]')) return true;
+            var help = document.getElementById('helpOverlay');
+            return !!(help && help.classList.contains('open'));
+        }
+
+        function pushModalState() {
+            if (modalHistoryOn) return;
+            try { history.pushState({ aquaOverlay: 1 }, ''); modalHistoryOn = true; } catch (e) {}
+        }
+
+        function openModal(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'flex';
+            pushModalState();
+        }
+
+        function closeModals(fromBack) {
             document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
             pendingRenameLocationId = null;
+            if (fromBack) { modalHistoryOn = false; return; }
+            releaseModalState();
         }
+
+        /* Убрать свою запись из истории, если на экране больше ничего не открыто.
+           Проверяем в следующем такте: в «Настройках» окна часто закрываются
+           и тут же открываются другие — тогда запись должна остаться. */
+        function releaseModalState() {
+            if (!modalHistoryOn) return;
+            setTimeout(function () {
+                if (anyOverlayOpen() || !modalHistoryOn) return;
+                modalHistoryOn = false;
+                skipNextPop = true;
+                try { history.back(); } catch (e) { skipNextPop = false; }
+            }, 0);
+        }
+
+        window.addEventListener('popstate', function () {
+            if (skipNextPop) { skipNextPop = false; return; }
+            modalHistoryOn = false;
+            var help = document.getElementById('helpOverlay');
+            if (help && help.classList.contains('open')) {
+                /* Сначала закрываем подсказку, окно под ней остаётся открытым */
+                hideHelp(true);
+                if (anyOverlayOpen()) pushModalState();
+                return;
+            }
+            if (anyOverlayOpen()) closeModals(true);
+        });
 
         async function confirmReplacement(skip) {
             var f = getCurrentFilter();

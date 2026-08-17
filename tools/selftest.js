@@ -92,7 +92,8 @@ global.localStorage = {
     removeItem: k => { delete store[k]; }
 };
 global.window = {
-    addEventListener() {}, innerWidth: 400, innerHeight: 800,
+    addEventListener(ev, fn) { if (ev === 'popstate') popHandler = fn; },
+    innerWidth: 400, innerHeight: 800,
     Capacitor: {
         Plugins: {
             LocalNotifications: {
@@ -112,6 +113,12 @@ global.window = {
         }
     }
 };
+const historyStack = [];
+global.history = {
+    pushState(s) { historyStack.push(s); },
+    back() { historyStack.pop(); if (popHandler) popHandler(); }
+};
+let popHandler = null;
 global.requestAnimationFrame = () => 0;
 global.setInterval = () => 0;
 try { Object.defineProperty(global, 'navigator', { value: { clipboard: null }, configurable: true }); } catch (e) {}
@@ -120,7 +127,10 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters, pricePerLiter, ecoAssumptionsText, themeName, applyTheme, ECO_DEFAULTS};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip,' +
+        ' resourceChipFromFilter, clampDays, litersForUse, historyLiters, pricePerLiter,' +
+        ' ecoAssumptionsText, themeName, applyTheme, ECO_DEFAULTS, openModal, closeModals,' +
+        ' toggleWhatsNew, openPrivacyModal};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -234,7 +244,19 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     eq('средние значения расчёта заданы', api.ECO_DEFAULTS.bottlePrice + '/' +
        api.ECO_DEFAULTS.bottleLiters + '/' + api.ECO_DEFAULTS.litersPerDay, '60/5/2');
 
-    console.log('\n[11] Планирование уведомлений');
+    console.log('\n[11] Жест «назад»');
+    const before = historyStack.length;
+    api.openModal('settingsModal');
+    eq('открытие окна добавляет шаг в историю', historyStack.length, before + 1);
+    api.openModal('aboutModal');
+    eq('второе окно не плодит шаги', historyStack.length, before + 1);
+    api.closeModals(true);            // как будто нажали «назад»
+    eq('после «назад» история очищена', historyStack.length, before + 1);
+    check('функция политики конфиденциальности есть в приложении',
+          typeof api.openPrivacyModal === 'function');
+    check('«Что нового» сворачивается', typeof api.toggleWhatsNew === 'function');
+
+    console.log('\n[12] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,
