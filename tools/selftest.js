@@ -150,7 +150,10 @@ eq('пользовательский текст экранируется',
     '&lt;b&gt;&quot;Дача&quot; &amp; Co&#39;s&lt;/b&gt;');
 
 console.log('\n[4] Настройки напоминаний');
-eq('час напоминания по умолчанию', api.notifyHour(), 10);
+eq('промежуток напоминания по умолчанию — утро (9:00)', api.notifyHour(), 9);
+api.appData.settings.notifyHour = 20;
+eq('произвольный час приводится к вечернему промежутку', api.notifyHour(), 19);
+api.appData.settings.notifyHour = 9;
 eq('предупреждение заранее по умолчанию, дней', api.appData.settings.preDays, 7);
 eq('режим проверки выключен', api.appData.settings.devMode, false);
 
@@ -169,7 +172,7 @@ eq('режим проверки выключен', api.appData.settings.devMode,
 
     eq('запланировано уведомлений', scheduled.length, 3);
     const hours = scheduled.map(n => new Date(n.schedule.at).getHours());
-    check('все уведомления в 10 часов утра', hours.every(h => h === 10), hours.join(', '));
+    check('все уведомления в начале выбранного промежутка (9:00)', hours.every(h => h === 9), hours.join(', '));
     const days = scheduled
         .map(n => Math.round((new Date(n.schedule.at).getTime() - Date.now()) / 86400000))
         .sort((a, b) => a - b);
