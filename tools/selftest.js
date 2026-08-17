@@ -120,7 +120,7 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters, pricePerLiter, ecoAssumptionsText, appDataRef: appData};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters, pricePerLiter, ecoAssumptionsText, themeName, applyTheme, ECO_DEFAULTS};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -224,7 +224,17 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     api.appData.settings.bottlePrice = 60;
     api.appData.settings.litersPerDay = 2;
 
-    console.log('\n[10] Планирование уведомлений');
+    console.log('\n[10] Оформление');
+    eq('по умолчанию — неон', api.themeName(), 'neon');
+    api.appData.settings.theme = 'light';
+    eq('переключение на светлое', api.themeName(), 'light');
+    api.appData.settings.theme = 'что-то не то';
+    eq('мусор в настройке не ломает вид', api.themeName(), 'neon');
+    api.appData.settings.theme = 'neon';
+    eq('средние значения расчёта заданы', api.ECO_DEFAULTS.bottlePrice + '/' +
+       api.ECO_DEFAULTS.bottleLiters + '/' + api.ECO_DEFAULTS.litersPerDay, '60/5/2');
+
+    console.log('\n[11] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,
