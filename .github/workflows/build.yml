@@ -472,3 +472,13 @@ jobs:
         with:
           name: AquaControlPro-v1.0.28-build29
           path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
+
+          
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.28-build29
+          name: AquaControl Pro 1.0.28 (build 29)
+          generate_release_notes: true
+          files: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
