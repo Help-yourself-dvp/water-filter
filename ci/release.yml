@@ -1,0 +1,597 @@
+# Релизная сборка для магазина (RuStore).
+# Запускается ТОЛЬКО вручную: Actions -> Build Release APK (RuStore) -> Run workflow.
+# Отличия от build.yml:
+#   * версия берётся из version.json (единый источник), а не вбита в YAML;
+#   * сборка release (android:debuggable отсутствует), а не debug;
+#   * ключ подписи прописывается прямо в Gradle — AGP не может подменить его молча;
+#   * если ключа нет — сборка ПАДАЕТ (иначе APK получит случайную подпись и не встанет поверх);
+#   * печатается отпечаток сертификата SHA-256 — он обязан совпадать от версии к версии;
+#   * проверяется, что версия в index.html совпадает с version.json.
+name: Build Release APK (RuStore)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Опубликовать APK в GitHub Releases'
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version.json (единый источник версии)
+        run: |
+          set -e
+          VERSION=$(python3 -c "import json;print(json.load(open('version.json'))['versionName'])")
+          VCODE=$(python3 -c "import json;print(json.load(open('version.json'))['versionCode'])")
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "APP_VCODE=$VCODE" >> $GITHUB_ENV
+          echo "Версия: $VERSION (build $VCODE)"
+          EXPECTED="версия $VERSION (build $VCODE)"
+          if ! grep -q "$EXPECTED" index.html; then
+            echo "::error::В index.html не найдена строка «$EXPECTED». Обновите номер версии в index.html (id=appVersionTag) или в version.json."
+            exit 1
+          fi
+          echo "Версия в index.html совпадает с version.json."
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Remove stale capacitor config (legacy PWA leftover)
+        run: |
+          if [ -f capacitor.config.json ]; then
+            echo "Найден устаревший capacitor.config.json — удаляю, чтобы cap init создал правильный."
+            rm -f capacitor.config.json
+          else
+            echo "Старого capacitor.config.json нет, всё чисто."
+          fi
+
+      - name: Prepare www
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp manifest.json www/ 2>/dev/null || true
+          cp icon.png www/ 2>/dev/null || true
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0 @capacitor/local-notifications@5.0.7 @capacitor/browser@5.2.0
+
+      - name: Init Android
+        run: |
+          npx cap init "AquaControl Pro" "com.aquacontrol.pro" --web-dir www
+          npx cap add android
+          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
+          sed -i "s/versionCode 1/versionCode ${APP_VCODE}/g" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"${APP_VERSION}\"/g" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+          echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
+          npx cap sync android
+
+      - name: Verify webDir is correct (safety check)
+        run: |
+          echo "Итоговый capacitor.config.json:"
+          cat capacitor.config.json || true
+          echo "---"
+          echo "Содержимое android/app/src/main/assets/public:"
+          ls -la android/app/src/main/assets/public 2>/dev/null | head -30 || echo "путь не найден, пропускаем проверку"
+
+      - name: Patch MainActivity (alarms, battery, backup save bridge)
+        run: |
+          mkdir -p android/app/src/main/java/com/aquacontrol/pro
+          cat > android/app/src/main/java/com/aquacontrol/pro/MainActivity.java << 'EOF'
+          package com.aquacontrol.pro;
+
+          import android.app.AlarmManager;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.PowerManager;
+          import android.provider.Settings;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+
+          import androidx.core.app.NotificationManagerCompat;
+
+          import com.getcapacitor.BridgeActivity;
+
+          import org.json.JSONObject;
+
+          import java.io.OutputStream;
+
+          public class MainActivity extends BridgeActivity {
+
+              private static final int REQ_SAVE_BACKUP = 7301;
+              private String pendingBackupJson = null;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  requestExactAlarmPermission();
+                  requestIgnoreBatteryOptimizations();
+                  installBackupBridge();
+              }
+
+              /* ===== Сохранение резервной копии через системное окно Android ===== */
+
+              private void installBackupBridge() {
+                  try {
+                      WebView wv = getBridge().getWebView();
+                      if (wv != null) {
+                          wv.addJavascriptInterface(new BackupBridge(), "AquaExport");
+                      }
+                  } catch (Exception e) {
+                  }
+              }
+
+              public class BackupBridge {
+                                /* Производитель устройства — для подсказки по автозапуску */
+                  @JavascriptInterface
+                  public String getManufacturer() {
+                      try {
+                          return Build.MANUFACTURER == null ? "" : Build.MANUFACTURER;
+                      } catch (Exception e) {
+                          return "";
+                      }
+                  }
+
+                  /* Разрешены ли уведомления */
+                  @JavascriptInterface
+                  public boolean areNotificationsEnabled() {
+                      try {
+                          return NotificationManagerCompat.from(MainActivity.this).areNotificationsEnabled();
+                      } catch (Exception e) {
+                          return true;
+                      }
+                  }
+
+                  /* Выключены ли оптимизации батареи для приложения */
+                  @JavascriptInterface
+                  public boolean isBatteryOptimizationIgnored() {
+                      try {
+                          PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                          return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+                      } catch (Exception e) {
+                          return true;
+                      }
+                  }
+
+                  /* Открыть нужный экран системных настроек */
+                  @JavascriptInterface
+                  public void openSettingsScreen(final String which) {
+                      runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              openSettings(which);
+                          }
+                      });
+                  }
+                  @JavascriptInterface
+                  public void saveBackup(final String json, final String fileName) {
+                      pendingBackupJson = json;
+                      final String name = (fileName == null || fileName.length() == 0)
+                              ? "aquacontrol-backup.json"
+                              : fileName;
+                      runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              try {
+                                  Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                                  intent.addCategory(Intent.CATEGORY_OPENABLE);
+                                  intent.setType("application/json");
+                                  intent.putExtra(Intent.EXTRA_TITLE, name);
+                                  startActivityForResult(intent, REQ_SAVE_BACKUP);
+                              } catch (Exception e) {
+                                  pendingBackupJson = null;
+                                  notifyBackupResult(false, "Системное окно сохранения недоступно");
+                              }
+                          }
+                      });
+                  }
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == REQ_SAVE_BACKUP) {
+                      String json = pendingBackupJson;
+                      pendingBackupJson = null;
+                      Uri uri = (data == null) ? null : data.getData();
+                      if (resultCode == RESULT_OK && uri != null && json != null) {
+                          OutputStream os = null;
+                          try {
+                              os = getContentResolver().openOutputStream(uri, "w");
+                              os.write(json.getBytes("UTF-8"));
+                              os.flush();
+                              notifyBackupResult(true, "Резервная копия сохранена");
+                          } catch (Exception e) {
+                              notifyBackupResult(false, "Не удалось записать файл");
+                          } finally {
+                              try { if (os != null) os.close(); } catch (Exception e2) { }
+                          }
+                      } else {
+                          notifyBackupResult(false, "Сохранение отменено");
+                      }
+                      return;
+                  }
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+
+              private void notifyBackupResult(final boolean ok, final String message) {
+                  runOnUiThread(new Runnable() {
+                      @Override
+                      public void run() {
+                          try {
+                              WebView wv = getBridge().getWebView();
+                              if (wv == null) return;
+                              String js = "window.onBackupSaveResult && window.onBackupSaveResult("
+                                      + ok + "," + JSONObject.quote(message) + ");";
+                              wv.evaluateJavascript(js, null);
+                          } catch (Exception e) {
+                          }
+                      }
+                  });
+              }
+
+                            /* ===== Экраны системных настроек ===== */
+
+              private void openSettings(String which) {
+                  if ("battery".equals(which)) {
+                      /*
+                       * ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS — это запрос
+                       * разрешения. Если оно уже выдано, Android молча игнорирует
+                       * запрос и ничего не открывает. Поэтому в этом случае сразу
+                       * показываем экран со списком, где настройку можно изменить.
+                       */
+                      boolean granted = false;
+                      try {
+                          PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                          granted = pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+                      } catch (Exception e) {
+                      }
+
+                      if (!granted) {
+                          if (tryStart(new Intent(
+                                  Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                  Uri.parse("package:" + getPackageName())))) return;
+                      }
+
+                      if (tryStart(new Intent(
+                              Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))) return;
+                      openAppDetails();
+                      return;
+                  }
+
+                  if ("notifications".equals(which)) {
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                          Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                          i.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                          if (tryStart(i)) return;
+                      }
+                      openAppDetails();
+                      return;
+                  }
+
+                  if ("autostart".equals(which)) {
+                      if (tryAutostart()) return;
+                      openAppDetails();
+                      return;
+                  }
+                  openAppDetails();
+              }
+
+              private boolean tryAutostart() {
+                  String[][] targets = new String[][] {
+                      { "com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity" },
+                      { "com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity" },
+                      { "com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity" },
+                      { "com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity" },
+                      { "com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity" },
+                      { "com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity" },
+                      { "com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity" },
+                      { "com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity" },
+                      { "com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity" },
+                      { "com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity" },
+                      { "com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity" }
+                  };
+                  for (String[] t : targets) {
+                      Intent i = new Intent();
+                      i.setClassName(t[0], t[1]);
+                      if (tryStart(i)) return true;
+                  }
+                  return false;
+              }
+
+              private void openAppDetails() {
+                  tryStart(new Intent(
+                          Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                          Uri.parse("package:" + getPackageName())));
+              }
+
+              /*
+               * На Android 11+ resolveActivity часто возвращает null из-за
+               * ограничений видимости пакетов, поэтому просто пробуем запустить
+               * и ловим исключение.
+               */
+              private boolean tryStart(Intent intent) {
+                  try {
+                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      startActivity(intent);
+                      return true;
+                  } catch (Exception e) {
+                      return false;
+                  }
+              }
+              
+              /* ===== Разрешения ===== */
+
+              private void requestExactAlarmPermission() {
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                      try {
+                          AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                          if (am != null && !am.canScheduleExactAlarms()) {
+                              Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                              intent.setData(Uri.parse("package:" + getPackageName()));
+                              startActivity(intent);
+                          }
+                      } catch (Exception e) {
+                      }
+                  }
+              }
+
+              private void requestIgnoreBatteryOptimizations() {
+                  try {
+                      PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                      if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                          Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                          intent.setData(Uri.parse("package:" + getPackageName()));
+                          startActivity(intent);
+                      }
+                  } catch (Exception e) {
+                  }
+              }
+          }
+          EOF
+
+      - name: Patch manifest and icons
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-pil
+          python3 << 'ENDSCRIPT'
+          from pathlib import Path
+          from PIL import Image
+
+          man = Path('android/app/src/main/AndroidManifest.xml')
+          t = man.read_text(encoding='utf-8')
+          perms = [
+              'android.permission.POST_NOTIFICATIONS',
+              'android.permission.SCHEDULE_EXACT_ALARM',
+              'android.permission.USE_EXACT_ALARM',
+              'android.permission.RECEIVE_BOOT_COMPLETED',
+              'android.permission.WAKE_LOCK',
+              'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+          ]
+          for p in perms:
+              tag = f'    <uses-permission android:name="{p}" />\n'
+              if p not in t:
+                  t = t.replace('</manifest>', tag + '</manifest>')
+          man.write_text(t, encoding='utf-8')
+
+          res = Path('android/app/src/main/res')
+          for p in res.rglob('ic_launcher*'):
+              if p.is_file():
+                  p.unlink()
+          legacy = res / 'values' / 'ic_launcher_background.xml'
+          if legacy.exists():
+              legacy.unlink()
+
+          icon = Path('icon.png')
+          if not icon.exists():
+              print('no icon.png')
+              raise SystemExit(0)
+
+          src = Image.open(icon).convert('RGBA')
+          BG = (2, 132, 199, 255)
+
+          def solid(size, path):
+              c = Image.new('RGBA', (size, size), BG)
+              fg = src.copy()
+              fg.thumbnail((int(size * 0.72), int(size * 0.72)), Image.Resampling.LANCZOS)
+              c.paste(fg, ((size - fg.width) // 2, (size - fg.height) // 2), fg)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              c.convert('RGB').save(path, format='PNG')
+
+          def foreground(size, path):
+              c = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+              fg = src.copy()
+              fg.thumbnail((int(size * 0.72), int(size * 0.72)), Image.Resampling.LANCZOS)
+              c.paste(fg, ((size - fg.width) // 2, (size - fg.height) // 2), fg)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              c.save(path, format='PNG')
+
+          for folder, size in {
+              'mipmap-mdpi': 48,
+              'mipmap-hdpi': 72,
+              'mipmap-xhdpi': 96,
+              'mipmap-xxhdpi': 144,
+              'mipmap-xxxhdpi': 192,
+          }.items():
+              d = res / folder
+              solid(size, d / 'ic_launcher.png')
+              solid(size, d / 'ic_launcher_round.png')
+              foreground(size, d / 'ic_launcher_foreground.png')
+
+          drawable = res / 'drawable'
+          foreground(324, drawable / 'ic_launcher_foreground.png')
+          src.resize((96, 96), Image.Resampling.LANCZOS).save(drawable / 'ic_stat_icon.png', format='PNG')
+
+          (res / 'values').mkdir(parents=True, exist_ok=True)
+          (res / 'values' / 'colors.xml').write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<resources>\n'
+              '    <color name="colorPrimary">#0284C7</color>\n'
+              '    <color name="colorPrimaryDark">#0284C7</color>\n'
+              '    <color name="ic_launcher_background">#0284C7</color>\n'
+              '</resources>\n',
+              encoding='utf-8',
+          )
+
+          (drawable / 'ic_launcher_background.xml').write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
+              '    android:width="108dp"\n'
+              '    android:height="108dp"\n'
+              '    android:viewportWidth="108"\n'
+              '    android:viewportHeight="108">\n'
+              '    <path android:fillColor="#0284C7" android:pathData="M0,0h108v108h-108z"/>\n'
+              '</vector>\n',
+              encoding='utf-8',
+          )
+
+          adaptive = (
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+              '    <background android:drawable="@drawable/ic_launcher_background"/>\n'
+              '    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n'
+              '</adaptive-icon>\n'
+          )
+          anydpi = res / 'mipmap-anydpi-v26'
+          anydpi.mkdir(parents=True, exist_ok=True)
+          (anydpi / 'ic_launcher.xml').write_text(adaptive, encoding='utf-8')
+          (anydpi / 'ic_launcher_round.xml').write_text(adaptive, encoding='utf-8')
+          print('OK icons + manifest')
+          ENDSCRIPT
+
+      - name: Restore signing key (обязательно, иначе сборка падает)
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 || secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Нет секрета с ключом подписи (RELEASE_KEYSTORE_BASE64 или DEBUG_KEYSTORE_BASE64). Без него APK получит случайную подпись и не установится поверх предыдущей версии."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > android/app/aqua-release.keystore
+          ls -l android/app/aqua-release.keystore
+          echo "SHA-256 файла ключа (должен быть одинаковым во всех сборках):"
+          sha256sum android/app/aqua-release.keystore
+
+      - name: Pin signing config in Gradle (AGP не должен подменить ключ)
+        run: |
+          python3 << 'ENDSCRIPT'
+          import re, sys
+          from pathlib import Path
+
+          p = Path('android/app/build.gradle')
+          t = p.read_text(encoding='utf-8')
+
+          signing = (
+              "\n    signingConfigs {\n"
+              "        release {\n"
+              "            storeFile file('aqua-release.keystore')\n"
+              "            storePassword System.getenv(\"AQUA_STORE_PASSWORD\")\n"
+              "            keyAlias System.getenv(\"AQUA_KEY_ALIAS\")\n"
+              "            keyPassword System.getenv(\"AQUA_KEY_PASSWORD\")\n"
+              "        }\n"
+              "    }\n"
+          )
+
+          t2, n1 = re.subn(r'android\s*\{', lambda m: m.group(0) + signing, t, count=1)
+          if n1 != 1:
+              print('::error::Не найден блок android { в build.gradle')
+              sys.exit(1)
+
+          t3, n2 = re.subn(r'(buildTypes\s*\{\s*release\s*\{)',
+                           r'\1\n            signingConfig signingConfigs.release',
+                           t2, count=1)
+          if n2 != 1:
+              print('::error::Не найден блок buildTypes { release { в build.gradle')
+              sys.exit(1)
+
+          p.write_text(t3, encoding='utf-8')
+          print('Подпись release прописана в build.gradle')
+          ENDSCRIPT
+          sed -n '1,60p' android/app/build.gradle
+
+      - name: Build release APK
+        env:
+          AQUA_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD || 'android' }}
+          AQUA_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || 'androiddebugkey' }}
+          AQUA_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || 'android' }}
+        run: |
+          set -e
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK
+        run: |
+          set -e
+          SRC=android/app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$SRC" ]; then
+            echo "::error::APK не найден по пути $SRC"
+            ls -R android/app/build/outputs/apk || true
+            exit 1
+          fi
+          OUT="AquaControlPro-v${APP_VERSION}-build${APP_VCODE}-release.apk"
+          cp "$SRC" "$OUT"
+          echo "APK_NAME=$OUT" >> $GITHUB_ENV
+          ls -l "$OUT"
+
+      - name: Проверка подписи и debuggable
+        run: |
+          set -e
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          echo "build-tools: $BT"
+          if [ -x "$BT/aapt" ]; then AAPT="$BT/aapt"; else AAPT="$BT/aapt2"; fi
+          echo "aapt: $AAPT"
+          echo "=== Сертификат подписи ==="
+          "$BT/apksigner" verify --print-certs --verbose "$APK_NAME" | tee /tmp/sign.txt
+          FP=$(grep -i "SHA-256 digest" /tmp/sign.txt | head -1 | sed 's/.*: //')
+          echo "CERT_SHA256=$FP" >> $GITHUB_ENV
+          echo "=== Отпечаток сертификата: $FP ==="
+          echo "Он обязан совпадать во всех будущих версиях, иначе обновление поверх станет невозможным."
+          echo "=== Проверка debuggable ==="
+          if "$AAPT" dump badging "$APK_NAME" | grep -q "application-debuggable"; then
+            echo "::error::В APK включён android:debuggable — такую сборку нельзя публиковать в магазине."
+            exit 1
+          fi
+          echo "debuggable отсутствует — сборка релизная."
+          echo "=== Версия внутри APK ==="
+          "$AAPT" dump badging "$APK_NAME" | head -2
+          echo "APK_SHA256=$(sha256sum "$APK_NAME" | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AquaControlPro-v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}-release
+          path: ${{ env.APK_NAME }}
+
+      - name: Publish GitHub Release
+        if: ${{ inputs.publish_release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}
+          name: AquaControl Pro ${{ env.APP_VERSION }} (build ${{ env.APP_VCODE }}) — release
+          files: ${{ env.APK_NAME }}
+          body: |
+            Релизная подписанная сборка для установки и публикации в магазине.
+
+            * Версия: ${{ env.APP_VERSION }} (versionCode ${{ env.APP_VCODE }})
+            * SHA-256 APK: `${{ env.APK_SHA256 }}`
+            * Отпечаток сертификата (SHA-256): `${{ env.CERT_SHA256 }}`
+            * android:debuggable — отсутствует (проверено сборкой)
+
+            Обновление устанавливается поверх предыдущей версии, данные сохраняются.
