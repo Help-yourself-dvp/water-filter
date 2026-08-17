@@ -272,118 +272,128 @@
 
         /* ==========================================================================
            СВЕТЛОЕ ОФОРМЛЕНИЕ «ДНЕВНАЯ ВОДА»
-           Не серая «дневная тема», а второй фирменный вид: та же механика (волны,
-           пузырьки, стеклянные карточки), но палитра дневной воды — голубое небо,
-           белое стекло, насыщенный синий акцент. Включается вручную
-           в «Настройки» → «Оформление». Только переопределения: неон не тронут.
+           Самостоятельный вид, а не перекрашенный неон.
+           Логика другая: в неоне работу делает свечение на тёмном, здесь — слои,
+           белое стекло и цветная плашка счётчика. Механика та же: волны и пузырьки.
+           Только переопределения — тёмный вид не тронут.
            ========================================================================== */
-        body.light { background: linear-gradient(180deg, #eaf6ff 0%, #cfe8fb 55%, #b6dbf5 100%);
-            background-attachment: fixed; color: #08243c; }
-        body.light .card { background: rgba(255,255,255,0.55);
-            border: 1px solid rgba(255,255,255,0.9);
-            box-shadow: 0 18px 44px rgba(2,90,150,0.18); }
+        body.light { background: linear-gradient(180deg, #f0f8ff 0%, #d9ecfa 48%, #b9d9f2 100%);
+            background-attachment: fixed; color: #0a2740; }
 
-        /* --- шапка --- */
-        body.light .location-btn-picker { background: rgba(255,255,255,0.72);
-            border-color: rgba(2,132,199,0.28); color: #0369a1; }
-        body.light .location-btn-picker .loc-pin { fill: #0369a1; }
-        body.light .btn-header-icon { background: rgba(255,255,255,0.72);
-            border-color: rgba(2,132,199,0.22); }
+        body.light .card { background: rgba(255,255,255,0.82);
+            border: 1px solid rgba(255,255,255,0.95);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset,
+                        0 12px 24px rgba(10,70,120,0.1),
+                        0 28px 60px rgba(10,70,120,0.14); }
+
+        /* --- шапка: белые «таблетки» с мягкой тенью --- */
+        body.light .location-btn-picker { background: #ffffff; border-color: rgba(10,70,120,0.1);
+            color: #0b5f96; box-shadow: 0 2px 6px rgba(10,70,120,0.1); }
+        body.light .location-btn-picker .loc-pin { fill: #0b5f96; }
+        body.light .btn-header-icon { background: #ffffff; border-color: rgba(10,70,120,0.1);
+            box-shadow: 0 2px 6px rgba(10,70,120,0.1); }
         body.light .btn-header-icon svg[stroke="#b8a4ff"] { stroke: #6d5ae0; }
 
-        /* --- вкладки и счётчик --- */
-        body.light .tab { background: rgba(255,255,255,0.7); border-color: rgba(2,132,199,0.2);
-            color: #3a5670; }
-        body.light .tab.active { background: #0284c7; border-color: #0284c7; color: #fff;
-            box-shadow: 0 4px 14px rgba(2,132,199,0.35); }
-        body.light .tab.tab-warning { background: #e58a00 !important; border-color: #e58a00 !important;
-            color: #fff !important; box-shadow: 0 4px 14px rgba(229,138,0,0.3) !important; }
-        body.light .tab.tab-danger { background: #e02424 !important; border-color: #e02424 !important;
-            color: #fff !important; box-shadow: 0 4px 14px rgba(224,36,36,0.3) !important; }
-        body.light .days-left { text-shadow: 0 0 26px rgba(2,132,199,0.3); }
-        body.light .all-link { color: #0369a1; }
+        /* --- главный герой экрана: счётчик на цветной плашке --- */
+        body.light .timer-box { border-radius: 22px; padding: 18px 12px 14px; margin: 6px 0 16px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0b6fb8 100%);
+            box-shadow: 0 10px 26px rgba(11,111,184,0.32); }
+        body.light .timer-box.state-warn { background: linear-gradient(135deg, #f59e0b 0%, #c2680a 100%);
+            box-shadow: 0 10px 26px rgba(194,104,10,0.3); }
+        body.light .timer-box.state-bad { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+            box-shadow: 0 10px 26px rgba(190,18,60,0.3); }
+        body.light .timer-box.state-none { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            box-shadow: 0 10px 26px rgba(100,116,139,0.28); }
+        body.light .days-left { text-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+        body.light .timer-box .days-label { color: rgba(255,255,255,0.9); }
 
-        /* --- текст --- */
-        body.light .days-label, body.light .app-version-tag, body.light .wiz-progress,
-        body.light .wiz-hint, body.light .set-arrow, body.light .set-group { color: #5b7692; }
+        /* --- вкладки --- */
+        body.light .tab { background: #ffffff; border-color: rgba(10,70,120,0.12); color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.08); }
+        body.light .tab.active { background: #0b6fb8; border-color: #0b6fb8; color: #fff;
+            box-shadow: 0 4px 12px rgba(11,111,184,0.3); }
+        body.light .tab.tab-warning { background: #c2680a !important; border-color: #c2680a !important;
+            color: #fff !important; box-shadow: 0 4px 12px rgba(194,104,10,0.28) !important; }
+        body.light .tab.tab-danger { background: #be123c !important; border-color: #be123c !important;
+            color: #fff !important; box-shadow: 0 4px 12px rgba(190,18,60,0.28) !important; }
+        body.light .all-link { color: #0b6fb8; }
+
+        /* --- текст: три уровня, как в типографике, а не «всё серое» --- */
+        body.light .info-item span, body.light .af-name, body.light .empty-state h3,
+        body.light .modal h2, body.light .set-row, body.light .help-card h3,
+        body.light .about-note b, body.light .eco-badge { color: #0a2740; }
         body.light .info-title, body.light .af-sub, body.light .set-txt small,
         body.light .eco-note, body.light .empty-state p, body.light .wiz-lead,
-        body.light .form-group label, body.light .acc-head { color: #3a5670; }
-        body.light .info-item span, body.light .af-name, body.light .empty-state h3,
-        body.light .modal h2, body.light .set-row, body.light .help-card h3 { color: #08243c; }
-        body.light .info-grid { background: rgba(255,255,255,0.62); color: #33506b; }
+        body.light .form-group label, body.light .acc-head, body.light .priv-txt,
+        body.light .help-card p, body.light .about-list, body.light .setup-note,
+        body.light .about-note { color: #44607c; }
+        body.light .days-label, body.light .app-version-tag, body.light .wiz-progress,
+        body.light .wiz-hint, body.light .set-arrow, body.light .set-group .grp-arrow { color: #6b8299; }
         body.light .btn-toggle, body.light .eco-edit, body.light .modal-subtitle,
-        body.light .priv-sec { color: #0284c7; }
+        body.light .priv-sec { color: #0b6fb8; }
         body.light .eco-note b { color: #0f7a3d; }
-        body.light .priv-txt, body.light .help-card p, body.light .about-list,
-        body.light .setup-note { color: #33506b; }
+
+        /* --- блоки-карточки: белые с тонкой тенью, без «мыла» --- */
+        body.light .info-grid { background: #ffffff; color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.08); }
+        body.light .set-row, body.light .setup-step, body.light .af-item,
+        body.light .loc-option-item, body.light .history-item, body.light .set-group,
+        body.light .about-note, body.light .eco-badge {
+            background: #ffffff; border-color: rgba(10,70,120,0.1);
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .af-item.current { background: #eaf6fe; border-color: #0b6fb8; }
+        body.light .loc-option-item.active { background: #eaf6fe; border-color: #0b6fb8; color: #0b5f96; }
+        body.light .set-ico { background: #eaf6fe; border-color: rgba(11,111,184,0.2); }
+        body.light .setup-num { background: #0b6fb8; color: #fff; }
 
         /* --- кнопки --- */
-        body.light .btn-secondary-small { background: rgba(255,255,255,0.72); color: #33506b;
-            border-color: rgba(2,132,199,0.2); }
-        body.light .btn-edit-outline { background: rgba(2,132,199,0.1); color: #0369a1;
-            border-color: rgba(2,132,199,0.4); }
-        body.light .help-dot { background: rgba(2,132,199,0.12); color: #0284c7;
-            border-color: rgba(2,132,199,0.45); }
-        body.light .btn-warning { background: rgba(197,104,10,0.1); color: #b8600a;
-            border-color: rgba(197,104,10,0.32); }
-        body.light .btn-danger-outline { background: rgba(217,45,32,0.08); color: #c92a1e;
-            border-color: rgba(217,45,32,0.28); }
+        body.light .btn-secondary-small { background: #ffffff; color: #44607c;
+            border-color: rgba(10,70,120,0.14); box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .btn-edit-outline { background: #eaf6fe; color: #0b5f96;
+            border-color: rgba(11,111,184,0.3); }
+        body.light .help-dot { background: #eaf6fe; color: #0b6fb8; border-color: rgba(11,111,184,0.35); }
+        body.light .btn-warning { background: #fff5e8; color: #b8600a; border-color: rgba(194,104,10,0.3); }
+        body.light .btn-danger-outline { background: #fff1f2; color: #be123c; border-color: rgba(190,18,60,0.25); }
+        body.light .loc-icon-btn { background: #ffffff; border-color: rgba(10,70,120,0.12); color: #44607c; }
+        body.light .act-btn { background: #ffffff; border-color: rgba(10,70,120,0.1); color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .act-edit { color: #0b6fb8; border-color: rgba(11,111,184,0.28); background: #eaf6fe; }
+        body.light .act-add { color: #0f766e; border-color: rgba(15,118,110,0.25); background: #e9f7f5; }
+        body.light .act-del { color: #be123c; border-color: rgba(190,18,60,0.22); background: #fff1f2; }
 
         /* --- окна --- */
-        body.light .modal { background: rgba(16,68,110,0.42); }
-        body.light .modal-content { background: #f4fbff; border-color: rgba(255,255,255,0.9);
-            box-shadow: 0 24px 60px rgba(2,60,100,0.28); }
-        body.light #helpOverlay { background: rgba(16,68,110,0.45); }
-        body.light .help-card { background: #f4fbff; border-color: rgba(255,255,255,0.9); }
+        body.light .modal { background: rgba(9,48,80,0.45); }
+        body.light .modal-content { background: #f7fbff; border-color: rgba(255,255,255,0.95);
+            box-shadow: 0 28px 64px rgba(6,45,80,0.32); }
+        body.light #helpOverlay { background: rgba(9,48,80,0.45); }
+        body.light .help-card { background: #f7fbff; border-color: rgba(255,255,255,0.95); }
         body.light .form-group input, body.light .form-group textarea {
-            background: #ffffff; border-color: rgba(2,132,199,0.28); color: #08243c; }
+            background: #ffffff; border-color: rgba(10,70,120,0.18); color: #0a2740; }
         body.light .form-group input[type="date"] { color-scheme: light; }
 
-        /* --- «чипы»: выбранный залит цветом, а не бледной подсветкой --- */
-        body.light .chip-btn { background: rgba(255,255,255,0.85); border-color: rgba(2,132,199,0.22);
-            color: #3a5670; }
-        body.light .chip-btn.selected { background: #0284c7; border-color: #0284c7; color: #fff;
-            box-shadow: 0 4px 12px rgba(2,132,199,0.32); }
-        body.light .chip-btn.chip-test { border-color: rgba(197,104,10,0.4); color: #b8600a;
-            background: rgba(197,104,10,0.08); }
+        /* --- «чипы»: выбранный залит цветом, невыбранный — белый --- */
+        body.light .chip-btn { background: #ffffff; border-color: rgba(10,70,120,0.14); color: #44607c; }
+        body.light .chip-btn.selected { background: #0b6fb8; border-color: #0b6fb8; color: #fff;
+            box-shadow: 0 3px 10px rgba(11,111,184,0.28); }
+        body.light .chip-btn.chip-test { border-color: rgba(194,104,10,0.35); color: #b8600a; background: #fff8ee; }
         body.light .chip-btn.chip-test.selected { background: #c2680a; border-color: #c2680a; color: #fff; }
         body.light .hint-test { color: #b8600a; }
 
-        /* --- строки-карточки --- */
-        body.light .set-row, body.light .setup-step, body.light .af-item,
-        body.light .loc-option-item, body.light .history-item {
-            background: rgba(255,255,255,0.78); border-color: rgba(2,132,199,0.16); }
-        body.light .af-item.current { background: rgba(2,132,199,0.12); border-color: rgba(2,132,199,0.5); }
-        body.light .loc-option-item.active { background: rgba(2,132,199,0.12); border-color: #0284c7;
-            color: #0369a1; }
-        body.light .set-ico { background: rgba(2,132,199,0.12); border-color: rgba(2,132,199,0.25); }
-        body.light .setup-num { background: #0284c7; color: #fff; }
-        body.light .loc-icon-btn { background: rgba(255,255,255,0.85); border-color: rgba(2,132,199,0.18);
-            color: #3a5670; }
-        body.light .act-btn { background: rgba(255,255,255,0.78); border-color: rgba(2,132,199,0.16);
-            color: #3a5670; }
-        body.light .act-edit { color: #0369a1; border-color: rgba(2,132,199,0.32); background: rgba(2,132,199,0.1); }
-        body.light .act-add { color: #0f766e; border-color: rgba(15,118,110,0.3); background: rgba(15,118,110,0.08); }
-        body.light .act-del { color: #c92a1e; border-color: rgba(217,45,32,0.28); background: rgba(217,45,32,0.07); }
-        body.light .about-note, body.light .eco-badge { background: rgba(255,255,255,0.78);
-            border-color: rgba(2,132,199,0.16); color: #33506b; }
-        body.light .about-note b { color: #08243c; }
-
         /* --- состояния --- */
-        body.light .sum-chip.ok, body.light .af-badge.ok { color: #0369a1; background: rgba(2,132,199,0.14); }
-        body.light .sum-chip.warn, body.light .af-badge.warn { color: #b8600a; background: rgba(197,104,10,0.14); }
-        body.light .sum-chip.bad, body.light .af-badge.bad { color: #c92a1e; background: rgba(217,45,32,0.13); }
-        body.light .warn-banner { background: rgba(229,138,0,0.14); border-color: rgba(197,104,10,0.4); }
+        body.light .sum-chip.ok, body.light .af-badge.ok { color: #0b5f96; background: #e3f2fd; }
+        body.light .sum-chip.warn, body.light .af-badge.warn { color: #b8600a; background: #fff3e0; }
+        body.light .sum-chip.bad, body.light .af-badge.bad { color: #be123c; background: #ffe9ed; }
+        body.light .warn-banner { background: #fff4e2; border-color: rgba(194,104,10,0.35);
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
         body.light .warn-txt { color: #8a4b00; }
-        body.light .warn-cta { color: #b8600a; border-color: rgba(197,104,10,0.5); }
+        body.light .warn-cta { color: #b8600a; border-color: rgba(194,104,10,0.45); background: #fff; }
         body.light .setup-ok { color: #0f7a3d; }
-        body.light .setup-bad { color: #c92a1e; }
+        body.light .setup-bad { color: #be123c; }
 
         /* --- мелочи --- */
-        body.light .loc-dots .loc-dot { background: rgba(2,132,199,0.3); }
-        body.light .loc-dot.active { background: #0284c7; }
-        body.light .toast { background: rgba(8,36,60,0.94); color: #fff; border-color: rgba(2,132,199,0.4); }
+        body.light .loc-dots .loc-dot { background: rgba(11,111,184,0.28); }
+        body.light .loc-dot.active { background: #0b6fb8; }
+        body.light .toast { background: rgba(10,39,64,0.95); color: #fff; border-color: rgba(11,111,184,0.4); }
     </style>
 </head>
 <body>
@@ -435,7 +445,7 @@
 
         <div class="filter-tabs" id="filterTabs"></div>
         <div class="all-link" id="allFiltersLink" style="display:none;" onclick="openAllFiltersModal()">Все фильтры →</div>
-        <div class="timer-box">
+        <div class="timer-box" id="timerBox">
             <div class="days-left" id="daysDisplay">--</div>
             <div class="days-label" id="statusLabel">дней осталось</div>
         </div>
@@ -487,7 +497,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.38 (build 39)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.39 (build 40)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -1264,7 +1274,7 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var WHATS_NEW = [
             'Жест «назад» закрывает окно, а не приложение (теперь по-настоящему).',
-            'Светлое оформление переделано: дневная вода вместо серого.',
+            'Светлое оформление проработано: счётчик на цветной плашке, белые карточки.',
             'Настройки свёрнуты в разделы — экран стал короче.',
             'Светлое оформление стало мягче для глаз.',
             'Политика конфиденциальности открывается внутри приложения.',
@@ -2528,6 +2538,20 @@
             return 'напоминание через ~' + t.daysLeft + ' дн';
         }
 
+        /*
+         * Состояние счётчика.
+         * В неоне цвет несёт сама цифра (свечение на тёмном фоне).
+         * В светлом оформлении так не работает: цветная цифра на белом выглядит бледно,
+         * поэтому цветом заливается плашка под счётчиком, а цифра остаётся белой.
+         */
+        function setCounterState(state) {
+            var box = document.getElementById('timerBox');
+            var days = document.getElementById('daysDisplay');
+            if (box) box.className = 'timer-box state-' + state;
+            if (!days) return;
+            days.style.color = (themeName() === 'light') ? '#ffffff' : pal()[state === 'none' ? 'ok' : state];
+        }
+
         function updateUI() {
             var currentLoc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; }) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
@@ -2592,7 +2616,7 @@
 
                 if (t.leftMs <= 0) {
                     daysDisplay.innerText = '0';
-                    daysDisplay.style.color = pal().bad;
+                    setCounterState('bad');
                     waveColor = pal().waveBad;
                     document.getElementById('statusLabel').innerText = 'Срок истёк — замените';
                     postponeRow.style.display = 'flex';
@@ -2604,25 +2628,25 @@
                         daysDisplay.innerText = Math.max(1, t.minutesLeft);
                         document.getElementById('statusLabel').innerText = 'минут осталось (тест)';
                     }
-                    daysDisplay.style.color = t.minutesLeft <= 1 ? pal().warn : pal().ok;
+                    setCounterState(t.minutesLeft <= 1 ? 'warn' : 'ok');
                     waveColor = pal().wave;
                     postponeRow.style.display = 'none';
                 } else if (t.daysLeft <= 10) {
                     daysDisplay.innerText = t.daysLeft;
-                    daysDisplay.style.color = pal().warn;
+                    setCounterState('warn');
                     waveColor = pal().waveWarn;
                     document.getElementById('statusLabel').innerText = 'Скоро замена';
                     postponeRow.style.display = 'none';
                 } else {
                     daysDisplay.innerText = t.daysLeft;
-                    daysDisplay.style.color = pal().ok;
+                    setCounterState('ok');
                     waveColor = pal().wave;
                     document.getElementById('statusLabel').innerText = 'дней осталось';
                     postponeRow.style.display = 'none';
                 }
             } else {
                 daysDisplay.innerText = '--';
-                daysDisplay.style.color = pal().ok;
+                setCounterState('none');
                 document.getElementById('statusLabel').innerText = 'нет устройств';
                 waveColor = pal().wave;
                 document.getElementById('infoType').innerText = '--';
