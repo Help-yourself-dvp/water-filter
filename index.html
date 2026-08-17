@@ -239,6 +239,8 @@
         .chip-btn.chip-test, .hint-test { display: none; }
         body.dev-mode .chip-btn.chip-test { display: block; }
         body.dev-mode .hint-test { display: block; }
+        .dev-only { display: none; }
+        body.dev-mode .dev-only { display: block; }
         .form-group input[type="date"] { color-scheme: dark; }
         .about-note { font-size: 12px; color: #b3bdcb; line-height: 1.5; background: rgba(0,0,0,0.28);
             border-radius: 14px; padding: 12px 14px; margin: 10px 0 4px; text-align: left; }
@@ -463,7 +465,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.36 (build 37)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.37 (build 38)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -1122,6 +1124,9 @@
             </div>
 
             <button class="btn btn-edit-outline" onclick="openPrivacyModal()">Политика конфиденциальности</button>
+
+            <button class="btn btn-secondary-small dev-only" style="width:100%; margin-top:10px;"
+                onclick="fillDemoForScreenshots()">Демо-данные для скриншотов</button>
 
             <div class="acc-head" id="whatsNewHead" onclick="toggleWhatsNew()">
                 <span>Что нового</span><span class="acc-arrow">▼</span>
@@ -2037,6 +2042,59 @@
             var head = document.getElementById('whatsNewHead');
             if (head) head.classList.remove('open');
             openModal('aboutModal');
+        }
+
+        /*
+         * Красивый набор данных для скриншотов в магазин: два объекта, четыре фильтра
+         * в разных состояниях (просрочен / скоро / в норме) и история замен.
+         * Доступно только в режиме проверки, чтобы обычный пользователь на это не наткнулся.
+         * Даты считаются от сегодняшнего дня, поэтому картинка всегда свежая.
+         */
+        function fillDemoForScreenshots() {
+            showCustomConfirm(
+                'Демо-данные',
+                'Все текущие дома, фильтры и история будут заменены набором для скриншотов. ' +
+                'Сначала сохраните свою резервную копию!',
+                async function () {
+                    var now = Date.now();
+                    var day = MS_DAY;
+                    appData.locations = [
+                        { id: 'loc_demo1', name: 'Квартира' },
+                        { id: 'loc_demo2', name: 'Дача' }
+                    ];
+                    appData.filters = [
+                        { id: 'f_demo1', locationId: 'loc_demo1', name: 'Кувшин на кухне', type: 'Кувшин',
+                          baseDays: 60, cycleMs: null, people: 2, hardness: 1,
+                          lastDate: now - 37 * day, brand: 'Аквафор B25', buyUrl: '' },
+                        { id: 'f_demo2', locationId: 'loc_demo1', name: 'Фильтр под мойкой', type: 'Проточный',
+                          baseDays: 180, cycleMs: null, people: 2, hardness: 1.25,
+                          lastDate: now - 30 * day, brand: 'Гейзер Био', buyUrl: '' },
+                        { id: 'f_demo3', locationId: 'loc_demo2', name: 'Насадка на кран', type: 'Насадка',
+                          baseDays: 90, cycleMs: null, people: 1, hardness: 1,
+                          lastDate: now - 95 * day, brand: '', buyUrl: '' },
+                        { id: 'f_demo4', locationId: 'loc_demo2', name: 'Осмос, предфильтры', type: 'Осмос',
+                          baseDays: 180, cycleMs: null, people: 3, hardness: 1,
+                          lastDate: now - 40 * day, brand: 'Барьер PROFI', buyUrl: '' }
+                    ];
+                    appData.history = [
+                        { filterName: 'Кувшин на кухне', filterId: 'f_demo1', locationId: 'loc_demo1',
+                          ts: now - 37 * day, usedDays: 58, liters: 232,
+                          date: new Date(now - 37 * day).toLocaleDateString('ru-RU'), cost: 450, note: '' },
+                        { filterName: 'Фильтр под мойкой', filterId: 'f_demo2', locationId: 'loc_demo1',
+                          ts: now - 30 * day, usedDays: 170, liters: 680,
+                          date: new Date(now - 30 * day).toLocaleDateString('ru-RU'), cost: 1290, note: '' },
+                        { filterName: 'Осмос, предфильтры', filterId: 'f_demo4', locationId: 'loc_demo2',
+                          ts: now - 40 * day, usedDays: 175, liters: 1050,
+                          date: new Date(now - 40 * day).toLocaleDateString('ru-RU'), cost: 890, note: '' }
+                    ];
+                    appData.currentLocationId = 'loc_demo1';
+                    appData.currentFilterId = 'f_demo1';
+                    persistOnly();
+                    updateUI();
+                    await scheduleAllFilterNotifications();
+                    showToast('Демо-данные загружены — можно снимать экраны');
+                }
+            );
         }
 
         function openPrivacyModal() {
