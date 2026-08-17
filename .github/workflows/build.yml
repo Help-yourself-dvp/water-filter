@@ -124,6 +124,26 @@ jobs:
                   installBackupBridge();
               }
 
+              /*
+               * Кнопка и жест «назад».
+               * Capacitor 5 сам это не обрабатывает: системный «назад» сразу закрывал
+               * приложение с любого экрана. Теперь сначала отматывается история WebView —
+               * в приложении это закрывает открытое окно (см. history.pushState в index.html),
+               * и только когда отматывать нечего, приложение закрывается.
+               */
+              @Override
+              public void onBackPressed() {
+                  try {
+                      WebView wv = (getBridge() == null) ? null : getBridge().getWebView();
+                      if (wv != null && wv.canGoBack()) {
+                          wv.goBack();
+                          return;
+                      }
+                  } catch (Exception e) {
+                  }
+                  super.onBackPressed();
+              }
+
               /* ===== Сохранение резервной копии через системное окно Android ===== */
 
               private void installBackupBridge() {
