@@ -11,6 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read version.json (единый источник версии)
+        run: |
+          set -e
+          VERSION=$(python3 -c "import json;print(json.load(open('version.json'))['versionName'])")
+          VCODE=$(python3 -c "import json;print(json.load(open('version.json'))['versionCode'])")
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "APP_VCODE=$VCODE" >> $GITHUB_ENV
+          echo "Версия: $VERSION (build $VCODE)"
+          EXPECTED="версия $VERSION (build $VCODE)"
+          if ! grep -q "$EXPECTED" index.html; then
+            echo "::error::В index.html не найдена строка «$EXPECTED». Обновите версию в index.html или в version.json."
+            exit 1
+          fi
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -19,6 +33,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Self-test (быстрая проверка index.html без телефона)
+        run: node tools/selftest.js
 
       - name: Remove stale capacitor config (legacy PWA leftover)
         run: |
@@ -47,8 +64,8 @@ jobs:
           npx cap add android
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 34/g' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 34/g' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 29/g' android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "1.0.28"/g' android/app/build.gradle
+          sed -i "s/versionCode 1/versionCode ${APP_VCODE}/g" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"${APP_VERSION}\"/g" android/app/build.gradle
           echo 'android.suppressUnsupportedCompileSdk=34' >> android/gradle.properties
           npx cap sync android
 
@@ -92,8 +109,12 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  requestExactAlarmPermission();
-                  requestIgnoreBatteryOptimizations();
+                  /*
+                   * Раньше здесь сразу открывались системные экраны «Будильники и напоминания»
+                   * и «Оптимизация батареи». Для нового пользователя это выглядело так, будто
+                   * приложение не запустилось. Теперь разрешения запрашиваются только осознанно —
+                   * из экрана «Настроить уведомления» внутри приложения.
+                   */
                   installBackupBridge();
               }
 
@@ -309,6 +330,7 @@ jobs:
               
               /* ===== Разрешения ===== */
 
+              /* Вызывается из JS через AquaExport.openSettingsScreen('alarms') */
               private void requestExactAlarmPermission() {
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                       try {
@@ -369,45 +391,47 @@ jobs:
           if legacy.exists():
               legacy.unlink()
 
-          icon = Path('icon.png')
-          if not icon.exists():
-              print('no icon.png')
-              raise SystemExit(0)
+          # Иконки готовятся заранее скриптом store/make_icons.py и лежат в репозитории:
+          #   icon.png              — мастер «во весь квадрат» (магазин, старые лаунчеры)
+          #   icon_foreground.png   — прозрачный слой адаптивной иконки Android 8+
+          #   icon_background.png   — фон адаптивной иконки
+          #   icon_notification.png — белый силуэт капли для шторки уведомлений
+          need = ['icon.png', 'icon_foreground.png', 'icon_background.png', 'icon_notification.png']
+          missing = [f for f in need if not Path(f).exists()]
+          if missing:
+              print('::error::Нет файлов иконок: ' + ', '.join(missing) +
+                    '. Запустите python3 store/make_icons.py и закоммитьте результат.')
+              raise SystemExit(1)
 
-          src = Image.open(icon).convert('RGBA')
-          BG = (2, 132, 199, 255)
+          src = Image.open('icon.png').convert('RGBA')
+          fg_src = Image.open('icon_foreground.png').convert('RGBA')
+          bg_src = Image.open('icon_background.png').convert('RGBA')
+          nt_src = Image.open('icon_notification.png').convert('RGBA')
 
-          def solid(size, path):
-              c = Image.new('RGBA', (size, size), BG)
-              fg = src.copy()
-              fg.thumbnail((int(size * 0.72), int(size * 0.72)), Image.Resampling.LANCZOS)
-              c.paste(fg, ((size - fg.width) // 2, (size - fg.height) // 2), fg)
+          def save(img, size, path, rgb=False):
+              out = img.resize((size, size), Image.Resampling.LANCZOS)
               path.parent.mkdir(parents=True, exist_ok=True)
-              c.convert('RGB').save(path, format='PNG')
+              (out.convert('RGB') if rgb else out).save(path, format='PNG')
 
-          def foreground(size, path):
-              c = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-              fg = src.copy()
-              fg.thumbnail((int(size * 0.72), int(size * 0.72)), Image.Resampling.LANCZOS)
-              c.paste(fg, ((size - fg.width) // 2, (size - fg.height) // 2), fg)
-              path.parent.mkdir(parents=True, exist_ok=True)
-              c.save(path, format='PNG')
-
-          for folder, size in {
-              'mipmap-mdpi': 48,
-              'mipmap-hdpi': 72,
-              'mipmap-xhdpi': 96,
-              'mipmap-xxhdpi': 144,
-              'mipmap-xxxhdpi': 192,
-          }.items():
+          # Обычная (не адаптивная) иконка — просто уменьшенный мастер, без полей.
+          # Раньше мастер вставлялся на 72% внутрь синего квадрата, из-за чего иконка
+          # в лаунчере и в списке приложений настроек выглядела по-разному.
+          for folder, size, adaptive in [
+              ('mipmap-mdpi', 48, 108),
+              ('mipmap-hdpi', 72, 162),
+              ('mipmap-xhdpi', 96, 216),
+              ('mipmap-xxhdpi', 144, 324),
+              ('mipmap-xxxhdpi', 192, 432),
+          ]:
               d = res / folder
-              solid(size, d / 'ic_launcher.png')
-              solid(size, d / 'ic_launcher_round.png')
-              foreground(size, d / 'ic_launcher_foreground.png')
+              save(src, size, d / 'ic_launcher.png', rgb=True)
+              save(src, size, d / 'ic_launcher_round.png', rgb=True)
+              save(fg_src, adaptive, d / 'ic_launcher_foreground.png')
+              save(bg_src, adaptive, d / 'ic_launcher_background.png', rgb=True)
 
           drawable = res / 'drawable'
-          foreground(324, drawable / 'ic_launcher_foreground.png')
-          src.resize((96, 96), Image.Resampling.LANCZOS).save(drawable / 'ic_stat_icon.png', format='PNG')
+          drawable.mkdir(parents=True, exist_ok=True)
+          save(nt_src, 96, drawable / 'ic_stat_icon.png')
 
           (res / 'values').mkdir(parents=True, exist_ok=True)
           (res / 'values' / 'colors.xml').write_text(
@@ -420,23 +444,15 @@ jobs:
               encoding='utf-8',
           )
 
-          (drawable / 'ic_launcher_background.xml').write_text(
-              '<?xml version="1.0" encoding="utf-8"?>\n'
-              '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
-              '    android:width="108dp"\n'
-              '    android:height="108dp"\n'
-              '    android:viewportWidth="108"\n'
-              '    android:viewportHeight="108">\n'
-              '    <path android:fillColor="#0284C7" android:pathData="M0,0h108v108h-108z"/>\n'
-              '</vector>\n',
-              encoding='utf-8',
-          )
+          old_vector = drawable / 'ic_launcher_background.xml'
+          if old_vector.exists():
+              old_vector.unlink()
 
           adaptive = (
               '<?xml version="1.0" encoding="utf-8"?>\n'
               '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-              '    <background android:drawable="@drawable/ic_launcher_background"/>\n'
-              '    <foreground android:drawable="@drawable/ic_launcher_foreground"/>\n'
+              '    <background android:drawable="@mipmap/ic_launcher_background"/>\n'
+              '    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n'
               '</adaptive-icon>\n'
           )
           anydpi = res / 'mipmap-anydpi-v26'
@@ -464,21 +480,23 @@ jobs:
 
       - name: Rename APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
+          set -e
+          OUT="android/app/build/outputs/apk/debug/AquaControlPro-v${APP_VERSION}-build${APP_VCODE}-debug.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$OUT"
+          echo "APK_PATH=$OUT" >> $GITHUB_ENV
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AquaControlPro-v1.0.28-build29
-          path: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
+          name: AquaControlPro-v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}-debug
+          path: ${{ env.APK_PATH }}
 
           
       - name: Publish GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.28-build29
-          name: AquaControl Pro 1.0.28 (build 29)
+          tag_name: v${{ env.APP_VERSION }}-build${{ env.APP_VCODE }}
+          name: AquaControl Pro ${{ env.APP_VERSION }} (build ${{ env.APP_VCODE }})
           generate_release_notes: true
-          files: android/app/build/outputs/apk/debug/AquaControlPro-v1.0.28-build29.apk
+          files: ${{ env.APK_PATH }}
