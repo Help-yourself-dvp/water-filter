@@ -120,7 +120,7 @@ let api;
 try {
     api = new Function(code + ';return {inputToTs, atHour, dateToInput, esc, getFilterTiming,' +
         ' notifyHour, peopleMult, appData, forceRescheduleAll, showToast, isFirstRun,' +
-        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays};')();
+        ' wizardFinish, filterNameForType, allFiltersRows, shortLeft, parseResourceChip, resourceChipFromFilter, clampDays, litersForUse, historyLiters};')();
     check('скрипт загрузился без ошибок', true);
 } catch (e) {
     check('скрипт загрузился без ошибок', false, e.message);
@@ -206,7 +206,14 @@ eq('название по типу фильтра', api.filterNameForType('Ос�
     eq('тестовый режим узнаётся',
        api.resourceChipFromFilter({ baseDays: 0, cycleMs: 300000 }), 't300');
 
-    console.log('\n[9] Планирование уведомлений');
+    console.log('\n[9] Литры и экономия');
+    eq('2 человека × 2 л × 60 дней', api.litersForUse(2, 60), 240);
+    eq('ошибочная дата не даёт сотни лет', api.litersForUse(2, 100000), 2920);
+    eq('меньше суток считается как сутки', api.litersForUse(1, 0), 2);
+    eq('старая запись без литров оценивается', api.historyLiters({ filterName: 'x' }) > 0, 'true');
+    eq('новая запись берёт сохранённые литры', api.historyLiters({ liters: 500 }), 500);
+
+    console.log('\n[10] Планирование уведомлений');
     api.appData.filters = [{
         id: 'f_test', locationId: api.appData.locations[0].id, name: 'Кувшин', type: 'Кувшин',
         baseDays: 90, cycleMs: null, people: 1, hardness: 1,

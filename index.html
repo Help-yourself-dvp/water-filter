@@ -123,6 +123,8 @@
         .modal-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
         .modal-title-row h2 { margin-bottom: 0; }
 
+        .eco-note { font-size: 11px; color: #8f9cae; text-align: center; margin-top: 6px; line-height: 1.4; }
+        .eco-note b { color: #4ade80; }
         .app-version-tag { font-size: 10px; color: #6e7d93; text-align: center; margin-top: 12px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
@@ -341,7 +343,7 @@
 
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.32 (build 33)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.33 (build 34)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -583,8 +585,9 @@
                 <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('ecoStats')" aria-label="Подсказка">?</button>
             </div>
             <div class="eco-badge" style="margin-top:10px;">
-                🌱 ~<span id="ecoBottles">0</span> бутылок · 💰 ~<span id="ecoMoney">0</span> ₽
+                💧 ~<span id="ecoLiters">0</span> л очищено · 🌱 ~<span id="ecoBottles">0</span> бутылей по 5 л
             </div>
+            <div class="eco-note" id="ecoMoneyNote">Экономия появится после первой замены</div>
             <div class="history-list" id="historyList"></div>
             <div style="font-size: 13px; font-weight: 600; text-align: right; margin-bottom: 15px; color: #00f2fe;">
                 Всего: <span id="totalSpent">0</span> ₽
@@ -922,8 +925,8 @@
                 body: 'Продлевает срок на 15 дней. Используйте, если картридж ещё не меняли, но нужно немного подождать.'
             },
             ecoStats: {
-                title: 'Как считаются бутылки и рубли',
-                body: 'Это примерная оценка, а не точный расчёт. Мы считаем, что один фильтр за время своей службы заменяет собой около 200 пластиковых бутылок воды и экономит примерно 9000 ₽ по сравнению с покупкой воды в магазине. Итоговое число просто умножается на количество зафиксированных вами замен.'
+                title: 'Откуда берутся литры и рубли',
+                body: 'Это оценка по вашим же данным, а не рекламная цифра. Литры считаются так: количество человек × 2 литра питьевой воды в день × сколько дней реально прослужил картридж. Бутыли — это литры, поделённые на 5. Экономия — стоимость такого же объёма воды в бутылях (берём 12 ₽ за литр, это примерно 60 ₽ за пятилитровку) минус то, что вы потратили на картриджи. Если цену картриджа не вписывать, экономия будет завышена.'
             },
             locSwipe: {
                 title: 'Переключение между домами',
@@ -970,6 +973,7 @@
         /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
         var PRIVACY_URL = 'https://help-yourself-dvp.github.io/water-filter/privacy.html';
         var WHATS_NEW = [
+            'Честный расчёт литров и экономии — по вашим данным, без рекламных цифр.',
             'Свой срок службы в днях — для картриджей с нестандартным ресурсом.',
             'Экран «Все фильтры»: весь дом и дача одним списком, сверху — что горит.',
             'Первый запуск: мастер настройки вместо чужих демонстрационных данных.',
@@ -2320,6 +2324,30 @@
             if (!u) { showToast('Вставьте ссылку'); return; }
             f.buyUrl = u; closeModals(); persistOnly(); updateUI(); showToast('Ссылка сохранена');
         }
+        /* ===== Оценка объёма и экономии (только по данным пользователя) ===== */
+        var LITERS_PER_PERSON_DAY = 2;   // питьевая вода, консервативно
+        var BOTTLE_LITERS = 5;           // стандартная бутыль
+        var BOTTLED_PRICE_PER_LITER = 12; // ~60 ₽ за пятилитровку
+
+        /* Сколько литров прошло через картридж за реально отработанные дни */
+        function litersForUse(people, usedDays) {
+            var p = Number(people) || 2;
+            var d = Math.round(Number(usedDays) || 0);
+            if (d < 1) d = 1;
+            if (d > 730) d = 730;          // защита от опечатки в дате
+            return Math.round(p * LITERS_PER_PERSON_DAY * d);
+        }
+
+        /* Для старых записей (до версии 1.0.33) литры не сохранялись — оцениваем скромно */
+        function historyLiters(entry) {
+            if (Number(entry.liters) > 0) return Number(entry.liters);
+            var f = entry.filterId
+                ? appData.filters.find(function (x) { return x.id === entry.filterId; })
+                : null;
+            var days = f ? Math.round(getFilterTiming(f).resourceMs / MS_DAY) : 60;
+            return litersForUse(f ? f.people : 2, days);
+        }
+
         function openHistoryModal() {
             var list = document.getElementById('historyList');
             var total = 0, n = appData.history.length;
@@ -2333,8 +2361,21 @@
                     '<br><small style="color:#6e7d93">' + when + (h.note ? ' • ' + esc(h.note) : '') +
                     '</small></div><div style="color:#00f2fe;">' + (h.cost ? esc(h.cost) + ' ₽' : '0 ₽') + '</div></div>';
             }).join('');
-            document.getElementById('ecoBottles').innerText = n * 200;
-            document.getElementById('ecoMoney').innerText = (n * 9000).toLocaleString('ru-RU');
+            var liters = appData.history.reduce(function (s, h) { return s + historyLiters(h); }, 0);
+            var saved = Math.round(liters * BOTTLED_PRICE_PER_LITER - total);
+            document.getElementById('ecoLiters').innerText = liters.toLocaleString('ru-RU');
+            document.getElementById('ecoBottles').innerText = Math.round(liters / BOTTLE_LITERS).toLocaleString('ru-RU');
+
+            var note = document.getElementById('ecoMoneyNote');
+            if (!n) {
+                note.innerHTML = 'Цифры появятся после первой зафиксированной замены';
+            } else if (saved > 0) {
+                note.innerHTML = 'Примерная экономия против воды в бутылях: <b>~' +
+                    saved.toLocaleString('ru-RU') + ' ₽</b>' +
+                    (total ? '' : ' · впишите цену картриджа, чтобы цифра была точнее');
+            } else {
+                note.innerHTML = 'Пока картриджи обошлись дороже покупной воды — это нормально в начале';
+            }
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
             document.getElementById('historyModal').style.display = 'flex';
         }
@@ -2348,13 +2389,17 @@
             if (!f) { showToast('Выберите фильтр'); return; }
             var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
             var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
+            var prevDate = Number(f.lastDate) || Date.now();
             f.lastDate = skip ? Date.now() : inputToTs(document.getElementById('repDate').value, Date.now());
             if (!skip && brand) f.brand = brand;
+            var usedDays = Math.round((f.lastDate - prevDate) / MS_DAY);
             appData.history.unshift({
                 filterName: f.name,
                 filterId: f.id,
                 locationId: f.locationId,
                 ts: f.lastDate,
+                usedDays: usedDays > 0 ? usedDays : 0,
+                liters: litersForUse(f.people, usedDays),
                 date: new Date(f.lastDate).toLocaleDateString('ru-RU'),
                 cost: cost,
                 note: skip ? 'Быстрая замена' : ''
