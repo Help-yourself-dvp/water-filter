@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>AquaControl Pro</title>
+    <meta name="theme-color" content="#05070f">
     <link rel="manifest" href="manifest.json">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -27,28 +28,85 @@
         .btn-header-icon.cart-active { border-color: rgba(255, 153, 0, 0.45); background: rgba(255, 153, 0, 0.12); }
         .btn-header-icon.cart-empty { opacity: 0.7; }
         .btn-header-icon .cart-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; background: #ff9900; border-radius: 50%; box-shadow: 0 0 6px rgba(255,153,0,0.8); }
+        /* Ссылка «Все фильтры» и сводный список */
+        .custom-days { display: none; margin-top: 8px; }
+        .custom-days.on { display: block; }
+        .custom-days input { width: 100%; }
+        .all-link { text-align: right; font-size: 11.5px; color: #00f2fe; font-weight: 600;
+            cursor: pointer; margin: -4px 2px 10px; }
+        .all-link:active { opacity: 0.7; }
+        .sum-line { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+            font-size: 11px; margin-bottom: 12px; }
+        .sum-chip { border-radius: 9px; padding: 4px 9px; border: 1px solid transparent; }
+        .sum-chip.bad { color: #ff4757; background: rgba(255,71,87,0.12); border-color: rgba(255,71,87,0.3); }
+        .sum-chip.warn { color: #ffaa00; background: rgba(255,170,0,0.12); border-color: rgba(255,170,0,0.3); }
+        .sum-chip.ok { color: #00f2fe; background: rgba(0,242,254,0.1); border-color: rgba(0,242,254,0.25); }
+        .af-item { display: flex; align-items: center; gap: 10px; padding: 10px 11px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; cursor: pointer; }
+        .af-item:active { background: rgba(255,255,255,0.09); }
+        .af-item.current { border-color: rgba(0,242,254,0.55); background: rgba(0,242,254,0.08); }
+        .af-badge { flex: 0 0 62px; text-align: center; border-radius: 11px; padding: 7px 4px;
+            font-size: 15px; font-weight: 800; line-height: 1.05; }
+        .af-badge small { display: block; font-size: 10px; font-weight: 600; opacity: 0.85; margin-top: 2px; }
+        .af-badge.bad { color: #ff4757; background: rgba(255,71,87,0.14); }
+        .af-badge.warn { color: #ffaa00; background: rgba(255,170,0,0.14); }
+        .af-badge.ok { color: #00f2fe; background: rgba(0,242,254,0.12); }
+        .af-txt { flex: 1; min-width: 0; }
+        .af-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; }
+        .af-sub { font-size: 11px; color: #a6b3c6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Пустой экран: пока нет ни одного фильтра, лишние блоки не показываем */
+        body.no-filters .card > .filter-tabs,
+        body.no-filters .card > .timer-box,
+        body.no-filters .card > .info-card-header,
+        body.no-filters .card > .info-grid-wrapper,
+        body.no-filters .card > .btn-row,
+        body.no-filters .card > .all-link,
+        body.no-filters .card > .action-bar { display: none !important; }
+        .empty-state { text-align: center; padding: 18px 6px 6px; }
+        .empty-state .es-drop { font-size: 40px; line-height: 1; margin-bottom: 10px; }
+        .empty-state h3 { font-size: 15px; color: #fff; margin-bottom: 8px; }
+        .empty-state p { font-size: 12.5px; color: #a6b3c6; line-height: 1.5; margin-bottom: 16px; }
+        .wiz-step { text-align: left; }
+        .wiz-progress { font-size: 11px; color: #8b99ad; letter-spacing: 1px;
+            text-transform: uppercase; text-align: center; margin-bottom: 10px; }
+        .wiz-lead { font-size: 12.5px; color: #b3bdcb; line-height: 1.5; margin-bottom: 14px; text-align: center; }
+        .wiz-hint { font-size: 11px; color: #8b99ad; margin-top: 6px; line-height: 1.4; }
+        .wiz-nav { display: flex; gap: 8px; margin-top: 16px; }
+        .wiz-nav .btn { margin-top: 0; }
+        .wiz-nav .btn-secondary-small { flex: 0 0 38%; }
+        .warn-banner { display: flex; align-items: center; gap: 9px; cursor: pointer;
+            background: rgba(255, 170, 0, 0.12); border: 1px solid rgba(255, 170, 0, 0.42);
+            border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; }
+        .warn-banner:active { background: rgba(255, 170, 0, 0.2); }
+        .warn-ico { font-size: 16px; flex-shrink: 0; }
+        .warn-txt { flex: 1; font-size: 12px; color: #ffc861; line-height: 1.35; }
+        .warn-cta { flex-shrink: 0; font-size: 11px; font-weight: 700; color: #ffaa00;
+            border: 1px solid rgba(255, 170, 0, 0.5); border-radius: 9px; padding: 5px 9px; }
         .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
-        .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #8f9cae; transition: all 0.3s; }
+        .tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #a6b3c6; transition: all 0.3s; }
         .tab.active { background: rgba(0, 242, 254, 0.15); border-color: #00f2fe; color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.2); }
         .tab.tab-danger { background: rgba(255, 71, 87, 0.25) !important; border-color: #ff4757 !important; color: #ff4757 !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
         .tab.tab-warning { background: rgba(255, 170, 0, 0.2) !important; border-color: #ffaa00 !important; color: #ffaa00 !important; box-shadow: 0 0 12px rgba(255, 170, 0, 0.3); }
         .timer-box { text-align: center; margin: 10px 0 15px; }
         .days-left { font-size: 68px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 30px rgba(0, 242, 254, 0.4); line-height: 1; transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s; }
         .days-left.large { font-size: 96px; text-shadow: 0 0 45px rgba(0, 242, 254, 0.65); }
-        .days-label { font-size: 11px; color: #6e7d93; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .days-label { font-size: 11px; color: #8b99ad; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
         .info-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
-        .info-title { font-size: 11px; color: #8f9cae; text-transform: uppercase; letter-spacing: 1px; }
+        .info-title { font-size: 11px; color: #a6b3c6; text-transform: uppercase; letter-spacing: 1px; }
         .btn-toggle { background: none; border: none; color: #00f2fe; font-size: 12px; cursor: pointer; font-weight: 600; outline: none; }
         .info-grid-wrapper { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; opacity: 1; }
         .info-grid-wrapper.collapsed { grid-template-rows: 0fr; opacity: 0; }
         .info-grid-inner { overflow: hidden; min-height: 0; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #a0aab8; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 15px; font-size: 12px; color: #b3bdcb; }
         .info-item span { color: #fff; font-weight: 600; display: block; margin-top: 2px; }
 
         .btn { width: 100%; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary { padding: 16px; font-size: 14px; background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc); color: #fff; box-shadow: 0 8px 25px rgba(67, 100, 247, 0.4); margin-top: 8px; }
         .btn-warning { padding: 12px; font-size: 13px; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); margin-top: 8px; }
-        .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #8f9cae; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
+        .btn-secondary-small { padding: 10px 14px; font-size: 12px; background: rgba(255, 255, 255, 0.06); color: #a6b3c6; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; border-radius: 12px; }
         .btn-danger-outline { background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.25); font-size: 11px; padding: 8px; margin-top: 12px; }
         .btn-edit-outline { background: rgba(0, 242, 254, 0.08); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.25); font-size: 12px; padding: 10px; margin-top: 10px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: 600; }
 
@@ -66,7 +124,10 @@
         .modal-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
         .modal-title-row h2 { margin-bottom: 0; }
 
-        .app-version-tag { font-size: 10px; color: #6e7d93; text-align: center; margin-top: 12px; }
+        .eco-note { font-size: 11.5px; color: #a6b3c6; text-align: center; margin-top: 6px; line-height: 1.4; }
+        .eco-note b { color: #4ade80; }
+        .eco-edit { color: #00f2fe; font-weight: 600; cursor: pointer; }
+        .app-version-tag { font-size: 11px; color: #8b99ad; text-align: center; margin-top: 12px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 5, 12, 0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
         .modal-content { background: #121724; padding: 22px; border-radius: 24px; width: 90%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.12); max-height: 90vh; overflow-y: auto; }
@@ -96,7 +157,7 @@
         .act-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 4px; padding: 10px 4px 8px; border-radius: 14px; cursor: pointer;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: #8f9cae; transition: all 0.18s ease; -webkit-tap-highlight-color: transparent; }
+            color: #a6b3c6; transition: all 0.18s ease; -webkit-tap-highlight-color: transparent; }
         .act-btn svg { width: 19px; height: 19px; stroke-width: 1.9; fill: none; stroke: currentColor;
             stroke-linecap: round; stroke-linejoin: round; }
         .act-btn span { font-size: 9.5px; font-weight: 600; letter-spacing: 0.1px; }
@@ -117,15 +178,40 @@
             background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.2); }
         .set-txt { flex: 1; min-width: 0; }
         .set-txt b { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-        .set-txt small { display: block; font-size: 11px; color: #8f9cae; line-height: 1.35; }
-        .set-arrow { color: #6e7d93; font-size: 15px; flex: 0 0 auto; }
+        .set-txt small { display: block; font-size: 11px; color: #a6b3c6; line-height: 1.35; }
+        .set-arrow { color: #8b99ad; font-size: 15px; flex: 0 0 auto; }
+        /* Разделы настроек свёрнуты: экран короткий, всё открывается нажатием */
+        .set-group { display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; font-size: 12.5px; font-weight: 600; color: #fff;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 14px; padding: 12px 14px; margin: 8px 0 0; text-align: left; }
+        .set-group:active { background: rgba(255,255,255,0.09); }
+        .set-group .grp-arrow { font-size: 11px; color: #8b99ad; transition: transform 0.2s; }
+        .set-group.open .grp-arrow { transform: rotate(180deg); }
+        .set-body { display: none; padding: 4px 0 2px; }
+        .set-body.open { display: block; }
+        body.light .set-group { color: #08243c; background: rgba(255,255,255,0.78);
+            border-color: rgba(2,132,199,0.16); }
+        body.light .set-group .grp-arrow { color: #5b7692; }
+        body.light .set-group { color: #55687e; }
+        .acc-head { display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            color: #a6b3c6; margin: 16px 0 4px; }
+        .acc-head .acc-arrow { font-size: 10px; transition: transform 0.2s; }
+        .priv-sec { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #00f2fe;
+            margin: 14px 0 4px; text-align: left; }
+        body.light .priv-sec { color: #0284c7; }
+        .priv-txt { font-size: 12.5px; color: #b3bdcb; line-height: 1.55; text-align: left; }
+        body.light .priv-txt { color: #3c4f66; }
+        .acc-head.open .acc-arrow { transform: rotate(180deg); }
+        body.light .acc-head { color: #445770; }
 
         /* Экран настройки уведомлений */
         .setup-step { display:flex; gap:10px; align-items:flex-start; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:11px 12px; margin-bottom:9px; }
         .setup-num { flex:0 0 22px; width:22px; height:22px; border-radius:50%; background:rgba(0,242,254,0.15); color:#00f2fe; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
         .setup-text { flex:1; font-size:12px; color:#c5cdd8; line-height:1.4; }
         .setup-text b { color:#fff; display:block; margin-bottom:2px; font-size:12.5px; }
-        .setup-note { font-size:11.5px; color:#8f9cae; line-height:1.45; background:rgba(0,0,0,0.25); border-radius:12px; padding:10px 12px; margin:4px 0 12px; }
+        .setup-note { font-size:11.5px; color:#a6b3c6; line-height:1.45; background:rgba(0,0,0,0.25); border-radius:12px; padding:10px 12px; margin:4px 0 12px; }
         .setup-ok { color:#2ed573; font-size:11px; font-weight:600; margin-top:4px; }
         .setup-bad { color:#ff4757; font-size:11px; font-weight:600; margin-top:4px; }
         .btn-setup { padding:9px 12px; font-size:11.5px; background:rgba(0,242,254,0.1); color:#00f2fe; border:1px solid rgba(0,242,254,0.3); border-radius:10px; margin-top:7px; width:100%; }
@@ -150,15 +236,28 @@
         }
 
         .form-group { margin-bottom: 12px; text-align: left; }
-        .form-group label { font-size: 11px; color: #8f9cae; display: block; margin-bottom: 6px; }
+        .form-group label { font-size: 11px; color: #a6b3c6; display: block; margin-bottom: 6px; }
         .form-group input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 13px; outline: none; }
         .form-group textarea { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 11px; outline: none; font-family: monospace; resize: vertical; }
         .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-        .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #8f9cae; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
+        .chip-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #a6b3c6; padding: 8px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; transition: all 0.2s; flex: 1 1 auto; text-align: center; }
         .chip-btn.selected { background: rgba(0, 242, 254, 0.18); border-color: #00f2fe; color: #00f2fe; font-weight: 600; box-shadow: 0 0 10px rgba(0,242,254,0.25); }
         .chip-btn.chip-test { border-color: rgba(255, 170, 0, 0.5); color: #ffaa00; background: rgba(255, 170, 0, 0.08); }
         .chip-btn.chip-test.selected { background: rgba(255, 170, 0, 0.22); border-color: #ffaa00; color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.3); }
-        .hint-test { font-size: 10px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
+        .hint-test { font-size: 11px; color: #ffaa00; margin-top: 6px; line-height: 1.35; }
+        /* Тестовые сроки скрыты, пока не включён режим разработчика (7 нажатий на версию) */
+        .chip-btn.chip-test, .hint-test { display: none; }
+        body.dev-mode .chip-btn.chip-test { display: block; }
+        body.dev-mode .hint-test { display: block; }
+        .dev-only { display: none; }
+        body.dev-mode .dev-only { display: block; }
+        .form-group input[type="date"] { color-scheme: dark; }
+        .about-note { font-size: 12px; color: #b3bdcb; line-height: 1.5; background: rgba(0,0,0,0.28);
+            border-radius: 14px; padding: 12px 14px; margin: 10px 0 4px; text-align: left; }
+        .about-note b { color: #fff; }
+        .about-list { font-size: 12px; color: #b3bdcb; line-height: 1.55; text-align: left;
+            margin: 8px 0 4px; padding-left: 18px; }
+        .about-list li { margin-bottom: 3px; }
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: rgba(18, 23, 36, 0.95); border: 1px solid #00f2fe; color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 12px; box-shadow: 0 10px 30px rgba(0, 242, 254, 0.3); z-index: 300; transition: all 0.4s; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { bottom: 30px; opacity: 1; }
         .history-list { max-height: 180px; overflow-y: auto; text-align: left; font-size: 12px; margin-bottom: 12px; }
@@ -167,9 +266,134 @@
         .loc-option-item { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .loc-option-item.active { border-color: #00f2fe; background: rgba(0,242,254,0.12); color: #00f2fe; }
         .loc-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .loc-icon-btn { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #8f9cae; }
+        .loc-icon-btn { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #a6b3c6; }
         .loc-icon-btn.edit { color: #00f2fe; border-color: rgba(0,242,254,0.25); background: rgba(0,242,254,0.08); }
         .loc-icon-btn.delete { color: #ff4757; border-color: rgba(255,71,87,0.25); background: rgba(255,71,87,0.1); }
+
+        /* ==========================================================================
+           СВЕТЛОЕ ОФОРМЛЕНИЕ «ДНЕВНАЯ ВОДА»
+           Самостоятельный вид, а не перекрашенный неон.
+           Логика другая: в неоне работу делает свечение на тёмном, здесь — слои,
+           белое стекло и цветная плашка счётчика. Механика та же: волны и пузырьки.
+           Только переопределения — тёмный вид не тронут.
+           ========================================================================== */
+        body.light { background: linear-gradient(180deg, #f0f8ff 0%, #d9ecfa 48%, #b9d9f2 100%);
+            background-attachment: fixed; color: #0a2740; }
+
+        body.light .card { background: rgba(255,255,255,0.82);
+            border: 1px solid rgba(255,255,255,0.95);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset,
+                        0 12px 24px rgba(10,70,120,0.1),
+                        0 28px 60px rgba(10,70,120,0.14); }
+
+        /* --- шапка: белые «таблетки» с мягкой тенью --- */
+        body.light .location-btn-picker { background: #ffffff; border-color: rgba(10,70,120,0.1);
+            color: #0b5f96; box-shadow: 0 2px 6px rgba(10,70,120,0.1); }
+        body.light .location-btn-picker .loc-pin { fill: #0b5f96; }
+        body.light .btn-header-icon { background: #ffffff; border-color: rgba(10,70,120,0.1);
+            box-shadow: 0 2px 6px rgba(10,70,120,0.1); }
+        body.light .btn-header-icon svg[stroke="#b8a4ff"] { stroke: #6d5ae0; }
+
+        /* --- главный герой экрана: счётчик на цветной плашке --- */
+        body.light .timer-box { border-radius: 22px; padding: 18px 12px 14px; margin: 6px 0 16px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0b6fb8 100%);
+            box-shadow: 0 10px 26px rgba(11,111,184,0.32); }
+        body.light .timer-box.state-warn { background: linear-gradient(135deg, #f59e0b 0%, #c2680a 100%);
+            box-shadow: 0 10px 26px rgba(194,104,10,0.3); }
+        body.light .timer-box.state-bad { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+            box-shadow: 0 10px 26px rgba(190,18,60,0.3); }
+        body.light .timer-box.state-none { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            box-shadow: 0 10px 26px rgba(100,116,139,0.28); }
+        body.light .days-left { text-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+        body.light .timer-box .days-label { color: rgba(255,255,255,0.9); }
+
+        /* --- вкладки --- */
+        body.light .tab { background: #ffffff; border-color: rgba(10,70,120,0.12); color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.08); }
+        body.light .tab.active { background: #0b6fb8; border-color: #0b6fb8; color: #fff;
+            box-shadow: 0 4px 12px rgba(11,111,184,0.3); }
+        body.light .tab.tab-warning { background: #c2680a !important; border-color: #c2680a !important;
+            color: #fff !important; box-shadow: 0 4px 12px rgba(194,104,10,0.28) !important; }
+        body.light .tab.tab-danger { background: #be123c !important; border-color: #be123c !important;
+            color: #fff !important; box-shadow: 0 4px 12px rgba(190,18,60,0.28) !important; }
+        body.light .all-link { color: #0b6fb8; }
+
+        /* --- текст: три уровня, как в типографике, а не «всё серое» --- */
+        body.light .info-item span, body.light .af-name, body.light .empty-state h3,
+        body.light .modal h2, body.light .set-row, body.light .help-card h3,
+        body.light .about-note b, body.light .eco-badge { color: #0a2740; }
+        body.light .info-title, body.light .af-sub, body.light .set-txt small,
+        body.light .eco-note, body.light .empty-state p, body.light .wiz-lead,
+        body.light .form-group label, body.light .acc-head, body.light .priv-txt,
+        body.light .help-card p, body.light .about-list, body.light .setup-note,
+        body.light .about-note { color: #44607c; }
+        body.light .days-label, body.light .app-version-tag, body.light .wiz-progress,
+        body.light .wiz-hint, body.light .set-arrow, body.light .set-group .grp-arrow { color: #6b8299; }
+        body.light .btn-toggle, body.light .eco-edit, body.light .modal-subtitle,
+        body.light .priv-sec { color: #0b6fb8; }
+        body.light .eco-note b { color: #0f7a3d; }
+
+        /* --- блоки-карточки: белые с тонкой тенью, без «мыла» --- */
+        body.light .info-grid { background: #ffffff; color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.08); }
+        body.light .set-row, body.light .setup-step, body.light .af-item,
+        body.light .loc-option-item, body.light .history-item, body.light .set-group,
+        body.light .about-note, body.light .eco-badge {
+            background: #ffffff; border-color: rgba(10,70,120,0.1);
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .af-item.current { background: #eaf6fe; border-color: #0b6fb8; }
+        body.light .loc-option-item.active { background: #eaf6fe; border-color: #0b6fb8; color: #0b5f96; }
+        body.light .set-ico { background: #eaf6fe; border-color: rgba(11,111,184,0.2); }
+        body.light .setup-num { background: #0b6fb8; color: #fff; }
+
+        /* --- кнопки --- */
+        body.light .btn-secondary-small { background: #ffffff; color: #44607c;
+            border-color: rgba(10,70,120,0.14); box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .btn-edit-outline { background: #eaf6fe; color: #0b5f96;
+            border-color: rgba(11,111,184,0.3); }
+        body.light .help-dot { background: #eaf6fe; color: #0b6fb8; border-color: rgba(11,111,184,0.35); }
+        body.light .btn-warning { background: #fff5e8; color: #b8600a; border-color: rgba(194,104,10,0.3); }
+        body.light .btn-danger-outline { background: #fff1f2; color: #be123c; border-color: rgba(190,18,60,0.25); }
+        body.light .loc-icon-btn { background: #ffffff; border-color: rgba(10,70,120,0.12); color: #44607c; }
+        body.light .act-btn { background: #ffffff; border-color: rgba(10,70,120,0.1); color: #44607c;
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .act-edit { color: #0b6fb8; border-color: rgba(11,111,184,0.28); background: #eaf6fe; }
+        body.light .act-add { color: #0f766e; border-color: rgba(15,118,110,0.25); background: #e9f7f5; }
+        body.light .act-del { color: #be123c; border-color: rgba(190,18,60,0.22); background: #fff1f2; }
+
+        /* --- окна --- */
+        body.light .modal { background: rgba(9,48,80,0.45); }
+        body.light .modal-content { background: #f7fbff; border-color: rgba(255,255,255,0.95);
+            box-shadow: 0 28px 64px rgba(6,45,80,0.32); }
+        body.light #helpOverlay { background: rgba(9,48,80,0.45); }
+        body.light .help-card { background: #f7fbff; border-color: rgba(255,255,255,0.95); }
+        body.light .form-group input, body.light .form-group textarea {
+            background: #ffffff; border-color: rgba(10,70,120,0.18); color: #0a2740; }
+        body.light .form-group input[type="date"] { color-scheme: light; }
+
+        /* --- «чипы»: выбранный залит цветом, невыбранный — белый --- */
+        body.light .chip-btn { background: #ffffff; border-color: rgba(10,70,120,0.14); color: #44607c; }
+        body.light .chip-btn.selected { background: #0b6fb8; border-color: #0b6fb8; color: #fff;
+            box-shadow: 0 3px 10px rgba(11,111,184,0.28); }
+        body.light .chip-btn.chip-test { border-color: rgba(194,104,10,0.35); color: #b8600a; background: #fff8ee; }
+        body.light .chip-btn.chip-test.selected { background: #c2680a; border-color: #c2680a; color: #fff; }
+        body.light .hint-test { color: #b8600a; }
+
+        /* --- состояния --- */
+        body.light .sum-chip.ok, body.light .af-badge.ok { color: #0b5f96; background: #e3f2fd; }
+        body.light .sum-chip.warn, body.light .af-badge.warn { color: #b8600a; background: #fff3e0; }
+        body.light .sum-chip.bad, body.light .af-badge.bad { color: #be123c; background: #ffe9ed; }
+        body.light .warn-banner { background: #fff4e2; border-color: rgba(194,104,10,0.35);
+            box-shadow: 0 1px 3px rgba(10,70,120,0.07); }
+        body.light .warn-txt { color: #8a4b00; }
+        body.light .warn-cta { color: #b8600a; border-color: rgba(194,104,10,0.45); background: #fff; }
+        body.light .setup-ok { color: #0f7a3d; }
+        body.light .setup-bad { color: #be123c; }
+
+        /* --- мелочи --- */
+        body.light .loc-dots .loc-dot { background: rgba(11,111,184,0.28); }
+        body.light .loc-dot.active { background: #0b6fb8; }
+        body.light .toast { background: rgba(10,39,64,0.95); color: #fff; border-color: rgba(11,111,184,0.4); }
     </style>
 </head>
 <body>
@@ -213,8 +437,15 @@
             </div>
         </div>
 
+        <div class="warn-banner" id="notifWarn" style="display:none;" onclick="showSetupModal()">
+            <span class="warn-ico">🔕</span>
+            <span class="warn-txt" id="notifWarnText">Напоминания не придут — нужно разрешение</span>
+            <span class="warn-cta">Настроить</span>
+        </div>
+
         <div class="filter-tabs" id="filterTabs"></div>
-        <div class="timer-box">
+        <div class="all-link" id="allFiltersLink" style="display:none;" onclick="openAllFiltersModal()">Все фильтры →</div>
+        <div class="timer-box" id="timerBox">
             <div class="days-left" id="daysDisplay">--</div>
             <div class="days-label" id="statusLabel">дней осталось</div>
         </div>
@@ -256,9 +487,17 @@
             </div>
         </div>
 
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <div class="es-drop">💧</div>
+            <h3>Здесь появится ваш фильтр</h3>
+            <p>Расскажите, где он стоит и какой у него срок службы —
+               и приложение само посчитает, когда менять картридж.</p>
+            <button class="btn btn-primary" onclick="openWizard()">Настроить за минуту</button>
+        </div>
+
         <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="handleImportFile(event)">
 
-        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.28 (build 29)</div>
+        <div class="app-version-tag" id="appVersionTag">AquaControl Pro · версия 1.0.39 (build 40)</div>
     </div>
 
     <div class="loc-dots" id="locDots"></div>
@@ -277,7 +516,7 @@
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <h2 id="confirmTitle">Подтверждение</h2>
-            <p id="confirmMessage" style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;"></p>
+            <p id="confirmMessage" style="font-size: 13px; color: #b3bdcb; text-align: center; margin: 12px 0 18px; line-height: 1.4;"></p>
             <button class="btn btn-danger-outline" id="confirmOkBtn" style="width:100%; padding: 14px; font-size:13px; margin-top:0;">Да, удалить</button>
             <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
         </div>
@@ -290,7 +529,7 @@
                 <button type="button" class="help-dot" style="width:22px; border-radius:50%;"
                     onclick="showHelp('locSwipe')" aria-label="Подсказка">?</button>
             </div>
-            <p id="locSwipeTip" style="font-size:11.5px; color:#8f9cae; text-align:center; margin:2px 0 10px; display:none;">
+            <p id="locSwipeTip" style="font-size:11.5px; color:#a6b3c6; text-align:center; margin:2px 0 10px; display:none;">
                 Между домами можно листать свайпом влево и вправо
             </p>
             <div id="locationsListContainer" style="margin-top:4px;"></div>
@@ -323,6 +562,10 @@
                 <input type="text" id="editFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
+                <label>Дата последней замены:</label>
+                <input type="date" id="editFilterDate">
+            </div>
+            <div class="form-group">
                 <label>Срок службы (указан на упаковке фильтра):</label>
                 <div class="chip-group" id="editChipResource">
                     <div class="chip-btn chip-test" data-value="t60" onclick="selectChip('editChipResource', this)">1 мин (тест)</div>
@@ -334,6 +577,10 @@
                     <div class="chip-btn selected" data-value="d90" onclick="selectChip('editChipResource', this)">90 дн</div>
                     <div class="chip-btn" data-value="d180" onclick="selectChip('editChipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('editChipResource', this)">1 год</div>
+                    <div class="chip-btn" data-value="custom" onclick="selectResourceChip('editChipResource', this, 'editCustomDaysBox')">Свой</div>
+                </div>
+                <div class="custom-days" id="editCustomDaysBox">
+                    <input type="number" id="editCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
                 </div>
                 <p class="hint-test">Оранжевые пункты — только для проверки напоминаний.</p>
             </div>
@@ -365,7 +612,7 @@
     <div class="modal" id="noLinkModal">
         <div class="modal-content">
             <h2>Ссылки пока нет</h2>
-            <p style="font-size: 13px; color: #a0aab8; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Сохраните ссылку на нужный картридж в вашем магазине — в следующий раз сможете сразу перейти к покупке одним нажатием на корзину.</p>
+            <p style="font-size: 13px; color: #b3bdcb; text-align: center; margin: 12px 0 18px; line-height: 1.4;">Сохраните ссылку на нужный картридж в вашем магазине — в следующий раз сможете сразу перейти к покупке одним нажатием на корзину.</p>
             <div class="form-group">
                 <label>Ссылка:</label>
                 <input type="url" id="noLinkUrlInput" placeholder="https://ozon.ru/...">
@@ -380,6 +627,10 @@
             <h2>Замена картриджа</h2>
             <div class="modal-subtitle" id="replaceModalContext">Объект • Фильтр</div>
 
+            <div class="form-group">
+                <label>Дата замены:</label>
+                <input type="date" id="repDate">
+            </div>
             <div class="form-group">
                 <label>Модель (по желанию):</label>
                 <input type="text" id="repBrand" placeholder="Например, Аквафор А5">
@@ -413,6 +664,10 @@
                 <input type="text" id="newFilterName" placeholder="Кувшин на кухне">
             </div>
             <div class="form-group">
+                <label>Когда меняли картридж в последний раз:</label>
+                <input type="date" id="newFilterDate">
+            </div>
+            <div class="form-group">
                 <label>Тип:</label>
                 <div class="chip-group" id="chipType">
                     <div class="chip-btn selected" data-value="Кувшин" onclick="selectChip('chipType', this)">Кувшин</div>
@@ -433,6 +688,10 @@
                     <div class="chip-btn selected" data-value="d90" onclick="selectChip('chipResource', this)">90 дн</div>
                     <div class="chip-btn" data-value="d180" onclick="selectChip('chipResource', this)">180 дн</div>
                     <div class="chip-btn" data-value="d365" onclick="selectChip('chipResource', this)">1 год</div>
+                    <div class="chip-btn" data-value="custom" onclick="selectResourceChip('chipResource', this, 'newCustomDaysBox')">Свой</div>
+                </div>
+                <div class="custom-days" id="newCustomDaysBox">
+                    <input type="number" id="newCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
                 </div>
                 <p class="hint-test">Оранжевые — проверка напоминаний, потом верните обычный срок.</p>
             </div>
@@ -480,8 +739,11 @@
                 <button type="button" class="help-dot" style="width:22px; border-radius:50%;" onclick="showHelp('ecoStats')" aria-label="Подсказка">?</button>
             </div>
             <div class="eco-badge" style="margin-top:10px;">
-                🌱 ~<span id="ecoBottles">0</span> бутылок · 💰 ~<span id="ecoMoney">0</span> ₽
+                💧 ~<span id="ecoLiters">0</span> л очищено · 🌱 ~<span id="ecoBottles">0</span> бутылей
+                по <span id="ecoBottleSize">5</span> л
             </div>
+            <div class="eco-note" id="ecoMoneyNote">Экономия появится после первой замены</div>
+            <div class="eco-note" id="ecoAssumptions" style="margin-bottom:10px;"></div>
             <div class="history-list" id="historyList"></div>
             <div style="font-size: 13px; font-weight: 600; text-align: right; margin-bottom: 15px; color: #00f2fe;">
                 Всего: <span id="totalSpent">0</span> ₽
@@ -493,9 +755,35 @@
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <h2>Настройки</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px;">
-                Уведомления и резервные копии
-            </p>
+            <div class="set-group" onclick="toggleSetGroup(this)">
+                <span>Напоминания и оформление</span><span class="grp-arrow">▼</span>
+            </div>
+            <div class="set-body">
+
+            <div class="set-row" onclick="closeModals(); openNotifyModal();">
+                <div class="set-ico">⏰</div>
+                <div class="set-txt">
+                    <b>Когда напоминать</b>
+                    <small id="setRowNotifyWhen">Время напоминания и предупреждение заранее</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            <div class="set-row" onclick="closeModals(); openThemeModal();">
+                <div class="set-ico">🎨</div>
+                <div class="set-txt">
+                    <b>Оформление</b>
+                    <small id="setRowTheme">Неон или светлое</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            </div>
+
+            <div class="set-group" onclick="toggleSetGroup(this)">
+                <span>Разрешения Android</span><span class="grp-arrow">▼</span>
+            </div>
+            <div class="set-body">
 
             <div class="set-row" onclick="closeModals(); showSetupModal();">
                 <div class="set-ico">🔔</div>
@@ -505,6 +793,13 @@
                 </div>
                 <div class="set-arrow">›</div>
             </div>
+
+            </div>
+
+            <div class="set-group" onclick="toggleSetGroup(this)">
+                <span>Резервная копия</span><span class="grp-arrow">▼</span>
+            </div>
+            <div class="set-body">
 
             <div class="set-row" onclick="closeModals(); exportData();">
                 <div class="set-ico">📤</div>
@@ -533,6 +828,24 @@
                 <div class="set-arrow">›</div>
             </div>
 
+            </div>
+
+            <div class="set-group" onclick="toggleSetGroup(this)">
+                <span>Приложение</span><span class="grp-arrow">▼</span>
+            </div>
+            <div class="set-body">
+
+            <div class="set-row" onclick="closeModals(); openAboutModal();">
+                <div class="set-ico">ℹ️</div>
+                <div class="set-txt">
+                    <b>О приложении</b>
+                    <small>Версия, конфиденциальность, что нового</small>
+                </div>
+                <div class="set-arrow">›</div>
+            </div>
+
+            </div>
+
             <div class="app-version-tag" id="settingsVersionTag" style="margin:14px 0 12px;"></div>
 
             <button class="btn btn-secondary-small" style="width:100%; margin-top:0;" onclick="closeModals()">Закрыть</button>
@@ -541,10 +854,11 @@
 
     <div class="modal" id="setupModal">
         <div class="modal-content">
-            <h2>Чтобы напоминания приходили</h2>
-            <p style="font-size:12px; color:#a0aab8; text-align:center; margin:8px 0 14px; line-height:1.45;">
-                Android по умолчанию усыпляет приложения и может не показать напоминание вовремя.
-                Проверьте три пункта ниже — это занимает меньше минуты.
+            <h2 id="setupTitle">Чтобы напоминания приходили</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Приложение напоминает о замене картриджа. Чтобы напоминание дошло, Android должен
+                разрешить три вещи — иначе система просто «усыпит» приложение и уведомление не придёт.
+                Это занимает меньше минуты, и всё делается кнопками ниже.
             </p>
 
             <div class="setup-step">
@@ -554,7 +868,7 @@
                     Без этого разрешения приложение не сможет показать ни одного напоминания.
                     <span id="setupNotifOk" class="setup-ok" style="display:none;">✓ Уже разрешено</span>
                     <span id="setupNotifBad" class="setup-bad" style="display:none;">✗ Запрещено — напоминания не придут</span>
-                    <button class="btn btn-setup" onclick="openSetupScreen('notifications')">Открыть настройку</button>
+                    <button class="btn btn-setup" onclick="requestNotifPermission()">Разрешить</button>
                 </div>
             </div>
 
@@ -586,10 +900,297 @@
         </div>
     </div>
 
+    <div class="modal" id="privacyModal">
+        <div class="modal-content">
+            <h2>Политика конфиденциальности</h2>
+            <div class="app-version-tag" style="margin:4px 0 12px;">AquaControl Pro · действует с 17.08.2026</div>
+
+            <div class="about-note">
+                <b>Главное.</b> Приложение не собирает, не передаёт и нигде не хранит ваши данные.
+                Всё, что вы вводите, остаётся в памяти этого телефона.
+            </div>
+
+            <div class="priv-sec">Какие данные вы вводите</div>
+            <p class="priv-txt">Названия объектов и фильтров, срок службы картриджа, жёсткость воды,
+                количество человек, даты замен, модель и цену картриджа, ссылку на магазин.
+                Всё это хранится только на устройстве и никуда не отправляется.</p>
+
+            <div class="priv-sec">Чего приложение не делает</div>
+            <p class="priv-txt">Не запрашивает имя, телефон, почту и адрес. Не определяет
+                местоположение. Не обращается к контактам, звонкам, сообщениям, камере,
+                микрофону и фотографиям. Не содержит рекламы и счётчиков посещаемости.
+                Не требует регистрации.</p>
+
+            <div class="priv-sec">Разрешения Android</div>
+            <p class="priv-txt">Показ уведомлений — чтобы напомнить о замене картриджа.
+                Точные будильники — чтобы напоминание пришло в нужный день.
+                Запуск после перезагрузки — чтобы напоминания не пропали после выключения телефона.
+                Отключение экономии батареи — по желанию, чтобы система не задерживала напоминание.
+                Других разрешений нет, и ни одно из них не связано с передачей данных.</p>
+
+            <div class="priv-sec">Интернет</div>
+            <p class="priv-txt">Приложение работает офлайн. Единственный выход в сеть — если вы сами
+                сохранили ссылку на магазин и нажали кнопку перехода: ссылка откроется в вашем браузере,
+                и дальше действуют правила того сайта.</p>
+
+            <div class="priv-sec">Резервные копии</div>
+            <p class="priv-txt">По вашей команде данные сохраняются в файл. Куда его положить —
+                решаете вы; приложение никуда его не отправляет.</p>
+
+            <div class="priv-sec">Удаление данных</div>
+            <p class="priv-txt">«Настройки Android» → «Приложения» → AquaControl Pro → «Хранилище»
+                → «Очистить данные». Или просто удалите приложение — данные удалятся вместе с ним.
+                Восстановить их можно только из вашей резервной копии.</p>
+
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:14px;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="modal" id="themeModal">
+        <div class="modal-content">
+            <h2>Оформление</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Выбор запоминается и не зависит от ночного режима телефона.
+            </p>
+            <div class="form-group">
+                <div class="chip-group" id="chipTheme">
+                    <div class="chip-btn selected" data-value="neon" onclick="pickTheme(this)">Неон<br>тёмное</div>
+                    <div class="chip-btn" data-value="light" onclick="pickTheme(this)">Светлое<br>дневное</div>
+                </div>
+                <p class="wiz-hint">Нажмите — вид меняется сразу.</p>
+            </div>
+            <button class="btn btn-primary" onclick="closeModals()">Готово</button>
+        </div>
+    </div>
+
+    <div class="modal" id="ecoModal">
+        <div class="modal-content">
+            <h2>Справочный расчёт</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Цифры в истории — справочная оценка по средним значениям, а не учёт бюджета.
+                Здесь уже всё заполнено, менять ничего не нужно. Если ваши цены сильно отличаются —
+                поправьте, приложение запомнит.
+            </p>
+
+            <div class="form-group">
+                <label>Покупная вода для сравнения (в среднем):</label>
+                <div class="chip-group" id="chipBottleLiters">
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipBottleLiters', this)">1,5 л</div>
+                    <div class="chip-btn selected" data-value="5" onclick="selectChip('chipBottleLiters', this)">5 л</div>
+                    <div class="chip-btn" data-value="19" onclick="selectChip('chipBottleLiters', this)">19 л</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Средняя цена такой бутыли, ₽:</label>
+                <input type="number" id="ecoBottlePrice" min="1" max="10000" placeholder="60">
+            </div>
+
+            <div class="form-group">
+                <label>Сколько питьевой воды в день на человека:</label>
+                <div class="chip-group" id="chipLitersPerDay">
+                    <div class="chip-btn" data-value="1.5" onclick="selectChip('chipLitersPerDay', this)">1,5 л</div>
+                    <div class="chip-btn selected" data-value="2" onclick="selectChip('chipLitersPerDay', this)">2 л</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('chipLitersPerDay', this)">3 л</div>
+                </div>
+                <p class="wiz-hint">Средняя норма питья и готовки, а не вся вода в доме.</p>
+            </div>
+
+            <div class="eco-note" id="ecoPreview" style="margin-bottom:12px;"></div>
+
+            <button class="btn btn-primary" onclick="saveEcoSettings()">Сохранить</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="resetEcoSettings()">Вернуть средние значения</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
+        </div>
+    </div>
+
+    <div class="modal" id="allFiltersModal">
+        <div class="modal-content">
+            <h2>Все фильтры</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 12px; line-height:1.45;">
+                Все объекты сразу, сверху — то, что требует внимания.
+            </p>
+            <div class="sum-line" id="allFiltersSummary"></div>
+            <div id="allFiltersList"></div>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:10px;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="modal" id="wizardModal">
+        <div class="modal-content">
+
+            <div class="wiz-step" id="wizStep1">
+                <div class="wiz-progress">Шаг 1 из 3</div>
+                <h2>Добро пожаловать</h2>
+                <p class="wiz-lead">AquaControl напомнит, когда пора менять картридж фильтра.
+                   Настройка займёт минуту, интернет не нужен.</p>
+
+                <div class="form-group">
+                    <label>Где стоит фильтр?</label>
+                    <div class="chip-group" id="wizChipPlace">
+                        <div class="chip-btn selected" data-value="Моя квартира" onclick="wizardPickPlace(this)">Квартира</div>
+                        <div class="chip-btn" data-value="Дача" onclick="wizardPickPlace(this)">Дача</div>
+                        <div class="chip-btn" data-value="Дом родителей" onclick="wizardPickPlace(this)">У родителей</div>
+                        <div class="chip-btn" data-value="Офис" onclick="wizardPickPlace(this)">Офис</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Название (можно изменить):</label>
+                    <input type="text" id="wizPlaceName" placeholder="Моя квартира">
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-primary" onclick="wizardStep(2)">Далее</button>
+                </div>
+                <button class="btn btn-secondary-small" style="width:100%;" onclick="wizardDemo()">Заполнить примером</button>
+            </div>
+
+            <div class="wiz-step" id="wizStep2" style="display:none;">
+                <div class="wiz-progress">Шаг 2 из 3</div>
+                <h2>Какой у вас фильтр</h2>
+
+                <div class="form-group">
+                    <label>Тип:</label>
+                    <div class="chip-group" id="wizChipType">
+                        <div class="chip-btn selected" data-value="Кувшин" onclick="wizardPickType(this)">Кувшин</div>
+                        <div class="chip-btn" data-value="Проточный" onclick="wizardPickType(this)">Проточный</div>
+                        <div class="chip-btn" data-value="Осмос" onclick="wizardPickType(this)">Осмос</div>
+                        <div class="chip-btn" data-value="Насадка" onclick="wizardPickType(this)">Насадка</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Как назовём:</label>
+                    <input type="text" id="wizFilterName" placeholder="Кувшин на кухне">
+                </div>
+                <div class="form-group">
+                    <label>Срок службы картриджа:</label>
+                    <div class="chip-group" id="wizChipResource">
+                        <div class="chip-btn" data-value="d30" onclick="selectChip('wizChipResource', this)">30 дн</div>
+                        <div class="chip-btn" data-value="d60" onclick="selectChip('wizChipResource', this)">60 дн</div>
+                        <div class="chip-btn selected" data-value="d90" onclick="selectChip('wizChipResource', this)">90 дн</div>
+                        <div class="chip-btn" data-value="d180" onclick="selectChip('wizChipResource', this)">180 дн</div>
+                        <div class="chip-btn" data-value="d365" onclick="selectChip('wizChipResource', this)">1 год</div>
+                        <div class="chip-btn" data-value="custom" onclick="selectResourceChip('wizChipResource', this, 'wizCustomDaysBox')">Свой</div>
+                    </div>
+                    <div class="custom-days" id="wizCustomDaysBox">
+                        <input type="number" id="wizCustomDays" min="1" max="3650" placeholder="Сколько дней, например 120">
+                    </div>
+                    <p class="wiz-hint">Срок указан на упаковке картриджа. Если не знаете — оставьте 90 дней,
+                       потом поправите.</p>
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-secondary-small" onclick="wizardStep(1)">Назад</button>
+                    <button class="btn btn-primary" onclick="wizardStep(3)">Далее</button>
+                </div>
+            </div>
+
+            <div class="wiz-step" id="wizStep3" style="display:none;">
+                <div class="wiz-progress">Шаг 3 из 3</div>
+                <h2>Последняя замена</h2>
+
+                <div class="form-group">
+                    <label>Когда меняли картридж в последний раз?</label>
+                    <input type="date" id="wizDate">
+                    <p class="wiz-hint">Не помните точно — поставьте примерную дату или сегодняшнюю,
+                       если фильтр только что куплен.</p>
+                </div>
+                <div class="form-group">
+                    <label>Сколько человек пьют эту воду:</label>
+                    <div class="chip-group" id="wizChipPeople">
+                        <div class="chip-btn" data-value="1" onclick="selectChip('wizChipPeople', this)">1 чел</div>
+                        <div class="chip-btn selected" data-value="2" onclick="selectChip('wizChipPeople', this)">2 чел</div>
+                        <div class="chip-btn" data-value="3" onclick="selectChip('wizChipPeople', this)">3–4 чел</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Вода в кране:</label>
+                    <div class="chip-group" id="wizChipHardness">
+                        <div class="chip-btn selected" data-value="1" onclick="selectChip('wizChipHardness', this)">Обычная</div>
+                        <div class="chip-btn" data-value="1.25" onclick="selectChip('wizChipHardness', this)">Жёсткая</div>
+                        <div class="chip-btn" data-value="1.5" onclick="selectChip('wizChipHardness', this)">Очень жёсткая</div>
+                    </div>
+                    <p class="wiz-hint">Жёсткая вода — быстрый налёт в чайнике, белые разводы на смесителе.
+                       При жёсткой воде картридж служит меньше.</p>
+                </div>
+
+                <div class="wiz-nav">
+                    <button class="btn btn-secondary-small" onclick="wizardStep(2)">Назад</button>
+                    <button class="btn btn-primary" onclick="wizardFinish()">Готово</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal" id="notifyModal">
+        <div class="modal-content">
+            <h2>Когда напоминать</h2>
+            <p style="font-size:12px; color:#b3bdcb; text-align:center; margin:8px 0 14px; line-height:1.45;">
+                Напоминание придёт в удобное время суток, а не среди ночи.
+            </p>
+
+            <div class="form-group">
+                <label>Когда удобно получать напоминание:</label>
+                <div class="chip-group" id="chipNotifyHour">
+                    <div class="chip-btn selected" data-value="9" onclick="selectChip('chipNotifyHour', this)">Утром<br>9:00–12:00</div>
+                    <div class="chip-btn" data-value="14" onclick="selectChip('chipNotifyHour', this)">Днём<br>14:00–17:00</div>
+                    <div class="chip-btn" data-value="19" onclick="selectChip('chipNotifyHour', this)">Вечером<br>19:00–21:00</div>
+                </div>
+                <p style="font-size:11px;color:#8b99ad;margin-top:6px;line-height:1.4;">
+                    Напоминание придёт в начале выбранного промежутка.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Предупредить заранее, чтобы успеть купить картридж:</label>
+                <div class="chip-group" id="chipPreDays">
+                    <div class="chip-btn" data-value="0" onclick="selectChip('chipPreDays', this)">Не нужно</div>
+                    <div class="chip-btn" data-value="3" onclick="selectChip('chipPreDays', this)">За 3 дня</div>
+                    <div class="chip-btn selected" data-value="7" onclick="selectChip('chipPreDays', this)">За 7 дней</div>
+                    <div class="chip-btn" data-value="14" onclick="selectChip('chipPreDays', this)">За 14 дней</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveNotifySettings()">Сохранить</button>
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:8px;" onclick="closeModals()">Отмена</button>
+        </div>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <h2>AquaControl Pro</h2>
+            <div class="app-version-tag" id="aboutVersionTag" style="margin:6px 0 10px;" onclick="onVersionTap()"></div>
+
+            <div class="about-note">
+                <b>Все данные остаются на вашем телефоне.</b><br>
+                Приложение работает без интернета, ничего не собирает и никуда не передаёт.
+                Регистрация не нужна.
+            </div>
+
+            <div class="about-note">
+                Чтобы данные не потерялись при смене телефона, сделайте резервную копию:
+                «Настройки» → «Сохранить копию в файл».
+            </div>
+
+            <button class="btn btn-edit-outline" onclick="openPrivacyModal()">Политика конфиденциальности</button>
+
+            <button class="btn btn-secondary-small dev-only" style="width:100%; margin-top:10px;"
+                onclick="fillDemoForScreenshots()">Демо-данные для скриншотов</button>
+
+            <div class="acc-head" id="whatsNewHead" onclick="toggleWhatsNew()">
+                <span>Что нового</span><span class="acc-arrow">▼</span>
+            </div>
+            <ul class="about-list" id="aboutWhatsNew" style="display:none;"></ul>
+
+            <button class="btn btn-secondary-small" style="width:100%; margin-top:12px;" onclick="closeModals()">Закрыть</button>
+        </div>
+    </div>
+
     <div class="modal" id="exportModal">
         <div class="modal-content">
             <h2>Экспорт данных</h2>
-            <p style="font-size: 12px; color: #a0aab8; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Сохранение файлом недоступно на этом устройстве. Текст ниже — все ваши данные: нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
+            <p style="font-size: 12px; color: #b3bdcb; text-align: center; margin: 8px 0 12px; line-height: 1.4;">Сохранение файлом недоступно на этом устройстве. Текст ниже — все ваши данные: нажмите «Скопировать» и вставьте в заметки, письмо себе или облако.</p>
             <div class="form-group">
                 <textarea id="exportTextArea" rows="8" readonly onclick="this.select()"></textarea>
             </div>
@@ -621,8 +1222,12 @@
                 body: 'Продлевает срок на 15 дней. Используйте, если картридж ещё не меняли, но нужно немного подождать.'
             },
             ecoStats: {
-                title: 'Как считаются бутылки и рубли',
-                body: 'Это примерная оценка, а не точный расчёт. Мы считаем, что один фильтр за время своей службы заменяет собой около 200 пластиковых бутылок воды и экономит примерно 9000 ₽ по сравнению с покупкой воды в магазине. Итоговое число просто умножается на количество зафиксированных вами замен.'
+                title: 'Откуда берутся литры и рубли',
+                body: 'Это оценка по вашим же данным, а не рекламная цифра.\n\n' +
+                      'Литры = сколько человек × сколько литров в день × сколько дней реально прослужил картридж.\n\n' +
+                      'Бутыли = литры, поделённые на выбранный объём бутыли.\n\n' +
+                      'Экономия = стоимость такого же объёма покупной воды минус то, что вы потратили на картриджи.\n\n' +
+                      'Цену и объём бутыли, а также литры в день можно изменить: «Настройки» → «Как считать экономию». Если не вписывать цену картриджа, экономия окажется завышенной.'
             },
             locSwipe: {
                 title: 'Переключение между домами',
@@ -634,25 +1239,103 @@
             }
         };
 
-        var defaultData = {
-            currentLocationId: 'loc1',
-            currentFilterId: 'f1',
-            locations: [
-                { id: 'loc1', name: 'Моя квартира' },
-                { id: 'loc2', name: 'Дом родителей' }
-            ],
-            filters: [
-                { id: 'f1', locationId: 'loc1', name: 'Кувшин Кухня', type: 'Кувшин', baseDays: 60, cycleMs: null, people: 2, hardness: 1, lastDate: Date.now(), brand: 'Аквафор', buyUrl: '' }
-            ],
+        /*
+         * Новый пользователь больше не получает выдуманные «Моя квартира» и «Аквафор»:
+         * при первом запуске открывается мастер настройки, а данные создаются его руками.
+         * Демонстрационный набор можно создать кнопкой «Заполнить примером».
+         */
+        var emptyData = {
+            currentLocationId: null,
+            currentFilterId: null,
+            locations: [],
+            filters: [],
             history: []
         };
 
-        var appData = JSON.parse(localStorage.getItem('aquaControlProDB')) || defaultData;
+        var savedRaw = null;
+        try { savedRaw = localStorage.getItem('aquaControlProDB'); } catch (e) {}
+        var isFirstRun = !savedRaw;
+        var appData;
+        try {
+            appData = savedRaw ? JSON.parse(savedRaw) : JSON.parse(JSON.stringify(emptyData));
+        } catch (e) {
+            appData = JSON.parse(JSON.stringify(emptyData));
+            isFirstRun = true;
+        }
+        if (!Array.isArray(appData.locations)) appData.locations = [];
+        if (!Array.isArray(appData.filters)) appData.filters = [];
+        if (!Array.isArray(appData.history)) appData.history = [];
         (appData.filters || []).forEach(function (f) {
             if (f.cycleMs) f.cycleMs = Number(f.cycleMs);
             if (f.baseDays === 0 && !f.cycleMs) f.baseDays = 90;
             if (f.lastDate) f.lastDate = Number(f.lastDate);
         });
+
+        /* ===== Настройки приложения. У старых копий данных их нет — подставляем значения ===== */
+        var WHATS_NEW = [
+            'Жест «назад» закрывает окно, а не приложение (теперь по-настоящему).',
+            'Светлое оформление проработано: счётчик на цветной плашке, белые карточки.',
+            'Настройки свёрнуты в разделы — экран стал короче.',
+            'Светлое оформление стало мягче для глаз.',
+            'Политика конфиденциальности открывается внутри приложения.',
+            'Цифры экономии — справочные, по средним ценам; менять ничего не нужно.',
+            'Честный расчёт литров и экономии — по вашим данным, без рекламных цифр.',
+            'Свой срок службы в днях — для картриджей с нестандартным ресурсом.',
+            'Экран «Все фильтры»: весь дом и дача одним списком, сверху — что горит.',
+            'Первый запуск: мастер настройки вместо чужих демонстрационных данных.',
+            'Своя иконка приложения вместо стоковой.',
+            'Можно указать реальную дату последней замены — отсчёт больше не начинается «с сегодня».',
+            'Напоминание приходит в удобное время суток, а не среди ночи.',
+            'Появилось предупреждение заранее — успеть купить картридж.',
+            'Раздел «О приложении» с политикой конфиденциальности.',
+            'Тестовые сроки в минутах убраны из обычного режима.',
+            'Видно сразу, если Android запретил напоминания.'
+        ];
+
+        if (!appData.settings || typeof appData.settings !== 'object') appData.settings = {};
+        if (typeof appData.settings.notifyHour !== 'number') appData.settings.notifyHour = 9;
+        /* Допустимы только начала промежутков: утро / день / вечер */
+        if ([9, 14, 19].indexOf(appData.settings.notifyHour) < 0) {
+            appData.settings.notifyHour = appData.settings.notifyHour >= 17 ? 19
+                : (appData.settings.notifyHour >= 13 ? 14 : 9);
+        }
+        if (typeof appData.settings.preDays !== 'number') appData.settings.preDays = 7;
+        if (typeof appData.settings.devMode !== 'boolean') appData.settings.devMode = false;
+        /* Допущения расчёта экономии — их задаёт пользователь, цены и объёмы бывают разные */
+        if (typeof appData.settings.bottleLiters !== 'number') appData.settings.bottleLiters = 5;
+        if (typeof appData.settings.bottlePrice !== 'number') appData.settings.bottlePrice = 60;
+        if (typeof appData.settings.litersPerDay !== 'number') appData.settings.litersPerDay = 2;
+        if (appData.settings.theme !== 'light' && appData.settings.theme !== 'neon') appData.settings.theme = 'neon';
+
+        /* Пользовательский текст перед вставкой в разметку обязательно экранируем */
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function pad2(n) { return (n < 10 ? '0' : '') + n; }
+        function dateToInput(ts) {
+            var d = new Date(Number(ts) || Date.now());
+            return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        }
+        function inputToTs(value, fallback) {
+            var parts = String(value || '').split('-');
+            if (parts.length !== 3) return fallback;
+            var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0, 0);
+            var ms = d.getTime();
+            if (isNaN(ms)) return fallback;
+            return ms > Date.now() ? Date.now() : ms;
+        }
+        function setDateField(id, ts) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.value = dateToInput(ts);
+            el.max = dateToInput(Date.now());
+        }
+        function applyDevMode() {
+            if (document.body) document.body.classList.toggle('dev-mode', !!appData.settings.devMode);
+        }
 
         var pendingConfirmAction = null;
         var pendingRenameLocationId = null;
@@ -666,9 +1349,13 @@
             document.getElementById('helpTitle').innerText = item.title;
             document.getElementById('helpBody').innerText = item.body;
             document.getElementById('helpOverlay').classList.add('open');
+            pushModalState();
         }
-        function hideHelp() {
-            document.getElementById('helpOverlay').classList.remove('open');
+        function hideHelp(fromBack) {
+            var el = document.getElementById('helpOverlay');
+            if (!el || !el.classList.contains('open')) return;
+            el.classList.remove('open');
+            if (!fromBack) releaseModalState();
         }
         function onHelpOverlayClick(e) {
             if (e.target && e.target.id === 'helpOverlay') hideHelp();
@@ -682,12 +1369,45 @@
             document.getElementById('confirmTitle').innerText = title;
             document.getElementById('confirmMessage').innerText = message;
             pendingConfirmAction = onConfirm;
-            document.getElementById('confirmModal').style.display = 'flex';
+            openModal('confirmModal');
         }
         document.getElementById('confirmOkBtn').onclick = function () {
             if (pendingConfirmAction) pendingConfirmAction();
             closeModals();
         };
+
+        /* Две палитры: неон (по умолчанию) и светлая. Механика анимации общая. */
+        var PALETTES = {
+            neon: {
+                wave: 'rgba(0, 242, 254, 0.12)', waveWarn: 'rgba(255,170,0,0.15)', waveBad: 'rgba(255,71,87,0.18)',
+                particle: 'rgba(0, 242, 254, 0.3)', ok: '#00f2fe', warn: '#ffaa00', bad: '#ff4757'
+            },
+            light: {
+                wave: 'rgba(14,165,233,0.22)', waveWarn: 'rgba(229,138,0,0.2)', waveBad: 'rgba(224,36,36,0.16)',
+                particle: 'rgba(56,189,248,0.55)', ok: '#0369a1', warn: '#b8600a', bad: '#c92a1e'
+            }
+        };
+        function themeName() { return appData.settings.theme === 'light' ? 'light' : 'neon'; }
+        function pal() { return PALETTES[themeName()]; }
+
+        function applyTheme() {
+            if (document.body) document.body.classList.toggle('light', themeName() === 'light');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', themeName() === 'light' ? '#e9f2fb' : '#05070f');
+        }
+
+        function openThemeModal() {
+            setChipValue('chipTheme', themeName());
+            openModal('themeModal');
+        }
+
+        function pickTheme(el) {
+            selectChip('chipTheme', el);
+            appData.settings.theme = el.getAttribute('data-value') === 'light' ? 'light' : 'neon';
+            persistOnly();
+            applyTheme();
+            updateUI();   /* цвет счётчика и волн зависит от палитры */
+        }
 
         var canvas = document.getElementById('waveCanvas');
         var ctx = canvas.getContext('2d');
@@ -698,9 +1418,26 @@
         function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
+        /*
+         * Фон — часть фирменного стиля (неон в духе заставки приставки), поэтому анимация
+         * остаётся. Но рисовать её, когда её никто не видит, незачем: при свёрнутом
+         * приложении и при открытом окне поверх карточки кадры пропускаем.
+         * Заодно это снимает самое тяжёлое сочетание — движущийся холст под размытием.
+         */
+        var wavesHidden = false;
+        function wavesVisible() {
+            if (document.hidden) return false;
+            if (step % 15 === 0) {
+                wavesHidden = !!document.querySelector('.modal[style*="flex"]');
+            }
+            return !wavesHidden;
+        }
+
         function drawWaves() {
+            step++;
+            if (!wavesVisible()) { requestAnimationFrame(drawWaves); return; }
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
+            ctx.fillStyle = pal().particle;
             particles.forEach(function (p) {
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
                 p.y -= p.s; p.x += Math.sin(step * 0.02 + p.wobble) * 0.4;
@@ -712,7 +1449,7 @@
                 for (var x = 0; x <= width; x += 10) ctx.lineTo(x, Math.sin(x * 0.002 + step * 0.012 + i * 2.2) * amp + height * 0.58);
                 ctx.lineTo(width, height); ctx.closePath(); ctx.fill();
             }
-            step++; requestAnimationFrame(drawWaves);
+            requestAnimationFrame(drawWaves);
         }
         drawWaves();
 
@@ -738,7 +1475,20 @@
             }
         }
 
-        function parseResourceChip(value) {
+        var STANDARD_DAYS = [1, 30, 60, 90, 180, 365];
+
+        /* Свой срок: от 1 дня до 10 лет, всё остальное — ошибка ввода */
+        function clampDays(n) {
+            n = Math.round(Number(n));
+            if (!n || isNaN(n) || n < 1) return 0;
+            return Math.min(n, 3650);
+        }
+
+        function parseResourceChip(value, customDays) {
+            if (value === 'custom') {
+                var d = clampDays(customDays);
+                return { cycleMs: null, baseDays: d || 90 };
+            }
             if (value === 't60') return { cycleMs: 60000, baseDays: 0 };
             if (value === 't300') return { cycleMs: 300000, baseDays: 0 };
             if (value === 't3600') return { cycleMs: 3600000, baseDays: 0 };
@@ -759,14 +1509,35 @@
             if (d === 1) return 'd1';
             if (d === 30) return 'd30';
             if (d === 60) return 'd60';
+            if (d === 90) return 'd90';
             if (d === 180) return 'd180';
             if (d === 365) return 'd365';
-            return 'd90';
+            return 'custom';
         }
-        function applyResourceChip(filter, chipValue) {
-            var r = parseResourceChip(chipValue);
+        function applyResourceChip(filter, chipValue, customDays) {
+            var r = parseResourceChip(chipValue, customDays);
             filter.cycleMs = r.cycleMs;
             filter.baseDays = r.baseDays;
+        }
+
+        /* Показываем поле «сколько дней» только когда выбран вариант «Свой» */
+        function selectResourceChip(groupId, el, boxId) {
+            selectChip(groupId, el);
+            syncCustomDaysBox(groupId, boxId);
+        }
+        function syncCustomDaysBox(groupId, boxId) {
+            var box = document.getElementById(boxId);
+            if (!box) return;
+            box.classList.toggle('on', getSelectedChipValue(groupId) === 'custom');
+        }
+        /* Подставляет в поле срок фильтра, если он нестандартный */
+        function prepareResourceChips(groupId, boxId, inputId, filter) {
+            var chip = filter ? resourceChipFromFilter(filter) : 'd90';
+            setChipValue(groupId, chip);
+            var input = document.getElementById(inputId);
+            if (input) input.value = (chip === 'custom' && filter) ? Number(filter.baseDays) : '';
+            syncCustomDaysBox(groupId, boxId);
+            return chip;
         }
 
         function getCurrentFilter() {
@@ -987,6 +1758,57 @@
             return DEFAULT_HINT;
         }
 
+        /*
+         * Разрешение на показ уведомлений.
+         * Сначала пробуем штатное системное окно Android («Разрешить уведомления?»).
+         * Если система его больше не показывает (пользователь однажды отказал) —
+         * открываем экран настроек приложения.
+         */
+        async function requestNotifPermission() {
+            var ln = getLN();
+            if (!ln) { showToast('Доступно только в приложении на телефоне'); return; }
+            var granted = false;
+            try {
+                var res = await ln.requestPermissions();
+                granted = !!(res && (res.display === 'granted' || res.display === 'GRANTED'));
+            } catch (e) {}
+            if (!granted) {
+                var st = refreshSetupState();
+                granted = st.notifications;
+            }
+            if (granted) {
+                notificationsReady = true;
+                refreshSetupState();
+                refreshNotifWarning();
+                await scheduleAllFilterNotifications();
+                showToast('Уведомления разрешены');
+                return;
+            }
+            showToast('Открываем настройки уведомлений');
+            openSetupScreen('notifications');
+        }
+
+        /*
+         * Полоса на главном экране. Пользователь не обязан помнить про разрешения:
+         * если напоминания не смогут прийти, он видит это сразу и попадает в настройку одним нажатием.
+         */
+        function refreshNotifWarning() {
+            var el = document.getElementById('notifWarn');
+            if (!el) return;
+            if (!getNativeBridge()) { el.style.display = 'none'; return; }
+            var st = refreshSetupState();
+            var txt = document.getElementById('notifWarnText');
+            if (!st.notifications) {
+                if (txt) txt.textContent = 'Напоминания запрещены — они не придут';
+                el.style.display = 'flex';
+            } else if (!st.battery) {
+                if (txt) txt.textContent = 'Экономия батареи может задержать напоминание';
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
         function openSetupScreen(which) {
             var b = getNativeBridge();
             if (!b) { showToast('Доступно только в приложении на телефоне'); return; }
@@ -1040,12 +1862,348 @@
             return { battery: battery, notifications: notif, all: battery && notif };
         }
 
+        /* Разделы настроек: раскрывается один, остальные закрываются — экран остаётся коротким */
+        function toggleSetGroup(head) {
+            var body = head.nextElementSibling;
+            var open = head.classList.contains('open');
+            document.querySelectorAll('#settingsModal .set-group').forEach(function (h) {
+                h.classList.remove('open');
+                if (h.nextElementSibling) h.nextElementSibling.classList.remove('open');
+            });
+            if (!open) {
+                head.classList.add('open');
+                if (body) body.classList.add('open');
+            }
+        }
+
+        function collapseSetGroups() {
+            document.querySelectorAll('#settingsModal .set-group').forEach(function (h) {
+                h.classList.remove('open');
+            });
+            document.querySelectorAll('#settingsModal .set-body').forEach(function (b) {
+                b.classList.remove('open');
+            });
+        }
+
         function openSettingsModal() {
+            collapseSetGroups();
             refreshSetupState();
             var tag = document.getElementById('settingsVersionTag');
             var src = document.getElementById('appVersionTag');
             if (tag && src) tag.textContent = src.textContent;
-            document.getElementById('settingsModal').style.display = 'flex';
+            var when = document.getElementById('setRowNotifyWhen');
+            if (when) when.textContent = notifyWhenText();
+            var th = document.getElementById('setRowTheme');
+            if (th) th.textContent = themeName() === 'light' ? 'Светлое' : 'Неон (по умолчанию)';
+            openModal('settingsModal');
+        }
+
+        function notifyWhenText() {
+            var w = NOTIFY_WINDOWS[notifyHour()];
+            var pre = Number(appData.settings.preDays) || 0;
+            return w.name.toLowerCase() + ' (' + w.range + ')' +
+                (pre > 0 ? ', предупреждение за ' + pre + ' дн.' : ', без предупреждения заранее');
+        }
+
+        /* ===== Сводка «Все фильтры» ===== */
+
+        /* Как показать остаток: обычный фильтр — в днях, тестовый — в минутах/секундах */
+        function shortLeft(t) {
+            if (t.leftMs <= 0) return { big: '0', small: 'просрочен', cls: 'bad' };
+            if (t.isTest) {
+                if (t.secondsLeft < 120) return { big: String(t.secondsLeft), small: 'сек', cls: 'warn' };
+                return { big: String(t.minutesLeft), small: 'мин', cls: 'warn' };
+            }
+            var cls = t.daysLeft <= 10 ? 'warn' : 'ok';
+            return { big: String(t.daysLeft), small: 'дн', cls: cls };
+        }
+
+        function allFiltersRows() {
+            return appData.filters.map(function (f) {
+                var loc = appData.locations.find(function (l) { return l.id === f.locationId; });
+                return { filter: f, loc: loc, timing: getFilterTiming(f) };
+            }).sort(function (a, b) { return a.timing.leftMs - b.timing.leftMs; });
+        }
+
+        function openAllFiltersModal() {
+            var rows = allFiltersRows();
+            var bad = 0, warn = 0, ok = 0;
+            rows.forEach(function (r) {
+                var s = shortLeft(r.timing);
+                if (s.cls === 'bad') bad++; else if (s.cls === 'warn') warn++; else ok++;
+            });
+
+            var sum = [];
+            if (bad) sum.push('<span class="sum-chip bad">Просрочено: ' + bad + '</span>');
+            if (warn) sum.push('<span class="sum-chip warn">Скоро: ' + warn + '</span>');
+            if (ok) sum.push('<span class="sum-chip ok">В норме: ' + ok + '</span>');
+            document.getElementById('allFiltersSummary').innerHTML = sum.join('');
+
+            var list = document.getElementById('allFiltersList');
+            if (!rows.length) {
+                list.innerHTML = '<div style="color:#8b99ad;text-align:center;padding:10px;">Фильтров пока нет</div>';
+            } else {
+                list.innerHTML = rows.map(function (r) {
+                    var s = shortLeft(r.timing);
+                    var current = (r.filter.id === appData.currentFilterId) ? ' current' : '';
+                    var where = r.loc ? esc(r.loc.name) : 'без объекта';
+                    return '<div class="af-item' + current + '" onclick="jumpToFilter(\'' + esc(r.filter.locationId) +
+                        '\', \'' + esc(r.filter.id) + '\')">' +
+                        '<div class="af-badge ' + s.cls + '">' + s.big + '<small>' + s.small + '</small></div>' +
+                        '<div class="af-txt"><div class="af-name">' + esc(r.filter.name) + '</div>' +
+                        '<div class="af-sub">' + where + ' · ' + esc(r.filter.type || '') + '</div></div>' +
+                        '<div style="color:#8b99ad;font-size:15px;">›</div></div>';
+                }).join('');
+            }
+            openModal('allFiltersModal');
+        }
+
+        function jumpToFilter(locationId, filterId) {
+            appData.currentLocationId = locationId;
+            appData.currentFilterId = filterId;
+            closeModals();
+            persistOnly();
+            updateUI();
+        }
+
+        /* ===== Мастер первого запуска ===== */
+
+        function openWizard() {
+            closeModals();
+            wizardStep(1);
+            document.getElementById('wizPlaceName').value = getSelectedChipValue('wizChipPlace') || 'Моя квартира';
+            document.getElementById('wizFilterName').value = filterNameForType(getSelectedChipValue('wizChipType') || 'Кувшин');
+            prepareResourceChips('wizChipResource', 'wizCustomDaysBox', 'wizCustomDays', null);
+            setDateField('wizDate', Date.now());
+            openModal('wizardModal');
+        }
+
+        function wizardStep(n) {
+            [1, 2, 3].forEach(function (i) {
+                var el = document.getElementById('wizStep' + i);
+                if (el) el.style.display = (i === n) ? 'block' : 'none';
+            });
+            var box = document.querySelector('#wizardModal .modal-content');
+            if (box) box.scrollTop = 0;
+        }
+
+        function filterNameForType(type) {
+            if (type === 'Проточный') return 'Проточный фильтр';
+            if (type === 'Осмос') return 'Обратный осмос';
+            if (type === 'Насадка') return 'Насадка на кран';
+            return 'Кувшин на кухне';
+        }
+
+        /* Выбор готового варианта подставляет название, но не затирает то, что человек вписал сам */
+        function wizardPickPlace(el) {
+            var input = document.getElementById('wizPlaceName');
+            var prev = getSelectedChipValue('wizChipPlace');
+            selectChip('wizChipPlace', el);
+            if (!input.value || input.value === prev) input.value = el.getAttribute('data-value');
+        }
+
+        function wizardPickType(el) {
+            var input = document.getElementById('wizFilterName');
+            var prev = filterNameForType(getSelectedChipValue('wizChipType'));
+            selectChip('wizChipType', el);
+            if (!input.value || input.value === prev) input.value = filterNameForType(el.getAttribute('data-value'));
+        }
+
+        async function wizardFinish() {
+            var placeName = (document.getElementById('wizPlaceName').value || '').trim()
+                || getSelectedChipValue('wizChipPlace') || 'Мой дом';
+            var type = getSelectedChipValue('wizChipType') || 'Кувшин';
+            var filterName = (document.getElementById('wizFilterName').value || '').trim() || filterNameForType(type);
+
+            var locId = 'loc_' + Date.now();
+            var filterId = 'f_' + (Date.now() + 1);
+
+            appData.locations.push({ id: locId, name: placeName });
+            var f = {
+                id: filterId, locationId: locId, name: filterName, type: type,
+                baseDays: 90, cycleMs: null,
+                hardness: parseFloat(getSelectedChipValue('wizChipHardness') || '1'),
+                people: parseInt(getSelectedChipValue('wizChipPeople') || '2', 10),
+                lastDate: inputToTs(document.getElementById('wizDate').value, Date.now()),
+                brand: '', buyUrl: ''
+            };
+            applyResourceChip(f, getSelectedChipValue('wizChipResource') || 'd90',
+                document.getElementById('wizCustomDays').value);
+            appData.filters.push(f);
+            appData.currentLocationId = locId;
+            appData.currentFilterId = filterId;
+
+            closeModals();
+            persistOnly();
+            updateUI();
+            var ok = await scheduleAllFilterNotifications();
+            showToast('Готово · ' + nextPushHint(f) + (ok ? '' : ' · напоминание не запланировано'));
+            setTimeout(maybeShowSetupOnFirstRun, 600);
+        }
+
+        async function wizardDemo() {
+            var locId = 'loc_' + Date.now();
+            appData.locations.push({ id: locId, name: 'Моя квартира (пример)' });
+            var f = {
+                id: 'f_' + (Date.now() + 1), locationId: locId, name: 'Кувшин на кухне',
+                type: 'Кувшин', baseDays: 60, cycleMs: null, people: 2, hardness: 1,
+                lastDate: Date.now() - 50 * MS_DAY, brand: 'Аквафор', buyUrl: ''
+            };
+            appData.filters.push(f);
+            appData.currentLocationId = locId;
+            appData.currentFilterId = f.id;
+            closeModals();
+            persistOnly();
+            updateUI();
+            await scheduleAllFilterNotifications();
+            showToast('Пример добавлен — его можно изменить или удалить');
+            setTimeout(maybeShowSetupOnFirstRun, 600);
+        }
+
+        function openNotifyModal() {
+            setChipValue('chipNotifyHour', notifyHour());
+            setChipValue('chipPreDays', Number(appData.settings.preDays) || 0);
+            openModal('notifyModal');
+        }
+
+        async function saveNotifySettings() {
+            appData.settings.notifyHour = parseInt(getSelectedChipValue('chipNotifyHour') || '9', 10);
+            appData.settings.preDays = parseInt(getSelectedChipValue('chipPreDays') || '7', 10);
+            closeModals();
+            persistOnly();
+            var ok = await scheduleAllFilterNotifications();
+            showToast('Сохранено · ' + notifyWhenText() + (ok ? '' : ' · напоминания обновить не удалось'));
+        }
+
+        function openEcoModal() {
+            setChipValue('chipBottleLiters', bottleLiters());
+            setChipValue('chipLitersPerDay', litersPerDay());
+            document.getElementById('ecoBottlePrice').value = bottlePrice();
+            var prev = document.getElementById('ecoPreview');
+            if (prev) prev.textContent = ecoAssumptionsText();
+            openModal('ecoModal');
+        }
+
+        function resetEcoSettings() {
+            appData.settings.bottleLiters = ECO_DEFAULTS.bottleLiters;
+            appData.settings.bottlePrice = ECO_DEFAULTS.bottlePrice;
+            appData.settings.litersPerDay = ECO_DEFAULTS.litersPerDay;
+            persistOnly();
+            openEcoModal();
+            showToast('Вернули средние значения');
+        }
+
+        function saveEcoSettings() {
+            var liters = parseFloat(getSelectedChipValue('chipBottleLiters') || '5');
+            var price = Math.round(Number(document.getElementById('ecoBottlePrice').value));
+            var perDay = parseFloat(getSelectedChipValue('chipLitersPerDay') || '2');
+            if (!(price > 0)) { showToast('Укажите цену бутыли'); return; }
+            appData.settings.bottleLiters = liters > 0 ? liters : 5;
+            appData.settings.bottlePrice = Math.min(price, 10000);
+            appData.settings.litersPerDay = perDay > 0 ? perDay : 2;
+            closeModals();
+            persistOnly();
+            showToast('Сохранено · ' + ecoAssumptionsText().replace('Из расчёта: ', ''));
+        }
+
+        function openAboutModal() {
+            var src = document.getElementById('appVersionTag');
+            var tag = document.getElementById('aboutVersionTag');
+            if (tag && src) tag.textContent = src.textContent;
+            var list = document.getElementById('aboutWhatsNew');
+            if (list) {
+                list.innerHTML = WHATS_NEW.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+                list.style.display = 'none';   /* по умолчанию свёрнуто */
+            }
+            var head = document.getElementById('whatsNewHead');
+            if (head) head.classList.remove('open');
+            openModal('aboutModal');
+        }
+
+        /*
+         * Красивый набор данных для скриншотов в магазин: два объекта, четыре фильтра
+         * в разных состояниях (просрочен / скоро / в норме) и история замен.
+         * Доступно только в режиме проверки, чтобы обычный пользователь на это не наткнулся.
+         * Даты считаются от сегодняшнего дня, поэтому картинка всегда свежая.
+         */
+        function fillDemoForScreenshots() {
+            showCustomConfirm(
+                'Демо-данные',
+                'Все текущие дома, фильтры и история будут заменены набором для скриншотов. ' +
+                'Сначала сохраните свою резервную копию!',
+                async function () {
+                    var now = Date.now();
+                    var day = MS_DAY;
+                    appData.locations = [
+                        { id: 'loc_demo1', name: 'Квартира' },
+                        { id: 'loc_demo2', name: 'Дача' }
+                    ];
+                    appData.filters = [
+                        { id: 'f_demo1', locationId: 'loc_demo1', name: 'Кувшин на кухне', type: 'Кувшин',
+                          baseDays: 60, cycleMs: null, people: 2, hardness: 1,
+                          lastDate: now - 37 * day, brand: 'Аквафор B25', buyUrl: '' },
+                        { id: 'f_demo2', locationId: 'loc_demo1', name: 'Фильтр под мойкой', type: 'Проточный',
+                          baseDays: 180, cycleMs: null, people: 2, hardness: 1.25,
+                          lastDate: now - 30 * day, brand: 'Гейзер Био', buyUrl: '' },
+                        { id: 'f_demo3', locationId: 'loc_demo2', name: 'Насадка на кран', type: 'Насадка',
+                          baseDays: 90, cycleMs: null, people: 1, hardness: 1,
+                          lastDate: now - 95 * day, brand: '', buyUrl: '' },
+                        { id: 'f_demo4', locationId: 'loc_demo2', name: 'Осмос, предфильтры', type: 'Осмос',
+                          baseDays: 180, cycleMs: null, people: 3, hardness: 1,
+                          lastDate: now - 40 * day, brand: 'Барьер PROFI', buyUrl: '' }
+                    ];
+                    appData.history = [
+                        { filterName: 'Кувшин на кухне', filterId: 'f_demo1', locationId: 'loc_demo1',
+                          ts: now - 37 * day, usedDays: 58, liters: 232,
+                          date: new Date(now - 37 * day).toLocaleDateString('ru-RU'), cost: 450, note: '' },
+                        { filterName: 'Фильтр под мойкой', filterId: 'f_demo2', locationId: 'loc_demo1',
+                          ts: now - 30 * day, usedDays: 170, liters: 680,
+                          date: new Date(now - 30 * day).toLocaleDateString('ru-RU'), cost: 1290, note: '' },
+                        { filterName: 'Осмос, предфильтры', filterId: 'f_demo4', locationId: 'loc_demo2',
+                          ts: now - 40 * day, usedDays: 175, liters: 1050,
+                          date: new Date(now - 40 * day).toLocaleDateString('ru-RU'), cost: 890, note: '' }
+                    ];
+                    appData.currentLocationId = 'loc_demo1';
+                    appData.currentFilterId = 'f_demo1';
+                    persistOnly();
+                    updateUI();
+                    await scheduleAllFilterNotifications();
+                    showToast('Демо-данные загружены — можно снимать экраны');
+                }
+            );
+        }
+
+        function openPrivacyModal() {
+            openModal('privacyModal');
+        }
+
+        function toggleWhatsNew() {
+            var head = document.getElementById('whatsNewHead');
+            var list = document.getElementById('aboutWhatsNew');
+            var open = list.style.display !== 'none';
+            list.style.display = open ? 'none' : 'block';
+            head.classList.toggle('open', !open);
+        }
+
+        /* Скрытый режим разработчика: 7 нажатий на строку с версией */
+        var versionTapCount = 0, versionTapTimer = null;
+        function onVersionTap() {
+            versionTapCount++;
+            clearTimeout(versionTapTimer);
+            versionTapTimer = setTimeout(function () { versionTapCount = 0; }, 2500);
+            if (versionTapCount < 7) {
+                if (versionTapCount >= 4) {
+                    showToast('Ещё ' + (7 - versionTapCount) + ' — и включится режим проверки');
+                }
+                return;
+            }
+            versionTapCount = 0;
+            appData.settings.devMode = !appData.settings.devMode;
+            persistOnly();
+            applyDevMode();
+            showToast(appData.settings.devMode
+                ? 'Режим проверки включён: в сроках появились варианты в минутах'
+                : 'Режим проверки выключен');
         }
 
         function showSetupModal() {
@@ -1053,18 +2211,21 @@
             document.getElementById('setupAutostartTitle').innerText = hint.title;
             document.getElementById('setupVendorNote').innerText = hint.note;
             refreshSetupState();
-            document.getElementById('setupModal').style.display = 'flex';
+            openModal('setupModal');
         }
 
         function closeSetupModal(never) {
             document.getElementById('setupModal').style.display = 'none';
+            var st = refreshSetupState();
+            refreshNotifWarning();
+            if (!never && st.all) showToast('Готово — напоминания будут приходить вовремя');
             if (never) {
                 try { localStorage.setItem('aquaSetupHidden', '1'); } catch (e) {}
                 showToast('Подсказку можно открыть в разделе «Уведомления»');
             }
         }
 
-        // Показываем один раз при первом запуске на телефоне
+        // Первый запуск: показываем объяснение ДО системных окон Android
         function maybeShowSetupOnFirstRun() {
             if (!getNativeBridge()) return;
             var seen = false, hidden = false;
@@ -1146,7 +2307,7 @@
             try {
                 var ta = document.getElementById('exportTextArea');
                 ta.value = json;
-                document.getElementById('exportModal').style.display = 'flex';
+                openModal('exportModal');
                 setTimeout(function () { ta.focus(); ta.select(); }, 150);
             } catch (e) {
                 console.warn(e);
@@ -1247,6 +2408,24 @@
             await sleep(120);
         }
 
+        var NOTIFY_WINDOWS = {
+            9: { name: 'Утром', range: '9:00–12:00' },
+            14: { name: 'Днём', range: '14:00–17:00' },
+            19: { name: 'Вечером', range: '19:00–21:00' }
+        };
+        function notifyHour() {
+            var h = Number(appData.settings.notifyHour);
+            if (NOTIFY_WINDOWS[h]) return h;
+            if (!(h >= 0 && h <= 23)) return 9;
+            return h >= 17 ? 19 : (h >= 13 ? 14 : 9);
+        }
+        /* Переносит момент на выбранный час того же дня — чтобы не будить ночью */
+        function atHour(ts, hour) {
+            var d = new Date(Number(ts) || Date.now());
+            d.setHours(hour, 0, 0, 0);
+            return d.getTime();
+        }
+
         function scheduleAllFilterNotifications() {
             scheduleChain = scheduleChain.then(runScheduleJob, runScheduleJob);
             return scheduleChain;
@@ -1263,37 +2442,62 @@
                 var batch = [];
                 var minLead = 5000;
 
+                var hour = notifyHour();
+                var preDays = Number(appData.settings.preDays) || 0;
+
                 appData.filters.forEach(function (filter) {
                     var t = getFilterTiming(filter);
                     var loc = appData.locations.find(function (l) { return l.id === filter.locationId; });
                     var locText = loc ? ' [' + loc.name + ']' : '';
                     var extra = { locationId: filter.locationId, filterId: filter.id };
+                    var planned = [];
 
-                    var expAt = t.expiryMs;
-                    if (expAt <= now + minLead && expAt > now) expAt = now + minLead;
-                    if (expAt > now + 2000) {
-                        batch.push({
+                    if (t.isTest) {
+                        /* Тестовый режим: секунда в секунду, без переноса на удобный час */
+                        planned.push({
+                            kind: 'exp', at: t.expiryMs, color: '#00F2FE',
                             title: 'Пора заменить фильтр',
-                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.',
-                            id: notifId(filter.id, 'exp'),
-                            schedule: { at: new Date(expAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon', iconColor: '#00F2FE', autoCancel: true,
-                            channelId: NOTIF_CHANNEL, extra: extra
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.'
+                        });
+                        planned.push({
+                            kind: 'p7', at: t.followUpMs, color: '#FF4757',
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.'
+                        });
+                    } else {
+                        if (preDays > 0) {
+                            planned.push({
+                                kind: 'pre', at: atHour(t.expiryMs - preDays * MS_DAY, hour), color: '#FFAA00',
+                                title: 'Скоро замена фильтра',
+                                body: '«' + filter.name + '»' + locText + ' — осталось ' + preDays +
+                                      ' дн. Самое время купить картридж.'
+                            });
+                        }
+                        planned.push({
+                            kind: 'exp', at: atHour(t.expiryMs, hour), color: '#00F2FE',
+                            title: 'Пора заменить фильтр',
+                            body: '«' + filter.name + '»' + locText + ' — срок службы закончился.'
+                        });
+                        planned.push({
+                            kind: 'p7', at: atHour(t.followUpMs, hour), color: '#FF4757',
+                            title: 'Фильтр всё ещё не заменён',
+                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.'
                         });
                     }
 
-                    var fAt = t.followUpMs;
-                    if (fAt <= now + minLead && fAt > now) fAt = now + minLead + 1000;
-                    if (fAt > now + 2000) {
+                    planned.forEach(function (item) {
+                        var at = item.at;
+                        if (at <= now + minLead && at > now) at = now + minLead;
+                        if (at <= now + 2000) return;
                         batch.push({
-                            title: 'Фильтр всё ещё не заменён',
-                            body: '«' + filter.name + '»' + locText + '. Замените картридж или отложите срок.',
-                            id: notifId(filter.id, 'p7'),
-                            schedule: { at: new Date(fAt), allowWhileIdle: true },
-                            smallIcon: 'ic_stat_icon', iconColor: '#FF4757', autoCancel: true,
+                            title: item.title,
+                            body: item.body,
+                            id: notifId(filter.id, item.kind),
+                            schedule: { at: new Date(at), allowWhileIdle: true },
+                            smallIcon: 'ic_stat_icon', iconColor: item.color, autoCancel: true,
                             channelId: NOTIF_CHANNEL, extra: extra
                         });
-                    }
+                    });
                 });
 
                 if (batch.length) {
@@ -1334,18 +2538,45 @@
             return 'напоминание через ~' + t.daysLeft + ' дн';
         }
 
+        /*
+         * Состояние счётчика.
+         * В неоне цвет несёт сама цифра (свечение на тёмном фоне).
+         * В светлом оформлении так не работает: цветная цифра на белом выглядит бледно,
+         * поэтому цветом заливается плашка под счётчиком, а цифра остаётся белой.
+         */
+        function setCounterState(state) {
+            var box = document.getElementById('timerBox');
+            var days = document.getElementById('daysDisplay');
+            if (box) box.className = 'timer-box state-' + state;
+            if (!days) return;
+            days.style.color = (themeName() === 'light') ? '#ffffff' : pal()[state === 'none' ? 'ok' : state];
+        }
+
         function updateUI() {
             var currentLoc = appData.locations.find(function (l) { return l.id === appData.currentLocationId; }) || appData.locations[0];
             if (currentLoc) appData.currentLocationId = currentLoc.id;
             document.getElementById('currentLocName').innerText = currentLoc ? currentLoc.name : 'Локация';
             renderLocationDots();
 
+            var noFilters = appData.filters.length === 0;
+            if (document.body) document.body.classList.toggle('no-filters', noFilters);
+            var empty = document.getElementById('emptyState');
+            if (empty) empty.style.display = noFilters ? 'block' : 'none';
+            var allLink = document.getElementById('allFiltersLink');
+            if (allLink) {
+                allLink.style.display = appData.filters.length > 1 ? 'block' : 'none';
+                var overdue = appData.filters.filter(function (f) { return getFilterTiming(f).leftMs <= 0; }).length;
+                allLink.textContent = overdue
+                    ? ('Все фильтры · просрочено: ' + overdue + ' →')
+                    : ('Все фильтры (' + appData.filters.length + ') →');
+            }
+
             var list = appData.filters.filter(function (f) { return f.locationId === appData.currentLocationId; });
             var tabs = document.getElementById('filterTabs');
             var filter = null;
 
             if (!list.length) {
-                tabs.innerHTML = '<div style="font-size:12px;color:#6e7d93;">Нет устройств</div>';
+                tabs.innerHTML = '<div style="font-size:12px;color:#8b99ad;">Нет устройств</div>';
                 appData.currentFilterId = null;
             } else {
                 if (!list.some(function (f) { return f.id === appData.currentFilterId; })) appData.currentFilterId = list[0].id;
@@ -1355,9 +2586,11 @@
                     var cls = '', icon = '';
                     if (t.leftMs <= 0) { cls = 'tab-danger'; icon = '🔴 '; }
                     else if ((!t.isTest && t.daysLeft <= 10) || (t.isTest && t.leftMs <= t.resourceMs * 0.25)) { cls = 'tab-warning'; icon = '🟡 '; }
-                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + f.id + '\')">' + icon + f.name + '</div>';
+                    return '<div class="tab ' + (f.id === appData.currentFilterId ? 'active ' : '') + cls + '" onclick="selectFilter(\'' + esc(f.id) + '\')">' + icon + esc(f.name) + '</div>';
                 }).join('');
             }
+
+            refreshNotifWarning();
 
             var btnCart = document.getElementById('btnCartIcon');
             var cartDot = document.getElementById('cartDot');
@@ -1368,7 +2601,8 @@
             if (filter) {
                 var t = getFilterTiming(filter);
                 updatePostponeLabels(filter);
-                document.getElementById('infoType').innerText = filter.type;
+                document.getElementById('infoType').innerText = filter.type +
+                    (t.isTest ? ' · тест' : ' · ' + (Number(filter.baseDays) || 90) + ' дн');
                 document.getElementById('infoPeople').innerText = filter.people + ' чел';
                 document.getElementById('infoHardness').innerText = filter.hardness == 1.5 ? 'Очень жёсткая' : (filter.hardness == 1.25 ? 'Жёсткая' : 'Норма');
                 document.getElementById('infoBrand').innerText = filter.brand || 'Не указан';
@@ -1382,8 +2616,8 @@
 
                 if (t.leftMs <= 0) {
                     daysDisplay.innerText = '0';
-                    daysDisplay.style.color = '#ff4757';
-                    waveColor = 'rgba(255,71,87,0.18)';
+                    setCounterState('bad');
+                    waveColor = pal().waveBad;
                     document.getElementById('statusLabel').innerText = 'Срок истёк — замените';
                     postponeRow.style.display = 'flex';
                 } else if (t.isTest) {
@@ -1394,27 +2628,27 @@
                         daysDisplay.innerText = Math.max(1, t.minutesLeft);
                         document.getElementById('statusLabel').innerText = 'минут осталось (тест)';
                     }
-                    daysDisplay.style.color = t.minutesLeft <= 1 ? '#ffaa00' : '#00f2fe';
-                    waveColor = 'rgba(0,242,254,0.12)';
+                    setCounterState(t.minutesLeft <= 1 ? 'warn' : 'ok');
+                    waveColor = pal().wave;
                     postponeRow.style.display = 'none';
                 } else if (t.daysLeft <= 10) {
                     daysDisplay.innerText = t.daysLeft;
-                    daysDisplay.style.color = '#ffaa00';
-                    waveColor = 'rgba(255,170,0,0.15)';
+                    setCounterState('warn');
+                    waveColor = pal().waveWarn;
                     document.getElementById('statusLabel').innerText = 'Скоро замена';
                     postponeRow.style.display = 'none';
                 } else {
                     daysDisplay.innerText = t.daysLeft;
-                    daysDisplay.style.color = '#00f2fe';
-                    waveColor = 'rgba(0,242,254,0.12)';
+                    setCounterState('ok');
+                    waveColor = pal().wave;
                     document.getElementById('statusLabel').innerText = 'дней осталось';
                     postponeRow.style.display = 'none';
                 }
             } else {
                 daysDisplay.innerText = '--';
-                daysDisplay.style.color = '#00f2fe';
+                setCounterState('none');
                 document.getElementById('statusLabel').innerText = 'нет устройств';
-                waveColor = 'rgba(0,242,254,0.12)';
+                waveColor = pal().wave;
                 document.getElementById('infoType').innerText = '--';
                 document.getElementById('infoPeople').innerText = '-- чел';
                 document.getElementById('infoHardness').innerText = '--';
@@ -1435,10 +2669,14 @@
         });
 
         document.addEventListener('DOMContentLoaded', async function () {
+            if (isFirstRun) setTimeout(openWizard, 350);
             var ln = getLN();
             if (!ln) { updateUI(); return; }
             try {
-                await ln.requestPermissions();
+                /* Раньше здесь молча вызывалось requestPermissions() и пользователь
+                   получал системное окно раньше, чем видел приложение.
+                   Теперь сначала показывается экран с объяснением, а системное окно
+                   открывается кнопкой «Разрешить». */
                 await ensureChannel(ln);
                 notificationsReady = true;
                 ln.addListener('localNotificationActionPerformed', async function (notification) {
@@ -1451,11 +2689,8 @@
                     if (ex.locationId && ex.filterId) {
                         appData.currentLocationId = ex.locationId;
                         appData.currentFilterId = ex.filterId;
-                        var f = appData.filters.find(function (x) { return x.id === ex.filterId; });
-                        if (f) {
-                            var t = getFilterTiming(f);
-                            if (t.leftMs > 0) f.lastDate = Date.now() - (t.resourceMs + 5000);
-                        }
+                        /* Раньше здесь фильтр принудительно помечался просроченным —
+                           из-за этого открытие старого уведомления портило отсчёт. Убрано. */
                         persistOnly();
                         updateUI();
                         scheduleAllFilterNotifications();
@@ -1463,7 +2698,8 @@
                     }
                 });
                 await scheduleAllFilterNotifications();
-                maybeShowSetupOnFirstRun();
+                if (!isFirstRun) maybeShowSetupOnFirstRun();
+                refreshNotifWarning();
             } catch (e) { console.warn(e); }
         });
 
@@ -1497,14 +2733,14 @@
             c.innerHTML = appData.locations.map(function (l) {
                 return '<div class="loc-option-item ' + (l.id === appData.currentLocationId ? 'active' : '') + '">' +
                     '<span onclick="selectLocationDirect(\'' + l.id + '\')" style="flex:1;cursor:pointer;font-weight:600;padding:6px 0;">' +
-                    l.name + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
+                    esc(l.name) + (l.id === appData.currentLocationId ? ' ✓' : '') + '</span><div class="loc-actions">' +
                     '<button class="loc-icon-btn edit" onclick="event.stopPropagation();openRenameLocationModal(\'' + l.id + '\')">✏️</button>' +
                     (canDel ? '<button class="loc-icon-btn delete" onclick="event.stopPropagation();deleteSpecificLocation(\'' + l.id + '\')">🗑</button>' : '') +
                     '</div></div>';
             }).join('');
             var tip = document.getElementById('locSwipeTip');
             if (tip) tip.style.display = appData.locations.length > 1 ? 'block' : 'none';
-            document.getElementById('locSelectModal').style.display = 'flex';
+            openModal('locSelectModal');
         }
         function selectLocationDirect(id) { appData.currentLocationId = id; closeModals(); persistOnly(); updateUI(); }
         function openRenameLocationModal(id) {
@@ -1513,7 +2749,7 @@
             pendingRenameLocationId = id;
             document.getElementById('renameLocContext').innerText = 'Сейчас: ' + loc.name;
             document.getElementById('renameLocInput').value = loc.name;
-            document.getElementById('renameLocationModal').style.display = 'flex';
+            openModal('renameLocationModal');
         }
         function confirmRenameLocation() {
             var name = (document.getElementById('renameLocInput').value || '').trim();
@@ -1530,14 +2766,18 @@
             if (f && loc) document.getElementById('replaceModalContext').innerText = loc.name + ' • ' + f.name;
             document.getElementById('repBrand').value = (f && f.brand) ? f.brand : '';
             document.getElementById('repCost').value = '';
+            setDateField('repDate', Date.now());
             updatePostponeLabels(f);
-            document.getElementById('replaceModal').style.display = 'flex';
+            openModal('replaceModal');
         }
         function openAddFilterModal() {
-            setChipValue('chipResource', 'd90');
-            document.getElementById('addFilterModal').style.display = 'flex';
+            prepareResourceChips('chipResource', 'newCustomDaysBox', 'newCustomDays', null);
+            document.getElementById('newFilterName').value = '';
+            document.getElementById('newFilterUrl').value = '';
+            setDateField('newFilterDate', Date.now());
+            openModal('addFilterModal');
         }
-        function openAddLocationModal() { document.getElementById('addLocationModal').style.display = 'flex'; }
+        function openAddLocationModal() { openModal('addLocationModal'); }
 
         function openEditFilterModal() {
             var f = getCurrentFilter();
@@ -1545,10 +2785,11 @@
             document.getElementById('editFilterContext').innerText = f.name;
             document.getElementById('editFilterName').value = f.name || '';
             document.getElementById('editFilterUrl').value = f.buyUrl || '';
-            setChipValue('editChipResource', resourceChipFromFilter(f));
+            setDateField('editFilterDate', f.lastDate);
+            prepareResourceChips('editChipResource', 'editCustomDaysBox', 'editCustomDays', f);
             setChipValue('editChipHardness', f.hardness);
             setChipValue('editChipPeople', f.people);
-            document.getElementById('editFilterModal').style.display = 'flex';
+            openModal('editFilterModal');
         }
 
         async function confirmEditFilter() {
@@ -1560,8 +2801,10 @@
             f.buyUrl = normalizeUrl(document.getElementById('editFilterUrl').value);
             f.hardness = parseFloat(getSelectedChipValue('editChipHardness') || f.hardness);
             f.people = parseInt(getSelectedChipValue('editChipPeople') || f.people, 10);
-            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90');
+            applyResourceChip(f, getSelectedChipValue('editChipResource') || 'd90',
+                document.getElementById('editCustomDays').value);
             if (isTestFilter(f)) f.lastDate = Date.now();
+            else f.lastDate = inputToTs(document.getElementById('editFilterDate').value, f.lastDate);
             closeModals();
             persistOnly();
             updateUI();
@@ -1574,7 +2817,7 @@
             if (!f) return;
             if (f.buyUrl && String(f.buyUrl).trim()) { showToast('Открываем магазин…'); openExternalUrl(f.buyUrl); return; }
             document.getElementById('noLinkUrlInput').value = '';
-            document.getElementById('noLinkModal').style.display = 'flex';
+            openModal('noLinkModal');
         }
         function saveBuyUrlFromNoLinkModal() {
             var f = getCurrentFilter();
@@ -1583,34 +2826,164 @@
             if (!u) { showToast('Вставьте ссылку'); return; }
             f.buyUrl = u; closeModals(); persistOnly(); updateUI(); showToast('Ссылка сохранена');
         }
+        /* ===== Оценка объёма и экономии =====
+         * Считаем только по данным пользователя. Все три допущения он задаёт сам:
+         * «Настройки» → «Как считать экономию». Значения по умолчанию:
+         * бутыль 5 л за 60 ₽ (12 ₽/л) и 2 литра питьевой воды в день на человека.
+         */
+        function bottleLiters() { var v = Number(appData.settings.bottleLiters); return v > 0 ? v : 5; }
+        function bottlePrice() { var v = Number(appData.settings.bottlePrice); return v > 0 ? v : 60; }
+        function litersPerDay() { var v = Number(appData.settings.litersPerDay); return v > 0 ? v : 2; }
+        function pricePerLiter() { return bottlePrice() / bottleLiters(); }
+
+        /* Средние значения по умолчанию; пользователю не нужно ничего заполнять */
+        var ECO_DEFAULTS = { bottleLiters: 5, bottlePrice: 60, litersPerDay: 2 };
+
+        function ecoAssumptionsText() {
+            var perL = pricePerLiter();
+            return 'Бутыль ' + bottleLiters() + ' л за ' + bottlePrice() + ' ₽ (' +
+                (Math.round(perL * 10) / 10) + ' ₽ за литр), ' + litersPerDay() +
+                ' л в день на человека';
+        }
+
+        /* Сколько литров прошло через картридж за реально отработанные дни */
+        function litersForUse(people, usedDays) {
+            var p = Number(people) || 2;
+            var d = Math.round(Number(usedDays) || 0);
+            if (d < 1) d = 1;
+            if (d > 730) d = 730;          // защита от опечатки в дате
+            return Math.round(p * litersPerDay() * d);
+        }
+
+        /* Для старых записей (до версии 1.0.33) литры не сохранялись — оцениваем скромно */
+        function historyLiters(entry) {
+            if (Number(entry.liters) > 0) return Number(entry.liters);
+            var f = entry.filterId
+                ? appData.filters.find(function (x) { return x.id === entry.filterId; })
+                : null;
+            var days = f ? Math.round(getFilterTiming(f).resourceMs / MS_DAY) : 60;
+            return litersForUse(f ? f.people : 2, days);
+        }
+
         function openHistoryModal() {
             var list = document.getElementById('historyList');
             var total = 0, n = appData.history.length;
-            if (!n) list.innerHTML = '<div style="color:#6e7d93;text-align:center;">Пока пусто</div>';
+            if (!n) list.innerHTML = '<div style="color:#8b99ad;text-align:center;">Пока пусто</div>';
             else list.innerHTML = appData.history.map(function (h) {
                 total += Number(h.cost || 0);
-                return '<div class="history-item"><div><b>' + h.filterName + '</b><br><small style="color:#6e7d93">' + h.date + (h.note ? ' • ' + h.note : '') + '</small></div><div style="color:#00f2fe;">' + (h.cost ? h.cost + ' ₽' : '0 ₽') + '</div></div>';
+                var loc = h.locationId ? appData.locations.find(function (l) { return l.id === h.locationId; }) : null;
+                var where = loc ? (' · ' + esc(loc.name)) : '';
+                var when = h.date ? esc(h.date) : (h.ts ? new Date(Number(h.ts)).toLocaleDateString('ru-RU') : '');
+                return '<div class="history-item"><div><b>' + esc(h.filterName) + '</b>' + where +
+                    '<br><small style="color:#8b99ad">' + when + (h.note ? ' • ' + esc(h.note) : '') +
+                    '</small></div><div style="color:#00f2fe;">' + (h.cost ? esc(h.cost) + ' ₽' : '0 ₽') + '</div></div>';
             }).join('');
-            document.getElementById('ecoBottles').innerText = n * 200;
-            document.getElementById('ecoMoney').innerText = (n * 9000).toLocaleString('ru-RU');
+            var liters = appData.history.reduce(function (s, h) { return s + historyLiters(h); }, 0);
+            var saved = Math.round(liters * pricePerLiter() - total);
+            document.getElementById('ecoLiters').innerText = liters.toLocaleString('ru-RU');
+            document.getElementById('ecoBottleSize').innerText = bottleLiters();
+            document.getElementById('ecoBottles').innerText =
+                Math.round(liters / bottleLiters()).toLocaleString('ru-RU');
+
+            var note = document.getElementById('ecoMoneyNote');
+            if (!n) {
+                note.innerHTML = 'Цифры появятся после первой зафиксированной замены';
+            } else if (saved > 0) {
+                note.innerHTML = 'Примерная экономия против воды в бутылях: <b>~' +
+                    saved.toLocaleString('ru-RU') + ' ₽</b>' +
+                    (total ? '' : ' · впишите цену картриджа, чтобы цифра была точнее');
+            } else {
+                note.innerHTML = 'Пока картриджи обошлись дороже покупной воды — это нормально в начале';
+            }
+            var assum = document.getElementById('ecoAssumptions');
+            if (assum) assum.innerHTML = 'Справочная оценка. ' + esc(ecoAssumptionsText()) +
+                ' · <span class="eco-edit" onclick="closeModals(); openEcoModal();">изменить</span>';
             document.getElementById('totalSpent').innerText = total.toLocaleString('ru-RU');
-            document.getElementById('historyModal').style.display = 'flex';
+            openModal('historyModal');
         }
-        function closeModals() {
+        /* ===== Жест «назад» закрывает окно, а не приложение =====
+         * При открытии окна добавляем запись в историю браузера. Системная кнопка
+         * (или свайп) «назад» в Android сначала отматывает историю WebView — значит,
+         * закрывает наше окно. Когда открытых окон нет, история пуста и «назад»
+         * закрывает приложение, как и ожидает пользователь.
+         * Всё обёрнуто в try — если WebView запретит history, приложение продолжит работать.
+         */
+        var modalHistoryOn = false;   // добавлена ли наша запись в историю
+        var skipNextPop = false;      // мы сами отматываем историю — не реагировать
+
+        function anyOverlayOpen() {
+            if (document.querySelector('.modal[style*="flex"]')) return true;
+            var help = document.getElementById('helpOverlay');
+            return !!(help && help.classList.contains('open'));
+        }
+
+        function pushModalState() {
+            if (modalHistoryOn) return;
+            try { history.pushState({ aquaOverlay: 1 }, ''); modalHistoryOn = true; } catch (e) {}
+        }
+
+        function openModal(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            /* Показываем строго одно окно: раньше «Политика конфиденциальности»
+               открывалась ПОД экраном «О приложении» и выглядела пустой. */
+            document.querySelectorAll('.modal').forEach(function (m) {
+                if (m !== el) m.style.display = 'none';
+            });
+            el.style.display = 'flex';
+            pushModalState();
+        }
+
+        function closeModals(fromBack) {
             document.querySelectorAll('.modal').forEach(function (m) { m.style.display = 'none'; });
             pendingRenameLocationId = null;
+            if (fromBack) { modalHistoryOn = false; return; }
+            releaseModalState();
         }
+
+        /* Убрать свою запись из истории, если на экране больше ничего не открыто.
+           Проверяем в следующем такте: в «Настройках» окна часто закрываются
+           и тут же открываются другие — тогда запись должна остаться. */
+        function releaseModalState() {
+            if (!modalHistoryOn) return;
+            setTimeout(function () {
+                if (anyOverlayOpen() || !modalHistoryOn) return;
+                modalHistoryOn = false;
+                skipNextPop = true;
+                try { history.back(); } catch (e) { skipNextPop = false; }
+            }, 0);
+        }
+
+        window.addEventListener('popstate', function () {
+            if (skipNextPop) { skipNextPop = false; return; }
+            modalHistoryOn = false;
+            var help = document.getElementById('helpOverlay');
+            if (help && help.classList.contains('open')) {
+                /* Сначала закрываем подсказку, окно под ней остаётся открытым */
+                hideHelp(true);
+                if (anyOverlayOpen()) pushModalState();
+                return;
+            }
+            if (anyOverlayOpen()) closeModals(true);
+        });
 
         async function confirmReplacement(skip) {
             var f = getCurrentFilter();
             if (!f) { showToast('Выберите фильтр'); return; }
             var brand = skip ? f.brand : (document.getElementById('repBrand').value || f.brand);
             var cost = skip ? 0 : (document.getElementById('repCost').value || 0);
-            f.lastDate = Date.now();
+            var prevDate = Number(f.lastDate) || Date.now();
+            f.lastDate = skip ? Date.now() : inputToTs(document.getElementById('repDate').value, Date.now());
             if (!skip && brand) f.brand = brand;
+            var usedDays = Math.round((f.lastDate - prevDate) / MS_DAY);
             appData.history.unshift({
                 filterName: f.name,
-                date: new Date().toLocaleDateString('ru-RU'),
+                filterId: f.id,
+                locationId: f.locationId,
+                ts: f.lastDate,
+                usedDays: usedDays > 0 ? usedDays : 0,
+                liters: litersForUse(f.people, usedDays),
+                date: new Date(f.lastDate).toLocaleDateString('ru-RU'),
                 cost: cost,
                 note: skip ? 'Быстрая замена' : ''
             });
@@ -1631,9 +3004,11 @@
             var f = {
                 id: id, locationId: appData.currentLocationId, name: name, type: type,
                 baseDays: 90, cycleMs: null, hardness: hardness, people: people,
-                lastDate: Date.now(), brand: '', buyUrl: buyUrl
+                lastDate: inputToTs(document.getElementById('newFilterDate').value, Date.now()),
+                brand: '', buyUrl: buyUrl
             };
-            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90');
+            applyResourceChip(f, getSelectedChipValue('chipResource') || 'd90',
+                document.getElementById('newCustomDays').value);
             appData.filters.push(f);
             appData.currentFilterId = id;
             closeModals();
@@ -1683,6 +3058,8 @@
             setTimeout(function () { t.classList.remove('show'); }, 3000);
         }
 
+        applyDevMode();
+        applyTheme();
         updateUI();
     </script>
 </body>
